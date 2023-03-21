@@ -30,3 +30,19 @@
 *.exe
 *.out
 *.app
+
+# Temporaries
+*.sdf
+*.opensdf
+*.suo
+*.lnk
+*.ilk
+*.pdb
+
+# Hidden user folders
+*.user
+*.DS_Store
+
+# Specific to project
+binaries/*
+**incrementalSave
