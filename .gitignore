@@ -45,4 +45,5 @@
 
 # Specific to project
 binaries/*
+temp/*
 **incrementalSave
