@@ -11,9 +11,9 @@ Created by Denny Lindberg and Lisa Gren.
 
 # Building the code
 
-Get **premake5** for generating makefiles or solutions for your IDE - https://premake.github.io/download.html
+Get **premake5** for generating makefiles or solutions for your IDE - https://premake.github.io
 
-After downloading the executable, place it in the root folder. Run `premake5 vs2022` in the terminal or command line to generate a Visual Studio solution (the solution ends up in the temp folder). Open the solution and you're good to go.
+After downloading it, place the `premake5.exe` in the root folder of the project (... or place it in `Windows/System32` to install it globally on the system). Run `premake5 vs2022` in the terminal or command line to generate a Visual Studio solution (the solution ends up in the temp folder). Open the solution and you're good to go.
 
 # Third party libraries used
 
