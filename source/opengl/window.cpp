@@ -4,9 +4,9 @@
 #include <string>
 
 // IMGUI support
-#include "../thirdparty/imgui.h"
-#include "../thirdparty/imgui_impl_sdl2.h"
-#include "../thirdparty/imgui_impl_opengl3.h"
+#include "imgui.h"
+#include "imgui_impl_sdl2.h"
+#include "imgui_impl_opengl3.h"
 
 extern "C" {
 	/*

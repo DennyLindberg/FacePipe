@@ -3,7 +3,7 @@
 #include <iostream>
 #include <memory>
 #include <algorithm>
-#include "../thirdparty/lodepng.h"
+#include "lodepng.h"
 
 #define INTERNAL_PIXEL_FORMAT GL_RGBA
 #define PIXEL_FORMAT GL_RGBA

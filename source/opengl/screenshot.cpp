@@ -4,7 +4,7 @@
 #include <fstream>
 
 #include "glad/glad.h"
-#include "../thirdparty/lodepng.h"
+#include "lodepng.h"
 
 void TakeScreenshot(std::string filename, unsigned int windowWidth, unsigned int windowHeight)
 {

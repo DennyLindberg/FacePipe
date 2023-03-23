@@ -5,7 +5,7 @@
 
 #include <string>
 #include <functional>
-#include "../thirdparty/imgui.h"
+#include "imgui.h"
 
 class OpenGLWindow
 {

@@ -2,7 +2,7 @@
 #include "../core/application.h"
 
 #pragma warning(push,0)
-#include "../thirdparty/tiny_obj_loader.h"
+#include "tiny_obj_loader.h"
 #pragma warning(pop)
 
 #define GLM_ENABLE_EXPERIMENTAL

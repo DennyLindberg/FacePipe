@@ -1,6 +1,7 @@
 binaries_folder = "binaries/"
 includes_folder = "include/"
-source_folder   = "source/"                         
+source_folder   = "source/"
+source_thirdparty_folder   = "source/thirdparty/"
 libs_folder     = "libs/"
 
 workspace "FacePipe"
@@ -25,7 +26,7 @@ workspace "FacePipe"
     staticruntime "on"
 
     debugdir(binaries_folder)
-    includedirs { includes_folder }
+    includedirs { includes_folder, source_folder, source_thirdparty_folder }
     libdirs     { libs_folder }
     links       { "opengl32", "SDL2" }
     flags       { "MultiProcessorCompile" }
@@ -50,4 +51,3 @@ project "FacePipeApp"
     files ({source_folder .. "**.h", source_folder .. "**.c", source_folder .. "**.cpp"})
     removefiles{ source_folder .. "main*.cpp"}
     files ({source_folder .. "main.cpp"})
-    
