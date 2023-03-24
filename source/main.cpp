@@ -41,7 +41,7 @@ namespace fs = std::filesystem;
 /*
 	Application
 */
-int main()
+int main(int argc, char* args[])
 {
 	fs::path contentFolder = fs::current_path().parent_path() / "content";
 	fs::path textureFolder = fs::current_path().parent_path() / "content" / "textures";

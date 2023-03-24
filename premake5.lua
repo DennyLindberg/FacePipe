@@ -21,7 +21,6 @@ workspace "FacePipe"
 
     filter { "platforms:*64"} architecture "x64"
 
-    entrypoint "mainCRTStartup"     -- force Windows-executables to use main instead of WinMain as entry point   
     symbolspath '$(TargetName).pdb'
     staticruntime "on"
 
@@ -51,3 +50,4 @@ project "FacePipeApp"
     files ({source_folder .. "**.h", source_folder .. "**.c", source_folder .. "**.cpp"})
     removefiles{ source_folder .. "main*.cpp"}
     files ({source_folder .. "main.cpp"})
+    

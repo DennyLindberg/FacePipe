@@ -1,6 +1,5 @@
 #include "clock.h"
 #include "SDL2/SDL.h"
-#undef main
 
 struct ApplicationClock::SDL2Time
 {
