@@ -1,6 +1,5 @@
 #pragma once
 
-#define IMGUI_DEFINE_MATH_OPERATORS
 #include <stddef.h>
 #include <imgui.h>
 
@@ -37,7 +36,6 @@ enum ImNodesCol_
     ImNodesCol_BoxSelectorOutline,
     ImNodesCol_GridBackground,
     ImNodesCol_GridLine,
-    ImNodesCol_GridLinePrimary,
     ImNodesCol_MiniMapBackground,
     ImNodesCol_MiniMapBackgroundHovered,
     ImNodesCol_MiniMapOutline,
@@ -77,9 +75,7 @@ enum ImNodesStyleFlags_
 {
     ImNodesStyleFlags_None = 0,
     ImNodesStyleFlags_NodeOutline = 1 << 0,
-    ImNodesStyleFlags_GridLines = 1 << 2,
-    ImNodesStyleFlags_GridLinesPrimary = 1 << 3,
-    ImNodesStyleFlags_GridSnapping = 1 << 4
+    ImNodesStyleFlags_GridLines = 1 << 2
 };
 
 enum ImNodesPinShape_
@@ -137,21 +133,6 @@ struct ImNodesIO
         // IsLinkDestroyed() after EndNodeEditor().
         const bool* Modifier;
     } LinkDetachWithModifierClick;
-
-    struct MultipleSelectModifier
-    {
-        MultipleSelectModifier();
-
-        // Pointer to a boolean value indicating when the desired modifier is pressed. Set to NULL
-        // by default. To enable the feature, set the modifier to point to a boolean indicating the
-        // state of a modifier. For example,
-        //
-        // ImNodes::GetIO().MultipleSelectModifier.Modifier = &ImGui::GetIO().KeyCtrl;
-        //
-        // Left-clicking a node with this modifier pressed will add the node to the list of
-        // currently selected nodes. If this value is NULL, the Ctrl key will be used.
-        const bool* Modifier;
-    } MultipleSelectModifier;
 
     // Holding alt mouse button pans the node area, by default middle mouse button will be used
     // Set based on ImGuiMouseButton values
@@ -260,11 +241,10 @@ ImNodesIO& GetIO();
 
 // Returns the global style struct. See the struct declaration for default values.
 ImNodesStyle& GetStyle();
-// Style presets matching the dear imgui styles of the same name. If dest is NULL, the active
-// context's ImNodesStyle instance will be used as the destination.
-void StyleColorsDark(ImNodesStyle* dest = NULL); // on by default
-void StyleColorsClassic(ImNodesStyle* dest = NULL);
-void StyleColorsLight(ImNodesStyle* dest = NULL);
+// Style presets matching the dear imgui styles of the same name.
+void StyleColorsDark(); // on by default
+void StyleColorsClassic();
+void StyleColorsLight();
 
 // The top-level function call. Call this before calling BeginNode/EndNode. Calling this function
 // will result the node editor grid workspace being rendered.
@@ -347,9 +327,6 @@ void SetNodeGridSpacePos(int node_id, const ImVec2& grid_pos);
 ImVec2 GetNodeScreenSpacePos(const int node_id);
 ImVec2 GetNodeEditorSpacePos(const int node_id);
 ImVec2 GetNodeGridSpacePos(const int node_id);
-
-// If ImNodesStyleFlags_GridSnapping is enabled, snap the specified node's origin to the grid.
-void SnapNodeToGrid(int node_id);
 
 // Returns true if the current node editor canvas is being hovered over by the mouse, and is not
 // blocked by any other windows.

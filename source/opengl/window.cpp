@@ -8,6 +8,8 @@
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_opengl3.h"
 
+#include "imnodes.h"
+
 extern "C" {
 	/*
 		Laptops with discrete GPUs tend to auto-select the integrated graphics instead of the
@@ -30,6 +32,9 @@ void InitIMGUI(SDL_Window* window, SDL_GLContext gl_context)
 	ImGui::CreateContext();
 	ImGui::StyleColorsDark();
 
+	ImNodes::CreateContext();
+	ImNodes::StyleColorsDark();
+
 	// IO is only used for setting the config flags
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	//io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
@@ -45,6 +50,7 @@ void InitIMGUI(SDL_Window* window, SDL_GLContext gl_context)
 // Called before SDL shuts down
 void ShutdownIMGUI()
 {
+	ImNodes::DestroyContext();
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplSDL2_Shutdown();
 	ImGui::DestroyContext();
