@@ -24,12 +24,9 @@ out VertexAttrib
 void main()
 {
     // Flat face shading
-    vec3 avgNormal = vec3(0.0);
-    for (int i=0; i<gl_in.length(); i++)
-    {
-        avgNormal += vertex[i].normal;
-    }
-    avgNormal /= gl_in.length();
+    vec3 v1 = vertex[1].position - vertex[0].position;
+    vec3 v2 = vertex[2].position - vertex[1].position;
+    vec3 flatFaceNormal = normalize(cross(v1, v2));
 
     // Update outputs to fragment shader
     for (int i=0; i<gl_in.length(); i++)
@@ -37,8 +34,8 @@ void main()
         gl_Position = gl_in[i].gl_Position;
 
         vertexout.position = gl_in[i].gl_Position.xyz;
-        //vertexout.normal = avgNormal;
-        vertexout.normal = vertex[i].normal;
+        vertexout.normal = flatFaceNormal;
+        //vertexout.normal = vertex[i].normal;
         vertexout.color = vertex[i].color;
         vertexout.tcoord = vertex[i].tcoord;
         EmitVertex();

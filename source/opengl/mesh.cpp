@@ -66,7 +66,7 @@ GLTriangleMesh::GLTriangleMesh(bool allocate)
 	glBindBuffer(GL_ARRAY_BUFFER, normalBuffer);
 	glEnableVertexAttribArray(normalAttribId);
 	glVertexAttribPointer(normalAttribId, 3, GL_FLOAT, false, 0, 0);
-
+	
 	// Color buffer
 	glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
 	glEnableVertexAttribArray(colorAttribId);
@@ -733,17 +733,10 @@ namespace GLMesh
 		std::vector<tinyobj::shape_t> shapes;
 		std::vector<tinyobj::material_t> materials;
 
-		std::string warn;
 		std::string err;
 
 		std::string inputfile{ FilePath.string() };
-		bool loaded = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, inputfile.c_str());
-
-		if (!warn.empty())
-		{
-			// Ignore, we don't care about material warnings at the moment
-			//std::cout << warn << std::endl;
-		}
+		bool loaded = tinyobj::LoadObj(&attrib, &shapes, &materials, &err, inputfile.c_str(), nullptr, true);
 
 		if (!loaded || shapes.size() == 0)
 		{
@@ -789,17 +782,6 @@ namespace GLMesh
 					attrib.normals[3 * i + 0],
 					attrib.normals[3 * i + 1],
 					attrib.normals[3 * i + 2]
-				};
-			}
-
-			size_t last_color_index = (3 * i + 2);
-			if (last_color_index < attrib.colors.size())
-			{
-				OutMesh.colors[i] = glm::fvec4{
-					attrib.colors[3 * i + 0],
-					attrib.colors[3 * i + 1],
-					attrib.colors[3 * i + 2],
-					1.0f
 				};
 			}
 

@@ -167,27 +167,17 @@ printf(R"(
 	*/
 	bool quit = false;
 	bool captureMouse = false;
-	double lastUpdate = 0.0;
-	double deltaTime = 0.0;
-	double fpsDelta = (settings.fpsLimit == 0) ? 0.0 : (1.0 / settings.fpsLimit);
 	while (!quit)
 	{
+		if (settings.fpsLimit > 0 && clock.TimeSinceLastTick() < 1.0/settings.fpsLimit)
+		{
+			continue;
+		}
+
 		clock.Tick();
-		SetThreadedTime(clock.time);
+		SetThreadedTime(clock.tickTime);
 
-		if (settings.vsync || settings.fpsLimit == 0)
-		{
-			deltaTime = clock.deltaTime;
-			lastUpdate = clock.time;
-		}
-		else
-		{
-			deltaTime = clock.time - lastUpdate;
-			if (deltaTime < fpsDelta) continue;
-			lastUpdate = clock.time;
-		}
-
-		window.SetTitle("FPS: " + FpsString(deltaTime));
+		window.SetTitle("FPS: " + FpsString(clock.deltaTime));
 		shaderManager.CheckLiveShaders();
 		fileListener.ProcessCallbacksOnMainThread();
 
@@ -263,7 +253,7 @@ printf(R"(
 		if (renderHead)
 		{
 			// Debug: Test changing the mesh transform over time
-			//headmesh.transform.rotation = glm::vec3(0.0f, 360.0f*sinf(clock.time), 0.0f);
+			//headmesh.transform.rotation = glm::vec3(0.0f, 360.0f*sinf((float) clock.tickTime), 0.0f);
 
 			headShader.Use();
 			headShader.SetUniformMat4("model", headmesh.transform.ModelMatrix());

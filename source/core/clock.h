@@ -8,9 +8,13 @@ private:
 
 public:
 	double deltaTime = 0.0;
-	double time = 0.0;
+	double tickTime = 0.0;
+	double lastTickTime = 0.0;
 
 	ApplicationClock();
 	~ApplicationClock();
 	void Tick();
+
+	static double Time();
+	double TimeSinceLastTick() const { return Time() - lastTickTime; }
 };

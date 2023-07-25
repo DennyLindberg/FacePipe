@@ -14,6 +14,7 @@ struct ApplicationClock::SDL2Time
 ApplicationClock::ApplicationClock()
 {
 	msTime = new SDL2Time();
+	tickTime = Time();
 	Tick();
 }
 
@@ -27,5 +28,11 @@ void ApplicationClock::Tick()
 	msTime->previous = msTime->current;
 	msTime->current = SDL_GetPerformanceCounter();
 	deltaTime = (double)(msTime->delta() / (double)SDL_GetPerformanceFrequency());
-	time = SDL_GetTicks() / 1000.0;
+	lastTickTime = tickTime;
+	tickTime = Time();
+}
+
+double ApplicationClock::Time()
+{
+	return SDL_GetTicks() / 1000.0;
 }
