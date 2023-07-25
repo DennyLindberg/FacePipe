@@ -10,7 +10,7 @@ workspace "FacePipe"
 
     configurations { "Debug", "Release" }
 
-    cppdialect "C++17"
+    cppdialect "C++20"
     systemversion("latest")
     system      "windows"
     platforms { "win64" }

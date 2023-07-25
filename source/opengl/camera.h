@@ -29,13 +29,13 @@ public:
 		return position;
 	}
 
-	void SetPosition(glm::vec3& newPosition)
+	void SetPosition(const glm::vec3& newPosition)
 	{
 		position = newPosition;
 		UpdateVectors();
 	}
 
-	void SetFocusPoint(glm::vec3& newFocusPoint)
+	void SetFocusPoint(const glm::vec3& newFocusPoint)
 	{
 		focusPoint = newFocusPoint;
 		UpdateVectors();

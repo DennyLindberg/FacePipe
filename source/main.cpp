@@ -1,56 +1,33 @@
-// STL includes
-#include <cstdio>
-#include <cstdlib>
-#include <iostream>
-#include <string>
-#include <vector>
-#include <fstream>
-#include <filesystem>
-#include <functional>
+#include "core/core.h"
+#include "opengl/opengl.h"
 
-// Application includes
-#include "opengl/window.h"
-#include "opengl/camera.h"
-#include "opengl/mesh.h"
-#include "opengl/texture.h"
-#include "opengl/program.h"
-#include "opengl/screenshot.h"
-#include "opengl/grid.h"
-#include "opengl/canvas.h"
-#include "opengl/shadermanager.h"
-#include "core/application.h"
-#include "core/clock.h"
-#include "core/randomization.h"
-#include "core/threads.h"
-#include "core/utilities.h"
-#include "core/input.h"
+namespace fs = std::filesystem;
 
 /*
 	Program configurations
 */
-static const bool WINDOW_VSYNC = true;
-static const int WINDOW_FULLSCREEN = 0;
-static const int WINDOW_WIDTH = 1280;
-static const int WINDOW_HEIGHT = 720;
 static const float CAMERA_FOV = 45.0f;
-static const float WINDOW_RATIO = WINDOW_WIDTH / float(WINDOW_HEIGHT);
-static const int FPS_LIMIT = 0;
-
-namespace fs = std::filesystem;
+static const ApplicationSettings settings = {
+	.vsync = true,
+	.fullscreen = 0,
+	.windowWidth = 1280,
+	.windowHeight = 720,
+	.fpsLimit = 0,
+	.windowRatio = 1280.0f / 720.0f,
+	.contentPath = fs::current_path().parent_path() / "content"
+};
 
 /*
 	Application
 */
 int main(int argc, char* args[])
 {
-	fs::path contentFolder = fs::current_path().parent_path() / "content";
-	fs::path textureFolder = fs::current_path().parent_path() / "content" / "textures";
-	fs::path shaderFolder = fs::current_path().parent_path() / "content" / "shaders";
-	fs::path meshFolder = fs::current_path().parent_path() / "content" / "meshes";
-	fs::path curvesFolder = fs::current_path().parent_path() / "content" / "curves";
-	InitializeApplication(ApplicationSettings{
-		WINDOW_VSYNC, WINDOW_FULLSCREEN, WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_RATIO, contentFolder
-	});
+	fs::path textureFolder = settings.contentPath / "textures";
+	fs::path shaderFolder = settings.contentPath / "shaders";
+	fs::path meshFolder = settings.contentPath / "meshes";
+	fs::path curvesFolder = settings.contentPath / "curves";
+
+	InitializeApplication(settings);
 
 	UniformRandomGenerator uniformGenerator;
 	ApplicationClock clock;
@@ -173,7 +150,7 @@ printf(R"(
 		IMGUI callback
 	*/
 	auto DrawMainUI = [&]() -> void {
-		ImGui::SetNextWindowSize(ImVec2(WINDOW_WIDTH * 0.25f, WINDOW_HEIGHT));
+		ImGui::SetNextWindowSize(ImVec2(settings.windowWidth * 0.25f, settings.windowHeight * 1.0f));
 		ImGui::SetNextWindowPos(ImVec2(0, 0));
 		ImGui::Begin("Settings");
 		{
@@ -191,13 +168,13 @@ printf(R"(
 	bool captureMouse = false;
 	double lastUpdate = 0.0;
 	double deltaTime = 0.0;
-	double fpsDelta = (FPS_LIMIT == 0) ? 0.0 : (1.0 / FPS_LIMIT);
+	double fpsDelta = (settings.fpsLimit == 0) ? 0.0 : (1.0 / settings.fpsLimit);
 	while (!quit)
 	{
 		clock.Tick();
 		SetThreadedTime(clock.time);
 
-		if (WINDOW_VSYNC || FPS_LIMIT == 0)
+		if (settings.vsync || settings.fpsLimit == 0)
 		{
 			deltaTime = clock.deltaTime;
 			lastUpdate = clock.time;
@@ -230,7 +207,7 @@ printf(R"(
 			{
 				auto key = event.key.keysym.sym;
 
-				if      (key == SDLK_s) TakeScreenshot("screenshot.png", WINDOW_WIDTH, WINDOW_HEIGHT);
+				if      (key == SDLK_s) TakeScreenshot("screenshot.png", settings.windowWidth, settings.windowHeight);
 				else if (key == SDLK_f) turntable.SnapToOrigin();
 			}
 			else if (event.type == SDL_MOUSEBUTTONDOWN)

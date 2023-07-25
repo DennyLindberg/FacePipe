@@ -97,7 +97,7 @@ GLint CompileAndPrintStatus(GLuint glShaderId)
 			message = std::string(infoLog.get());
 		}
 
-		std::cout << L"GL_INFO_LOG: " << message;
+		std::cout << "GL_INFO_LOG: " << message;
 	}
 
 	return compileStatus;
@@ -134,7 +134,7 @@ GLint GLProgram::LinkAndPrintStatus()
 			message = std::string(infoLog.get());
 		}
 
-		std::cout << L"GL_INFO_LOG: " << message;
+		std::cout << "GL_INFO_LOG: " << message;
 		return 0;
 	} 
 
@@ -160,7 +160,7 @@ void GLProgram::CompileAndLink()
 
 	if (!VertexShaderCompiled || !FragmentShaderCompiled || !GeometryShaderCompiled)
 	{
-		std::cout << L"Failed to compile shaders\n";
+		std::wcout << L"Failed to compile shaders\n";
 	}
 	else if (LinkAndPrintStatus() == GL_TRUE)
 	{

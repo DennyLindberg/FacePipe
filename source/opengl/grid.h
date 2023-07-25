@@ -22,5 +22,5 @@ public:
 	GLGrid();
 	~GLGrid() = default;
 
-	void Draw(glm::mat4& mvp);
+	void Draw(const glm::mat4& mvp);
 };

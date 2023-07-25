@@ -58,7 +58,7 @@ GLGrid::GLGrid()
 	opacityUniform = glGetUniformLocation(gridShaderProgram.Id(), "opacity");
 }
 
-void GLGrid::Draw(glm::mat4& mvp)
+void GLGrid::Draw(const glm::mat4& mvp)
 {
 	glm::mat4 mvpOffset = mvp * planeRotationMatrix;
 	

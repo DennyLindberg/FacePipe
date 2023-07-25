@@ -7,6 +7,7 @@ struct ApplicationSettings
 	bool fullscreen = false;
 	int windowWidth = 0;
 	int windowHeight = 0;
+	int fpsLimit = 0;
 	float windowRatio = 0;
 	std::filesystem::path contentPath;
 };

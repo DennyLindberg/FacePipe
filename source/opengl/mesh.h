@@ -208,6 +208,6 @@ namespace GLMesh
 {
 	bool LoadOBJ(std::filesystem::path FilePath, class GLTriangleMesh& OutMesh);
 	bool LoadCurves(std::filesystem::path FilePath, class GLBezierStrips& OutStrips);
-	void AppendCoordinateAxis(GLLine& OutLines, const glm::fvec3& origin, glm::fvec3& x, const glm::fvec3& y, const glm::fvec3& z, float scale = 1.0f);
+	void AppendCoordinateAxis(GLLine& OutLines, const glm::fvec3& origin, const glm::fvec3& x, const glm::fvec3& y, const glm::fvec3& z, float scale = 1.0f);
 	void AppendCoordinateAxis(GLLine& OutLines, const glm::mat4& Transform, float scale = 1.0f);
 }

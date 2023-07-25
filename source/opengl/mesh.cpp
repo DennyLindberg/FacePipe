@@ -930,7 +930,7 @@ namespace GLMesh
 		return true;
 	}
 
-	void AppendCoordinateAxis(GLLine& OutLines, const glm::fvec3& origin, glm::fvec3& x, const glm::fvec3& y, const glm::fvec3& z, float scale)
+	void AppendCoordinateAxis(GLLine& OutLines, const glm::fvec3& origin, const glm::fvec3& x, const glm::fvec3& y, const glm::fvec3& z, float scale)
 	{
 		OutLines.AddLine(origin, origin + x*scale, glm::fvec4(1.0f, 0.0f, 0.0f, 1.0f));
 		OutLines.AddLine(origin, origin + y*scale, glm::fvec4(0.0f, 1.0f, 0.0f, 1.0f));
