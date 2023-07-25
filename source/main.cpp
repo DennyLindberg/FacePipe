@@ -6,8 +6,9 @@ namespace fs = std::filesystem;
 /*
 	Program configurations
 */
-static const float CAMERA_FOV = 45.0f;
-static const ApplicationSettings settings = {
+const float CAMERA_FOV = 45.0f;
+
+const ApplicationSettings settings = {
 	.vsync = true,
 	.fullscreen = 0,
 	.windowWidth = 1280,
@@ -17,16 +18,16 @@ static const ApplicationSettings settings = {
 	.contentPath = fs::current_path().parent_path() / "content"
 };
 
+const fs::path textureFolder = settings.contentPath / "textures";
+const fs::path shaderFolder = settings.contentPath / "shaders";
+const fs::path meshFolder = settings.contentPath / "meshes";
+const fs::path curvesFolder = settings.contentPath / "curves";
+
 /*
 	Application
 */
 int main(int argc, char* args[])
 {
-	fs::path textureFolder = settings.contentPath / "textures";
-	fs::path shaderFolder = settings.contentPath / "shaders";
-	fs::path meshFolder = settings.contentPath / "meshes";
-	fs::path curvesFolder = settings.contentPath / "curves";
-
 	InitializeApplication(settings);
 
 	UniformRandomGenerator uniformGenerator;
@@ -149,7 +150,7 @@ printf(R"(
 	/*
 		IMGUI callback
 	*/
-	auto DrawMainUI = [&]() -> void {
+	window.imguiLayout = [&]() -> void {
 		ImGui::SetNextWindowSize(ImVec2(settings.windowWidth * 0.25f, settings.windowHeight * 1.0f));
 		ImGui::SetNextWindowPos(ImVec2(0, 0));
 		ImGui::Begin("Settings");
@@ -282,7 +283,7 @@ printf(R"(
 		coordinateReferenceLines.Draw();
 
 		// Done
-		window.OnImguiUpdate(DrawMainUI);
+		window.RenderImgui();
 		window.SwapFramebuffer();
 	}
 

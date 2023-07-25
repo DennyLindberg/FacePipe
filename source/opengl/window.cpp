@@ -96,20 +96,23 @@ void OpenGLWindow::HandleImguiEvent(const SDL_Event* event)
 	ImGui_ImplSDL2_ProcessEvent(event);
 }
 
-void OpenGLWindow::NewImguiFrame()
+void OpenGLWindow::RenderImgui()
 {
-	ImGui_ImplOpenGL3_NewFrame();
-	ImGui_ImplSDL2_NewFrame(window);
-	ImGui::NewFrame();
-}
+	{
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplSDL2_NewFrame(window);
+		ImGui::NewFrame();
+	}
 
-void OpenGLWindow::RenderImguiFrame()
-{
-	ImGui::Render();
-	//glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
-	//glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
-	//glClear(GL_COLOR_BUFFER_BIT);
-	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+	imguiLayout();
+
+	{
+		ImGui::Render();
+		//glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
+		//glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
+		//glClear(GL_COLOR_BUFFER_BIT);
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+	}
 }
 
 void OpenGLWindow::Initialize(int width, int height, bool fullscreen, bool vsync)

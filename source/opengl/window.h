@@ -25,15 +25,10 @@ public:
 	void Clear();
 
 	void HandleImguiEvent(const SDL_Event* event);
-	void NewImguiFrame();
-	void RenderImguiFrame();
 
-	void OnImguiUpdate(std::function<void()> callback)
-	{
-		NewImguiFrame();
-		callback();
-		RenderImguiFrame();
-	}
+	void RenderImgui();
+
+	std::function<void()> imguiLayout = [](auto&&...) {};
 
 protected:
 	void Initialize(int width, int height, bool fullscreenEnabled, bool vsync);
