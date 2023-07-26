@@ -1,6 +1,8 @@
 #include "core/core.h"
 #include "opengl/opengl.h"
 #include "python/python.h"
+#include "imgui.h"
+#include "imgui_stdlib.h"
 #include "imnodes.h"
 
 namespace fs = std::filesystem;
@@ -156,6 +158,7 @@ printf(R"(
 	/*
 		IMGUI callback
 	*/
+	std::string input_field_string{"default text"};
 	window.imguiLayout = [&]() -> void {
 		ImGui::SetNextWindowSize(ImVec2(settings.windowWidth * 0.25f, settings.windowHeight * 1.0f));
 		ImGui::SetNextWindowPos(ImVec2(0, 0));
@@ -167,6 +170,12 @@ printf(R"(
 			if (ImGui::Button("Run Python test script"))
 			{
 				Python.Execute(PythonTestScript);
+			}
+
+			ImGui::InputTextMultiline( "ScriptInput", &input_field_string, ImVec2(0.0f, 200.0f) );
+			if (ImGui::Button("Execute"))
+			{
+				Python.Execute(input_field_string);
 			}
 		}
 		ImGui::End();
@@ -251,10 +260,14 @@ printf(R"(
 		SDL_Event event;
 		while (SDL_PollEvent(&event))
 		{
+			window.HandleImguiEvent(&event);
+			if (ImGui::GetIO().WantCaptureKeyboard)
+			{
+				continue;
+			}
+
 			quit = (event.type == SDL_QUIT) || (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE);
 			if (quit) break;
-
-			window.HandleImguiEvent(&event);
 
 			SDL_Keymod mod = SDL_GetModState();
 			bool bCtrlModifier = mod & KMOD_CTRL;
