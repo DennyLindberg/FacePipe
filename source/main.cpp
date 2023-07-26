@@ -48,7 +48,7 @@ int main(int argc, char* args[])
 	fileListener.StartThread(curvesFolder);
 
 	PythonInterpreter Python;
-	PythonScript PythonTestScript(scriptsFolder / "test.py");
+	PythonScript PythonTestScript(scriptsFolder / "test_cv2_webcam.py");
 
 printf(R"(
 ====================================================================
