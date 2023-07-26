@@ -12,23 +12,11 @@ enum class PythonScriptError
 	PybindException
 };
 
-class PythonScript
+struct ScriptExecutionResponse
 {
-public:
-	friend class PythonInterpreter;
-
-	PythonScript(const std::string& CodeString)
-		: bFile(false), Code(CodeString)
-	{}
-
-	PythonScript(const std::filesystem::path& FilePath)
-		: bFile(true), File(FilePath)
-	{}
-
-protected:
-	bool bFile = false;
-	std::string Code = "";
-	std::filesystem::path File;
+	int ScriptID = 0;
+	PythonScriptError Error = PythonScriptError::None;
+	std::exception Exception;
 };
 
 class PythonInterpreter
@@ -37,12 +25,10 @@ public:
 	PythonInterpreter();
 	~PythonInterpreter();
 
-	PythonScriptError Execute(PythonScript& Script);
-	const std::exception& GetLastException() const { return LastException; }
+	void Shutdown();
 
-protected:
-	PythonScriptError ExecuteInternal(PythonScript& Script);
+	void Execute(const std::string& Code, int ScriptID = -1);
+	void Execute(const std::filesystem::path& FilePath, int ScriptID = -1);
 
-	static bool bInterpreterInitialized;
-	std::exception LastException;
+	bool PopScriptResponse(ScriptExecutionResponse& Response);
 };

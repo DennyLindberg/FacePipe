@@ -19,7 +19,7 @@ void ListenToFileChange(std::atomic_bool* stopThread, std::filesystem::path fold
 
 	if (hDir == INVALID_HANDLE_VALUE)
 	{
-		printf("\r\nInvalid handle");
+		printf("\nFile listener failed - Invalid handle (bad path?): %ls\n", folder.c_str());
 		return;
 	}
 

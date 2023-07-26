@@ -44,11 +44,11 @@ int main(int argc, char* args[])
 	glGenVertexArrays(1, &defaultVao);
 	glBindVertexArray(defaultVao);
 
-	FileListener fileListener;
-	fileListener.StartThread(curvesFolder);
+	//FileListener fileListener;
+	//fileListener.StartThread(scriptsFolder);
 
 	PythonInterpreter Python;
-	PythonScript PythonTestScript(scriptsFolder / "test_cv2_webcam.py");
+	fs::path PythonTestScript(scriptsFolder / "test_cv2_webcam.py");
 
 printf(R"(
 ====================================================================
@@ -166,10 +166,7 @@ printf(R"(
 			ImGui::Checkbox("Light follows camera", &lightFollowsCamera);
 			if (ImGui::Button("Run Python test script"))
 			{
-				if (Python.Execute(PythonTestScript) != PythonScriptError::None)
-				{
-					std::cout << Python.GetLastException().what() << std::endl;
-				}
+				Python.Execute(PythonTestScript);
 			}
 		}
 		ImGui::End();
@@ -235,12 +232,21 @@ printf(R"(
 			continue;
 		}
 
+		ScriptExecutionResponse ScriptResponse;
+		if (Python.PopScriptResponse(ScriptResponse))
+		{
+			if (ScriptResponse.Error == PythonScriptError::None)
+				std::cout << "Script executed fully" << std::endl;
+			else
+				std::cout << ScriptResponse.Exception.what();
+		}
+
 		clock.Tick();
 		SetThreadedTime(clock.tickTime);
 
 		window.SetTitle("FPS: " + FpsString(clock.deltaTime));
 		shaderManager.CheckLiveShaders();
-		fileListener.ProcessCallbacksOnMainThread();
+		//fileListener.ProcessCallbacksOnMainThread();
 
 		SDL_Event event;
 		while (SDL_PollEvent(&event))
@@ -337,6 +343,8 @@ printf(R"(
 		window.RenderImgui();
 		window.SwapFramebuffer();
 	}
+
+	Python.Shutdown();
 
 	exit(0);
 }
