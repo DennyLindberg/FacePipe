@@ -281,31 +281,35 @@ printf(R"(
 				if      (key == SDLK_s) TakeScreenshot("screenshot.png", settings.windowWidth, settings.windowHeight);
 				else if (key == SDLK_f) turntable.SnapToOrigin();
 			}
-			else if (event.type == SDL_MOUSEBUTTONDOWN)
+
+			if (!ImGui::GetIO().WantCaptureMouse)
 			{
-				if (bAltModifier)
+				if (event.type == SDL_MOUSEBUTTONDOWN)
 				{
-					captureMouse = true;
-					SDL_ShowCursor(0);
-					SDL_SetRelativeMouseMode(SDL_TRUE);
+					if (bAltModifier)
+					{
+						captureMouse = true;
+						SDL_ShowCursor(0);
+						SDL_SetRelativeMouseMode(SDL_TRUE);
 
-					auto button = event.button.button;
-						 if (button == SDL_BUTTON_LEFT)   turntable.inputState = TurntableInputState::Rotate;
-					else if (button == SDL_BUTTON_MIDDLE) turntable.inputState = TurntableInputState::Translate;
-					else if (button == SDL_BUTTON_RIGHT)  turntable.inputState = TurntableInputState::Zoom;
+						auto button = event.button.button;
+						if (button == SDL_BUTTON_LEFT)   turntable.inputState = TurntableInputState::Rotate;
+						else if (button == SDL_BUTTON_MIDDLE) turntable.inputState = TurntableInputState::Translate;
+						else if (button == SDL_BUTTON_RIGHT)  turntable.inputState = TurntableInputState::Zoom;
 
-					turntable.OnBeginInput();
+						turntable.OnBeginInput();
+					}
 				}
-			}
-			else if (event.type == SDL_MOUSEBUTTONUP)
-			{
-				captureMouse = false;
-				SDL_ShowCursor(1);
-				SDL_SetRelativeMouseMode(SDL_FALSE);
-			}
-			else if (event.type == SDL_MOUSEMOTION && captureMouse)
-			{
-				turntable.ApplyMouseInput(-event.motion.xrel, event.motion.yrel);
+				else if (event.type == SDL_MOUSEBUTTONUP)
+				{
+					captureMouse = false;
+					SDL_ShowCursor(1);
+					SDL_SetRelativeMouseMode(SDL_FALSE);
+				}
+				else if (event.type == SDL_MOUSEMOTION && captureMouse)
+				{
+					turntable.ApplyMouseInput(-event.motion.xrel, event.motion.yrel);
+				}
 			}
 		}
 
