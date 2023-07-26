@@ -1,3 +1,46 @@
+---
+-- Python path and libs
+---
+function queryTerminal(command)
+    local success, handle = pcall(io.popen, command)
+    if not success then 
+        return ""
+    end
+
+    result = handle:read("*a")
+    handle:close()
+    result = string.gsub(result, "\n$", "") -- remove trailing whitespace
+    return result
+end
+
+function getPythonPath()
+    local p = queryTerminal('python -c "import sys; import os; print(os.path.dirname(sys.executable))"')
+    
+    -- sanitize path before returning it
+    p = string.gsub(p, "\\\\", "\\") -- replace double backslash
+    p = string.gsub(p, "\\", "/") -- flip slashes
+    return p
+end
+
+function getPythonLib()
+    return queryTerminal("python -c \"import sys; import os; import glob; path = os.path.dirname(sys.executable); libs = glob.glob(path + '/libs/python*'); print(os.path.splitext(os.path.basename(libs[-1]))[0]);\"")
+end
+
+python_includes_folder  = getPythonPath() .. "/include/"
+python_libs_folder      = getPythonPath() .. "/libs/"
+python_lib              = getPythonLib()
+
+if python_lib == "" then
+    error("Failed to find python path!")
+else
+    print("Python includes: " .. python_includes_folder)
+    print("Python libs: " .. python_libs_folder)
+    print("lib: " .. python_lib)
+end
+
+---
+-- Solution
+---
 binaries_folder = "binaries/"
 includes_folder = "include/"
 source_folder   = "source/"
@@ -25,9 +68,9 @@ workspace "FacePipe"
     staticruntime "on"
 
     debugdir(binaries_folder)
-    includedirs { includes_folder, source_folder, source_thirdparty_folder }
-    libdirs     { libs_folder }
-    links       { "opengl32", "SDL2" }
+    includedirs { includes_folder, source_folder, source_thirdparty_folder, python_includes_folder }
+    libdirs     { libs_folder, python_libs_folder }
+    links       { "opengl32", "SDL2", python_lib }
     flags       { "MultiProcessorCompile" }
 
     filter { "configurations:Debug" }
@@ -41,7 +84,6 @@ workspace "FacePipe"
         optimize "On"
         
     filter{}
-
 
 project "FacePipeApp"
     kind "ConsoleApp"

@@ -1,5 +1,6 @@
 #include "core/core.h"
 #include "opengl/opengl.h"
+#include "python/python.h"
 #include "imnodes.h"
 
 namespace fs = std::filesystem;
@@ -23,6 +24,7 @@ const fs::path textureFolder = settings.contentPath / "textures";
 const fs::path shaderFolder = settings.contentPath / "shaders";
 const fs::path meshFolder = settings.contentPath / "meshes";
 const fs::path curvesFolder = settings.contentPath / "curves";
+const fs::path scriptsFolder = settings.contentPath / "scripts";
 
 /*
 	Application
@@ -44,6 +46,9 @@ int main(int argc, char* args[])
 
 	FileListener fileListener;
 	fileListener.StartThread(curvesFolder);
+
+	PythonInterpreter Python;
+	PythonScript PythonTestScript(scriptsFolder / "test.py");
 
 printf(R"(
 ====================================================================
@@ -159,6 +164,13 @@ printf(R"(
 			ImGui::Text("Scene");
 			ImGui::Checkbox("Wireframe", &renderWireframe);
 			ImGui::Checkbox("Light follows camera", &lightFollowsCamera);
+			if (ImGui::Button("Run Python test script"))
+			{
+				if (Python.Execute(PythonTestScript) != PythonScriptError::None)
+				{
+					std::cout << Python.GetLastException().what() << std::endl;
+				}
+			}
 		}
 		ImGui::End();
 
