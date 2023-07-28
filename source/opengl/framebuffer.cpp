@@ -319,6 +319,19 @@ void GLFramebuffers::DrawAsQuad(GLuint FBO, float Opacity, glm::vec2 ScreenPos, 
 	QuadMesh->Draw();
 }
 
+bool GLFramebuffers::GetTexture(GLuint FBO, GLuint& Texture, GLuint& Width, GLuint& Height)
+{
+	if (RenderTarget* Target = FindRenderTarget(FBO))
+	{
+		Texture = Target->texture;
+		Width = Target->width;
+		Height = Target->height;
+		return true;
+	}
+
+	return false;
+}
+
 bool GLFramebuffers::IsValid(GLuint FBO)
 {
 	return glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE;

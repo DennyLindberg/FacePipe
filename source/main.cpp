@@ -88,7 +88,7 @@ printf(R"(
 
 	glm::vec4 ClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	GLFramebuffers::Initialize(settings.windowWidth, settings.windowHeight, ClearColor);
-	GLuint RenderTarget = GLFramebuffers::Create(640, 480, ClearColor);
+	GLuint RenderTarget = GLFramebuffers::Create(GLuint(settings.windowWidth*0.25f), GLuint(settings.windowHeight*0.25f), ClearColor);
 
 	/*
 		Load and initialize shaders
@@ -131,8 +131,10 @@ printf(R"(
 	/*
 		Load head mesh
 	*/
-	GLTriangleMesh headmesh;
+	GLTriangleMesh cubemesh, headmesh;
+	GLMesh::LoadOBJ(meshFolder/"cube.obj", cubemesh);
 	GLMesh::LoadOBJ(meshFolder/"blender_suzanne.obj", headmesh);
+	cubemesh.transform.scale = glm::vec3(0.25f);
 	headmesh.transform.scale = glm::vec3(0.25f);
 
 	/*
@@ -179,6 +181,12 @@ printf(R"(
 			if (ImGui::Button("Execute"))
 			{
 				Python.Execute(input_field_string);
+			}
+
+			GLuint Texture, TextureWidth, TextureHeight;
+			if (GLFramebuffers::GetTexture(RenderTarget, Texture, TextureWidth, TextureHeight))
+			{
+				ImGui::Image((ImTextureID)(intptr_t)Texture, ImVec2((float)TextureWidth, (float)TextureHeight), {0, 1}, {1, 0});
 			}
 		}
 		ImGui::End();
@@ -349,7 +357,7 @@ printf(R"(
 			if (auto F = GLFramebuffers::BindScoped(RenderTarget))
 			{
 				GLFramebuffers::ClearActive();
-				headmesh.Draw();
+				cubemesh.Draw();
 			}
 		}
 
@@ -362,11 +370,6 @@ printf(R"(
 		lineShader.Use();
 		lineShader.SetUniformFloat("useUniformColor", false);
 		coordinateReferenceLines.Draw();
-
-		// Off-screen rendering in quads
-		GLFramebuffers::ClearActiveDepth();
-		glm::vec2 QuadSize(0.25f, 0.25f);
-		GLFramebuffers::DrawAsQuad(RenderTarget, 1.0f, {1.0f - QuadSize.x*0.5f, QuadSize.y*0.5f}, QuadSize);
 
 		// Done
 		window.RenderImgui();
