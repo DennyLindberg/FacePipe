@@ -809,6 +809,179 @@ namespace GLMesh
 		return true;
 	}
 
+	bool LoadPLY(std::filesystem::path FilePath, GLTriangleMesh& OutMesh)
+	{
+		enum class ElementType { x, y, z, nx, ny, nz, s, t, unknown };
+		auto ToType = [](const std::string& token) -> ElementType {
+			if (token == "x") return ElementType::x;
+			if (token == "y") return ElementType::y;
+			if (token == "z") return ElementType::z;
+			if (token == "nx") return ElementType::nx;
+			if (token == "ny") return ElementType::ny;
+			if (token == "nz") return ElementType::nz;
+			if (token == "s") return ElementType::s;
+			if (token == "t") return ElementType::t;
+
+			return ElementType::unknown;
+		};
+
+		OutMesh.Clear();
+
+		if (!std::filesystem::exists(FilePath)) 
+			return false;
+
+		std::ifstream fileStream(FilePath);
+		if (!fileStream || !fileStream.is_open())
+			return false;
+
+		std::string line;
+		std::getline(fileStream, line);
+		if (line != "ply")
+		{
+			std::cout << "LoadPLY::Error: Not a valid ply ASCII file" << std::endl;
+			return false;
+		}
+
+		std::vector<ElementType> ElementTypeOrder;
+		bool bFoundEndOfHeader = false;
+		int VertexCount = -1;
+		int FaceCount = -1;
+		while (std::getline(fileStream, line))
+		{
+			std::istringstream ss(line);
+			std::string token;
+			if (!std::getline(ss, token, ' '))
+				continue;
+
+			if (token == "element")
+			{
+				std::string type, value;
+				if (std::getline(ss, type, ' ') && std::getline(ss, value))
+				{
+					try
+					{
+						if (type == "vertex")
+							VertexCount = std::stoi(value);
+						else if (type == "face")
+							FaceCount = std::stoi(value);
+					}
+					catch (...) 
+					{
+						std::cout << "LoadPLY::Error: Non-integer value for vertex or face count" << std::endl;
+						return false;
+					}
+				}
+				else
+				{
+					std::cout << "LoadPLY::Error: Bad element definition" << std::endl;
+					return false;
+				}				
+			}
+			else if (token == "property")
+			{
+				std::istringstream ss(line);
+				std::string token;
+				while (std::getline(ss, token, ' '));
+				ElementTypeOrder.push_back(ToType(token));
+			}
+			else if (token == "end_header")
+			{
+				bFoundEndOfHeader = true;
+				break;
+			}
+		}
+
+		if (VertexCount < 0 || FaceCount < 0 || !bFoundEndOfHeader)
+		{
+			std::cout << "Failed to parse header" << std::endl;
+			return false;
+		}
+
+		//std::cout << "LoadPLY::VertexCount: " << VertexCount << std::endl;
+		//std::cout << "LoadPLY::FaceCount: " << FaceCount << std::endl;
+		//std::cout << "LoadPLY::Order: " << ElementTypeOrder.size() << std::endl;
+
+		struct VertexEntry {
+			float x = 0.0f;
+			float y = 0.0f;
+			float z = 0.0f;
+			float nx = 0.0f;
+			float ny = 0.0f;
+			float nz = 0.0f;
+			float s = 0.0f;
+			float t = 0.0f;
+		};
+
+		OutMesh.positions.reserve(VertexCount);
+		OutMesh.normals.reserve(VertexCount);
+		OutMesh.texCoords.reserve(VertexCount);
+		while (VertexCount > 0 && std::getline(fileStream, line))
+		{
+			VertexCount--;
+			
+			VertexEntry Entry;
+
+			std::istringstream ss(line);
+			std::string token;
+			for (size_t i=0; i<ElementTypeOrder.size(); i++)
+			{
+				if (!std::getline(ss, token, ' ') || ElementTypeOrder[i] == ElementType::unknown)
+					break;
+				
+				float* Value = &Entry.x + ((int)ElementTypeOrder[i]);
+				try { *Value = std::stof(token); } catch (...) {}
+			}
+
+			//std::cout << "LoadPLY::Pos: " << Entry.x << " " << Entry.y << " " << Entry.z << std::endl;
+			//std::cout << "LoadPLY::Normal: " << Entry.nx << " " << Entry.ny << " " << Entry.nz << std::endl;
+			//std::cout << "LoadPLY::UV: " << Entry.s << " " << Entry.t << std::endl;
+
+			OutMesh.positions.push_back(glm::fvec3(Entry.x, Entry.y, Entry.z));
+			OutMesh.normals.push_back(glm::fvec3(Entry.nx, Entry.ny, Entry.nz));
+			OutMesh.texCoords.push_back(glm::fvec4(Entry.s, Entry.t, 1.0f, 1.0f));
+		}
+
+		OutMesh.indices.reserve(FaceCount*6); // we don't know if we get triangles or quads, reserve for triangulation of quads
+		while (FaceCount > 0 && std::getline(fileStream, line))
+		{
+			FaceCount--;
+
+			std::vector<int> FaceIndices;
+			FaceIndices.reserve(6); // 5 or 6 entries every time
+
+			std::istringstream ss(line);
+			std::string token;
+			while (std::getline(ss, token, ' '))
+			{
+				try { FaceIndices.push_back(std::stoi(token)); } catch (...) {}
+			}
+
+			//std::cout << "LoadPLY::Parsing face, got: " << FaceIndices.size() << std::endl;
+
+			if (FaceIndices.size() >= 4 && FaceIndices[0] >= 3) // triangle
+			{
+				OutMesh.indices.push_back(FaceIndices[1]);
+				OutMesh.indices.push_back(FaceIndices[2]);
+				OutMesh.indices.push_back(FaceIndices[3]);
+
+				//std::cout << "LoadPLY::Triangle1: " << FaceIndices[1] << " " << FaceIndices[2] << " " << FaceIndices[3] << std::endl;
+
+				if (FaceIndices.size() >= 5 && FaceIndices[0] >= 4) // quad or more (we don't handle the remaining scenario)
+				{
+					OutMesh.indices.push_back(FaceIndices[3]);
+					OutMesh.indices.push_back(FaceIndices[4]);
+					OutMesh.indices.push_back(FaceIndices[1]);
+
+					//std::cout << "LoadPLY::Triangle2: " << FaceIndices[3] << " " << FaceIndices[4] << " " << FaceIndices[1] << std::endl;
+				}
+			}
+		}
+
+		OutMesh.SendToGPU();
+
+		return true;
+	}
+
 	bool LoadLinesFromMeshNormals(GLTriangleMesh& OutMesh, GLLine& OutLines, float lineLength)
 	{
 		OutLines.Clear();
@@ -820,7 +993,6 @@ namespace GLMesh
 			glm::fvec3& normal = OutMesh.normals[i];
 
 			OutLines.AddLine(pos, pos + normal*lineLength, lineColor);
-			//OutLines.AddLine(pos, pos + glm::fvec3(0.0f, 1.0f, 0.0f), lineColor);
 		}
 
 		OutLines.SendToGPU();

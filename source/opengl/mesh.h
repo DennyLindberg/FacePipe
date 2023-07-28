@@ -211,6 +211,7 @@ public:
 namespace GLMesh
 {
 	bool LoadOBJ(std::filesystem::path FilePath, class GLTriangleMesh& OutMesh);
+	bool LoadPLY(std::filesystem::path FilePath, class GLTriangleMesh& OutMesh);
 	bool LoadLinesFromMeshNormals(class GLTriangleMesh& OutMesh, class GLLine& OutLines, float lineLength);
 	bool LoadCurves(std::filesystem::path FilePath, class GLBezierStrips& OutStrips);
 	void AppendCoordinateAxis(GLLine& OutLines, const glm::fvec3& origin, const glm::fvec3& x, const glm::fvec3& y, const glm::fvec3& z, float scale = 1.0f);

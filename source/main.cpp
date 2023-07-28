@@ -132,14 +132,14 @@ printf(R"(
 		Load head mesh
 	*/
 	GLTriangleMesh cubemesh, headmesh;
-	GLMesh::LoadOBJ(meshFolder/"cube.obj", cubemesh);
+	GLMesh::LoadPLY(meshFolder/"cube.ply", cubemesh);
 	GLMesh::LoadOBJ(meshFolder/"blender_suzanne.obj", headmesh);
 	cubemesh.transform.scale = glm::vec3(0.25f);
 	headmesh.transform.scale = glm::vec3(0.25f);
 
 	GLLine cubeMeshNormals;
-	GLMesh::LoadLinesFromMeshNormals(headmesh, cubeMeshNormals, 1.0f);
-	cubeMeshNormals.transform.scale = headmesh.transform.scale;
+	GLMesh::LoadLinesFromMeshNormals(cubemesh, cubeMeshNormals, 0.2f);
+	cubeMeshNormals.transform.scale = cubemesh.transform.scale;
 
 	/*
 		Coordinate Axis Lines
@@ -356,7 +356,8 @@ printf(R"(
 
 			headShader.Use();
 			headShader.SetUniformMat4("model", headmesh.transform.ModelMatrix());
-			headmesh.Draw();
+			//headmesh.Draw();
+			cubemesh.Draw();
 
 			if (auto F = GLFramebuffers::BindScoped(RenderTarget))
 			{
