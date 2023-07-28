@@ -26,6 +26,17 @@ struct UniformFloat
 	}
 };
 
+struct UniformVec2
+{
+	GLint id = 0;
+	glm::fvec2 value = glm::fvec2{ 0.0f };
+
+	void Upload()
+	{
+		glUniform2fv(id, 1, glm::value_ptr(value));
+	}
+};
+
 struct UniformVec3
 {
 	GLint id = 0;
@@ -101,6 +112,7 @@ protected:
 
 	std::map<std::string, UniformInt> intUniforms;
 	std::map<std::string, UniformFloat> floatUniforms;
+	std::map<std::string, UniformVec2> vec2Uniforms;
 	std::map<std::string, UniformVec3> vec3Uniforms;
 	std::map<std::string, UniformVec4> vec4Uniforms;
 	std::map<std::string, UniformMat4> mat4Uniforms;
@@ -110,17 +122,18 @@ public:
 	~GLProgram();
 
 	bool HasGeometryShader() { return geometry_shader_id != -1; }
-	void LoadFragmentShader(std::string shaderText);
-	void LoadVertexShader(std::string shaderText);
-	void LoadGeometryShader(std::string shaderText);
+	void LoadFragmentShader(const std::string& shaderText);
+	void LoadVertexShader(const std::string& shaderText);
+	void LoadGeometryShader(const std::string& shaderText);
 	GLint LinkAndPrintStatus();
 	void CompileAndLink();
 	void Use();
 	GLuint Id();
-	void SetUniformInt(std::string name, int value);
-	void SetUniformFloat(std::string name, float value);
-	void SetUniformVec3(std::string name, glm::fvec3 value);
-	void SetUniformVec4(std::string name, glm::fvec4 value);
-	void SetUniformMat4(std::string name, glm::mat4 value);
+	void SetUniformInt(const std::string& name, int value);
+	void SetUniformFloat(const std::string& name, float value);
+	void SetUniformVec2(const std::string& name, glm::fvec2 value);
+	void SetUniformVec3(const std::string& name, glm::fvec3 value);
+	void SetUniformVec4(const std::string& name, glm::fvec4 value);
+	void SetUniformMat4(const std::string& name, glm::mat4 value);
 	void ReloadUniforms();
 };

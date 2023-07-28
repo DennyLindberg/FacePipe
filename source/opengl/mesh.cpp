@@ -630,12 +630,7 @@ void GLQuadProperties::MatchWindowDimensions()
 
 GLQuad::GLQuad()
 {
-	CreateMeshBuffer(MeshBufferProperties{
-		-1.0f,
-		1.0f,
-		1.0f,
-		-1.0f
-	});
+	CreateMeshBuffer(MeshBufferProperties());
 }
 
 GLQuad::GLQuad(GLQuadProperties properties)
@@ -674,35 +669,9 @@ void GLQuad::Draw()
 
 void GLQuad::CreateMeshBuffer(MeshBufferProperties properties)
 {
-	float left = properties.left;
-	float right = properties.right;
-	float top = properties.top;
-	float bottom = properties.bottom;
-
-	const GLuint valuesPerPosition = 3;
-	std::vector<float> positions = {
-		// Triangle 1
-		left, top, 0.0f,
-		left, bottom, 0.0f,
-		right, bottom, 0.0f,
-
-		// Triangle 2
-		right, bottom, 0.0f,
-		right, top, 0.0f,
-		left, top, 0.0f,
-	};
-
-	// UVs work top to bottom, V is reversed to get image in correct orientation
-	const GLuint valuesPerCoord = 4;
-	std::vector<float> tcoords = {
-		0.0f, 0.0f, 1.0f, 1.0f,
-		0.0f, 1.0f, 1.0f, 1.0f,
-		1.0f, 1.0f, 1.0f, 1.0f,
-
-		1.0f, 1.0f, 1.0f, 1.0f,
-		1.0f, 0.0f, 1.0f, 1.0f,
-		0.0f, 0.0f, 1.0f, 1.0f
-	};
+	GLuint valuesPerPosition, valuesPerCoord;
+	std::vector<float> positions, tcoords;
+	GLQuad::GenerateTriangles(properties, positions, tcoords, valuesPerPosition, valuesPerCoord);
 
 	glBindVertexArray(vao);
 
@@ -721,6 +690,44 @@ void GLQuad::CreateMeshBuffer(MeshBufferProperties properties)
 	glEnableVertexAttribArray(texCoordAttribId);
 	glVertexAttribPointer(texCoordAttribId, valuesPerCoord, GL_FLOAT, false, 0, 0);
 	glBufferVector(GL_ARRAY_BUFFER, tcoords, GL_STATIC_DRAW);
+}
+
+void GLQuad::GenerateTriangles(std::vector<float>& Positions, std::vector<float>& TexCoords, GLuint& NumValuesPerPos, GLuint& NumValuesPerCoord)
+{
+	GenerateTriangles(MeshBufferProperties(), Positions, TexCoords, NumValuesPerPos, NumValuesPerCoord);
+}
+
+void GLQuad::GenerateTriangles(MeshBufferProperties properties, std::vector<float>& Positions, std::vector<float>& TexCoords, GLuint& NumValuesPerPos, GLuint& NumValuesPerCoord)
+{
+	float left = properties.left;
+	float right = properties.right;
+	float top = properties.top;
+	float bottom = properties.bottom;
+
+	NumValuesPerPos = 3;
+	Positions = {
+		// Triangle 1
+		left, top, 0.0f,
+		left, bottom, 0.0f,
+		right, bottom, 0.0f,
+
+		// Triangle 2
+		right, bottom, 0.0f,
+		right, top, 0.0f,
+		left, top, 0.0f,
+	};
+
+	// UVs work top to bottom, V is reversed to get image in correct orientation
+	NumValuesPerCoord = 4;
+	TexCoords = {
+		0.0f, 0.0f, 1.0f, 1.0f,
+		0.0f, 1.0f, 1.0f, 1.0f,
+		1.0f, 1.0f, 1.0f, 1.0f,
+
+		1.0f, 1.0f, 1.0f, 1.0f,
+		1.0f, 0.0f, 1.0f, 1.0f,
+		0.0f, 0.0f, 1.0f, 1.0f
+	};
 }
 
 namespace GLMesh

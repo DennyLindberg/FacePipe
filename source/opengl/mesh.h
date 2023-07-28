@@ -32,11 +32,11 @@ public:
 	MeshTransform transform;
 
 	GLMeshInterface();
-	~GLMeshInterface();
+	virtual ~GLMeshInterface();
 
 	// Behaves like glBufferData, but for std::vector<T>.
 	template <class T>
-	void glBufferVector(GLenum glBufferType, const std::vector<T>& vector, GLenum usage = GL_STATIC_DRAW)
+	static void glBufferVector(GLenum glBufferType, const std::vector<T>& vector, GLenum usage = GL_STATIC_DRAW)
 	{
 		size_t count = vector.size();
 		float* frontPtr = (float*)((count > 0) ? &vector.front() : NULL);
@@ -195,13 +195,17 @@ public:
 protected:
 	struct MeshBufferProperties
 	{
-		float left;
-		float right;
-		float top;
-		float bottom;
+		float left = -1.0f;
+		float right = 1.0f;
+		float top = 1.0f;
+		float bottom = -1.0f;
 	};
 
 	void CreateMeshBuffer(MeshBufferProperties properties);
+
+public:
+	static void GenerateTriangles(std::vector<float>& Positions, std::vector<float>& TexCoords, GLuint& NumValuesPerPos, GLuint& NumValuesPerCoord);
+	static void GenerateTriangles(MeshBufferProperties properties, std::vector<float>& Positions, std::vector<float>& TexCoords, GLuint& NumValuesPerPos, GLuint& NumValuesPerCoord);
 };
 
 namespace GLMesh

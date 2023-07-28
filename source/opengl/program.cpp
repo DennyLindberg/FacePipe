@@ -47,21 +47,21 @@ GLProgram::~GLProgram()
 	}
 }
 
-void GLProgram::LoadFragmentShader(std::string shaderText)
+void GLProgram::LoadFragmentShader(const std::string& shaderText)
 {
 	GLint sourceLength = (GLint)shaderText.size();
 	const char *fragmentSourcePtr = shaderText.c_str();
 	glShaderSource(fragment_shader_id, 1, &fragmentSourcePtr, &sourceLength);
 }
 
-void GLProgram::LoadVertexShader(std::string shaderText)
+void GLProgram::LoadVertexShader(const std::string& shaderText)
 {
 	GLint sourceLength = (GLint)shaderText.size();
 	const char *vertexSourcePtr = shaderText.c_str();
 	glShaderSource(vertex_shader_id, 1, &vertexSourcePtr, &sourceLength);
 }
 
-void GLProgram::LoadGeometryShader(std::string shaderText)
+void GLProgram::LoadGeometryShader(const std::string& shaderText)
 {
 	if (!HasGeometryShader())
 	{
@@ -182,7 +182,7 @@ GLuint GLProgram::Id()
 	return programId;
 }
 
-void GLProgram::SetUniformInt(std::string name, int value)
+void GLProgram::SetUniformInt(const std::string& name, int value)
 {
 	if (intUniforms.count(name) == 0)
 	{
@@ -200,7 +200,7 @@ void GLProgram::SetUniformInt(std::string name, int value)
 	}
 }
 
-void GLProgram::SetUniformFloat(std::string name, float value)
+void GLProgram::SetUniformFloat(const std::string& name, float value)
 {
 	if (floatUniforms.count(name) == 0)
 	{
@@ -218,7 +218,25 @@ void GLProgram::SetUniformFloat(std::string name, float value)
 	}
 }
 
-void GLProgram::SetUniformVec3(std::string name, glm::fvec3 value)
+void GLProgram::SetUniformVec2(const std::string& name, glm::fvec2 value)
+{
+	if (vec2Uniforms.count(name) == 0)
+	{
+		vec2Uniforms[name] = {
+			glGetUniformLocation(programId, name.c_str()),
+			value
+		};
+		vec2Uniforms[name].Upload();
+	}
+	else
+	{
+		auto& u = vec2Uniforms[name];
+		u.value = value;
+		u.Upload();
+	}
+}
+
+void GLProgram::SetUniformVec3(const std::string& name, glm::fvec3 value)
 {
 	if (vec3Uniforms.count(name) == 0)
 	{
@@ -236,7 +254,7 @@ void GLProgram::SetUniformVec3(std::string name, glm::fvec3 value)
 	}
 }
 
-void GLProgram::SetUniformVec4(std::string name, glm::fvec4 value)
+void GLProgram::SetUniformVec4(const std::string& name, glm::fvec4 value)
 {
 	if (vec4Uniforms.count(name) == 0)
 	{
@@ -254,7 +272,7 @@ void GLProgram::SetUniformVec4(std::string name, glm::fvec4 value)
 	}
 }
 
-void GLProgram::SetUniformMat4(std::string name, glm::mat4 value)
+void GLProgram::SetUniformMat4(const std::string& name, glm::mat4 value)
 {
 	if (mat4Uniforms.count(name) == 0)
 	{

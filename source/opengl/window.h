@@ -20,8 +20,6 @@ public:
 
 	void SetTitle(std::string newCaption);
 	void SwapFramebuffer();
-	void SetClearColor(float r, float g, float b, float a);
-	void Clear();
 
 	void HandleImguiEvent(const SDL_Event* event);
 

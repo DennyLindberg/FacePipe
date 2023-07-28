@@ -40,7 +40,6 @@ int main(int argc, char* args[])
 
 	OpenGLWindow window;
 	window.SetTitle("FacePipe");
-	window.SetClearColor(0.5f, 0.5f, 0.5f, 1.0f);
 
 	GLuint defaultVao = 0;
 	glGenVertexArrays(1, &defaultVao);
@@ -86,6 +85,10 @@ printf(R"(
 	turntable.position = glm::vec3{0.0f, 0.15f, 0.0f};
 	turntable.sensitivity = 0.25f;
 	turntable.Set(-65.0f, 15.0f, 1.0f);
+
+	glm::vec4 ClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	GLFramebuffers::Initialize(settings.windowWidth, settings.windowHeight, ClearColor);
+	GLuint RenderTarget = GLFramebuffers::Create(640, 480, ClearColor);
 
 	/*
 		Load and initialize shaders
@@ -316,12 +319,12 @@ printf(R"(
 		/*
 			Render scene
 		*/
-		window.Clear();
+		GLFramebuffers::ClearActive();
 
 		// Background color gradient
 		backgroundShader.Use();
 		backgroundQuad.Draw();
-		glClear(GL_DEPTH_BUFFER_BIT);
+		GLFramebuffers::ClearActiveDepth();
 		
 		// Set scene render properties
 		glPolygonMode(GL_FRONT_AND_BACK, (renderWireframe? GL_LINE : GL_FILL));
@@ -342,19 +345,28 @@ printf(R"(
 			headShader.Use();
 			headShader.SetUniformMat4("model", headmesh.transform.ModelMatrix());
 			headmesh.Draw();
+
+			if (auto F = GLFramebuffers::BindScoped(RenderTarget))
+			{
+				GLFramebuffers::ClearActive();
+				headmesh.Draw();
+			}
 		}
 
 		// Grid
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		grid.Draw(projectionmatrix * viewmatrix);
 		
-		// Clear depth so that we can draw lines on top of everything
-		glClear(GL_DEPTH_BUFFER_BIT);
-		
-		// Coordinate axis'
+		// Coordinate axis' xray on top of scene
+		GLFramebuffers::ClearActiveDepth();
 		lineShader.Use();
 		lineShader.SetUniformFloat("useUniformColor", false);
 		coordinateReferenceLines.Draw();
+
+		// Off-screen rendering in quads
+		GLFramebuffers::ClearActiveDepth();
+		glm::vec2 QuadSize(0.25f, 0.25f);
+		GLFramebuffers::DrawAsQuad(RenderTarget, 1.0f, {1.0f - QuadSize.x*0.5f, QuadSize.y*0.5f}, QuadSize);
 
 		// Done
 		window.RenderImgui();
@@ -362,6 +374,8 @@ printf(R"(
 	}
 
 	Python.Shutdown();
+
+	GLFramebuffers::Shutdown();
 
 	exit(0);
 }

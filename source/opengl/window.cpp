@@ -9,6 +9,7 @@
 #include "imgui_impl_opengl3.h"
 
 #include "imnodes.h"
+#include "framebuffer.h"
 
 extern "C" {
 	/*
@@ -85,16 +86,6 @@ void OpenGLWindow::SetTitle(std::string newCaption)
 void OpenGLWindow::SwapFramebuffer()
 {
 	SDL_GL_SwapWindow(window);
-}
-
-void OpenGLWindow::SetClearColor(float r, float g, float b, float a)
-{
-	glClearColor(r, g, b, a);
-}
-
-void OpenGLWindow::Clear()
-{
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 }
 
 void OpenGLWindow::HandleImguiEvent(const SDL_Event* event)
