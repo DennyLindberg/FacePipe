@@ -137,6 +137,10 @@ printf(R"(
 	cubemesh.transform.scale = glm::vec3(0.25f);
 	headmesh.transform.scale = glm::vec3(0.25f);
 
+	GLLine cubeMeshNormals;
+	GLMesh::LoadLinesFromMeshNormals(headmesh, cubeMeshNormals, 1.0f);
+	cubeMeshNormals.transform.scale = headmesh.transform.scale;
+
 	/*
 		Coordinate Axis Lines
 	*/
@@ -370,6 +374,9 @@ printf(R"(
 		lineShader.Use();
 		lineShader.SetUniformFloat("useUniformColor", false);
 		coordinateReferenceLines.Draw();
+
+		//lineShader.SetUniformMat4("model", cubeMeshNormals.transform.ModelMatrix());
+		//cubeMeshNormals.Draw();
 
 		// Done
 		window.RenderImgui();

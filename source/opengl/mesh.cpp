@@ -809,6 +809,25 @@ namespace GLMesh
 		return true;
 	}
 
+	bool LoadLinesFromMeshNormals(GLTriangleMesh& OutMesh, GLLine& OutLines, float lineLength)
+	{
+		OutLines.Clear();
+
+		glm::vec4 lineColor(0.0f, 1.0f, 0.0f, 1.0f);
+		for (size_t i=0; i<OutMesh.normals.size(); i++)
+		{
+			glm::fvec3& pos = OutMesh.positions[i];
+			glm::fvec3& normal = OutMesh.normals[i];
+
+			OutLines.AddLine(pos, pos + normal*lineLength, lineColor);
+			//OutLines.AddLine(pos, pos + glm::fvec3(0.0f, 1.0f, 0.0f), lineColor);
+		}
+
+		OutLines.SendToGPU();
+
+		return true;
+	}
+
 	bool LoadCurves(std::filesystem::path FilePath, GLBezierStrips& OutStrips)
 	{
 		OutStrips.Clear();
