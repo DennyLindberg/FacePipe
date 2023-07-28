@@ -136,7 +136,7 @@ printf(R"(
 	GLMesh::LoadPLY(meshFolder/"blender_suzanne.ply", headmesh);
 	//GLMesh::LoadPLY(meshFolder/"ARFaceGeometry.ply", headmesh);
 	cubemesh.transform.scale = glm::vec3(0.25f);
-	headmesh.transform.scale = glm::vec3(0.01f);
+	headmesh.transform.scale = glm::vec3(0.25f);
 
 	GLLine cubeMeshNormals;
 	GLMesh::LoadLinesFromMeshNormals(cubemesh, cubeMeshNormals, 0.2f);
