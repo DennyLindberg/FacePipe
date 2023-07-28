@@ -110,7 +110,7 @@ printf(R"(
 	shaderManager.LoadShader(lineShader, L"line_vertex.glsl", L"line_fragment.glsl");
 	shaderManager.LoadShader(backgroundShader, L"background_vertex.glsl", L"background_fragment.glsl");
 
-	shaderManager.LoadLiveShader(headShader, L"head_vertex.glsl", L"head_fragment.glsl", L"head_geometry.glsl");
+	shaderManager.LoadLiveShader(headShader, L"head_vertex.glsl", L"head_fragment.glsl");//, L"head_geometry.glsl");
 	shaderManager.LoadLiveShader(bezierLinesShader, L"bezier_vertex.glsl", L"line_fragment.glsl", L"bezier_lines_geometry.glsl");
 
 	// Initialize model values
@@ -133,9 +133,10 @@ printf(R"(
 	*/
 	GLTriangleMesh cubemesh, headmesh;
 	GLMesh::LoadPLY(meshFolder/"cube.ply", cubemesh);
-	GLMesh::LoadOBJ(meshFolder/"blender_suzanne.obj", headmesh);
+	GLMesh::LoadPLY(meshFolder/"blender_suzanne.ply", headmesh);
+	//GLMesh::LoadPLY(meshFolder/"ARFaceGeometry.ply", headmesh);
 	cubemesh.transform.scale = glm::vec3(0.25f);
-	headmesh.transform.scale = glm::vec3(0.25f);
+	headmesh.transform.scale = glm::vec3(0.01f);
 
 	GLLine cubeMeshNormals;
 	GLMesh::LoadLinesFromMeshNormals(cubemesh, cubeMeshNormals, 0.2f);
@@ -356,8 +357,7 @@ printf(R"(
 
 			headShader.Use();
 			headShader.SetUniformMat4("model", headmesh.transform.ModelMatrix());
-			//headmesh.Draw();
-			cubemesh.Draw();
+			headmesh.Draw();
 
 			if (auto F = GLFramebuffers::BindScoped(RenderTarget))
 			{
