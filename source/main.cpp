@@ -37,10 +37,17 @@ int main(int argc, char* args[])
 	Camera camera;
 	camera.fieldOfView = CAMERA_FOV;
 
+	Camera cameraCube;
+	cameraCube.fieldOfView = CAMERA_FOV;
+
 	TurntableController turntable(camera);
+	TurntableController turntableCube(cameraCube);
 	turntable.position = glm::vec3{0.0f, 0.15f, 0.0f};
 	turntable.sensitivity = 0.25f;
 	turntable.Set(-65.0f, 15.0f, 1.0f);
+	turntableCube.position = turntable.position;
+	turntableCube.sensitivity = turntable.sensitivity;
+	turntableCube.Set(-65.0f, 15.0f, 1.0f);
 
 	GLuint RenderTarget = GLFramebuffers::Create(GLuint(settings.windowWidth*0.25f), GLuint(settings.windowHeight*0.25f), App::settings.clearColor);
 
@@ -75,15 +82,14 @@ int main(int argc, char* args[])
 	/*
 		User interaction parameters in the UI
 	*/
-	bool renderHead = true;
 	bool renderWireframe = false;
-	bool renderBezierLines = false;
 	bool lightFollowsCamera = false;
 	bool drawDebugNormals = false;
 
 	/*
 		IMGUI callback
 	*/
+	bool interactingWithPreview = false;
 	std::string input_field_string{"default text"};
 	App::window.imguiLayout = [&]() -> void {
 		ImGui::SetNextWindowSize(ImVec2(settings.windowWidth * 0.25f, settings.windowHeight * 1.0f));
@@ -114,6 +120,7 @@ int main(int argc, char* args[])
 			if (GLFramebuffers::GetTexture(RenderTarget, Texture, TextureWidth, TextureHeight))
 			{
 				ImGui::Image((ImTextureID)(intptr_t)Texture, ImVec2((float)TextureWidth, (float)TextureHeight), {0, 1}, {1, 0});
+				interactingWithPreview = ImGui::IsItemHovered();
 			}
 		}
 		ImGui::End();
@@ -172,6 +179,7 @@ int main(int argc, char* args[])
 	*/
 	bool quit = false;
 	bool captureMouse = false;
+	int captureMouseX, captureMouseY;
 	while (!quit)
 	{
 		if (!App::ReadyToTick())
@@ -188,7 +196,7 @@ int main(int argc, char* args[])
 				quit = true;
 
 			App::window.HandleImguiEvent(&event);
-			if (ImGui::GetIO().WantCaptureKeyboard)
+			if (ImGui::GetIO().WantCaptureKeyboard && !interactingWithPreview)
 			{
 				continue;
 			}
@@ -206,20 +214,24 @@ int main(int argc, char* args[])
 				else if (key == SDLK_f) turntable.SnapToOrigin();
 			}
 
-			if (!ImGui::GetIO().WantCaptureMouse)
+			if (!ImGui::GetIO().WantCaptureMouse || interactingWithPreview)
 			{
+				auto& activeTurntable = interactingWithPreview? turntableCube : turntable;
+
 				if (event.type == SDL_MOUSEBUTTONDOWN)
 				{
+					captureMouseX = event.motion.x;
+					captureMouseY = event.motion.y;
 					captureMouse = true;
 					SDL_ShowCursor(0);
 					SDL_SetRelativeMouseMode(SDL_TRUE);
 
 					auto button = event.button.button;
-					if (button == SDL_BUTTON_LEFT)   turntable.inputState = TurntableInputState::Rotate;
-					else if (button == SDL_BUTTON_MIDDLE) turntable.inputState = TurntableInputState::Translate;
-					else if (button == SDL_BUTTON_RIGHT)  turntable.inputState = TurntableInputState::Zoom;
+					if (button == SDL_BUTTON_LEFT)			activeTurntable.inputState = TurntableInputState::Rotate;
+					else if (button == SDL_BUTTON_MIDDLE)	activeTurntable.inputState = TurntableInputState::Translate;
+					else if (button == SDL_BUTTON_RIGHT)	activeTurntable.inputState = TurntableInputState::Zoom;
 
-					turntable.OnBeginInput();
+					activeTurntable.OnBeginInput();
 				}
 				else if (event.type == SDL_MOUSEBUTTONUP)
 				{
@@ -229,7 +241,8 @@ int main(int argc, char* args[])
 				}
 				else if (event.type == SDL_MOUSEMOTION && captureMouse)
 				{
-					turntable.ApplyMouseInput(-event.motion.xrel, event.motion.yrel);
+					activeTurntable.ApplyMouseInput(-event.motion.xrel, event.motion.yrel);
+					SDL_WarpMouseInWindow(App::window.GetSDLWindow(), captureMouseX, captureMouseY);
 				}
 			}
 		}
@@ -249,27 +262,16 @@ int main(int argc, char* args[])
 		App::shaders.UpdateCameraUBO(camera);
 		App::shaders.UpdateLightUBOPosition(lightFollowsCamera? camera.GetPosition() : glm::fvec3{ 999999.0f });
 
-		if (renderHead)
-		{
-			// Debug: Test changing the mesh transform over time
-			//headmesh.transform.rotation = glm::vec3(0.0f, 360.0f*sinf((float) App::clock.time), 0.0f);
+		// Debug: Test changing the mesh transform over time
+		//headmesh.transform.rotation = glm::vec3(0.0f, 360.0f*sinf((float) App::clock.time), 0.0f);
 			
-			meshShader.Use();
-			meshShader.SetUniformMat4("model", headmesh.transform.ModelMatrix());
-			meshShader.SetUniformInt("useTexture", 1);
-			meshShader.SetUniformInt("useFlatShading", 0);
-			DefaultTexture.UseForDrawing();
-			headmesh.Draw();
+		meshShader.Use();
+		meshShader.SetUniformMat4("model", headmesh.transform.ModelMatrix());
+		meshShader.SetUniformInt("useTexture", 1);
+		meshShader.SetUniformInt("useFlatShading", 0);
+		DefaultTexture.UseForDrawing();
+		headmesh.Draw();
 			
-			if (auto F = GLFramebuffers::BindScoped(RenderTarget))
-			{
-				GLFramebuffers::ClearActive();
-				meshShader.SetUniformMat4("model", cubemesh.transform.ModelMatrix());
-				meshShader.SetUniformInt("useTexture", 0);
-				cubemesh.Draw();
-			}
-		}
-
 		// Grid
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		App::geometry.grid.Draw(App::geometry.quad, camera.ViewProjectionMatrix());
@@ -281,6 +283,16 @@ int main(int argc, char* args[])
 
 		lineShader.SetUniformMat4("model", cubeMeshNormals.transform.ModelMatrix());
 		//cubeMeshNormals.Draw();
+
+		if (auto F = GLFramebuffers::BindScoped(RenderTarget))
+		{
+			GLFramebuffers::ClearActive();
+			App::shaders.UpdateCameraUBO(cameraCube);
+			App::shaders.UpdateLightUBOPosition(lightFollowsCamera? cameraCube.GetPosition() : glm::fvec3{ 999999.0f });
+			meshShader.SetUniformMat4("model", cubemesh.transform.ModelMatrix());
+			meshShader.SetUniformInt("useTexture", 0);
+			cubemesh.Draw();
+		}
 
 		// Done
 		App::window.RenderImgui();

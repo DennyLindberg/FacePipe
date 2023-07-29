@@ -27,4 +27,5 @@ public:
 
 	void Initialize(int width, int height, bool fullscreenEnabled, bool vsync);
 	void Destroy();
+	SDL_Window* GetSDLWindow() { return window; }
 };
