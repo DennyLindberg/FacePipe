@@ -30,6 +30,7 @@ public:
 	~TurntableController() = default;
 
 	void OnBeginInput();
+	void SetDistance(float newDistance);
 	void Set(float newYaw, float newPitch, float newDistance);
 	void Offset(float yawOffset, float pitchOffset, float distanceOffset);
 	void ApplyMouseInput(int deltaX, int deltaY);

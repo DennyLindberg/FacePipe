@@ -49,6 +49,11 @@ int main(int argc, char* args[])
 	turntableCube.sensitivity = turntable.sensitivity;
 	turntableCube.Set(-65.0f, 15.0f, 1.0f);
 
+	auto SetCameraView = [](Camera& camera, TurntableController& controller, CameraView view) -> void {
+		camera.SetView(view);
+		controller.SetDistance(view == CameraView::Perspective? 1.0f : 1.0f);
+	};
+
 	GLuint RenderTarget = GLFramebuffers::Create(GLuint(settings.windowWidth*0.25f), GLuint(settings.windowHeight*0.25f), App::settings.clearColor);
 
 	/*
@@ -70,7 +75,7 @@ int main(int argc, char* args[])
 	GLMesh::LoadPLY(App::Path("content/meshes/ARFaceGeometry.ply"), headmesh);
 	//GLMesh::LoadPLY("content/meshes/ARFaceGeometry.ply", headmesh);
 	cubemesh.transform.scale = glm::vec3(0.25f);
-	headmesh.transform.scale = glm::vec3(0.01f);
+	headmesh.transform.scale = glm::vec3(0.001f);
 
 	GLTexture DefaultTexture(App::Path("content/textures/default.png"));
 	DefaultTexture.CopyToGPU();
@@ -212,6 +217,12 @@ int main(int argc, char* args[])
 
 				if      (key == SDLK_s) GLFramebuffers::SaveScreenshot();
 				else if (key == SDLK_f) turntable.SnapToOrigin();
+
+				else if (key == SDLK_KP_7) SetCameraView(camera, turntable, CameraView::OrthographicY);
+				else if (key == SDLK_KP_1) SetCameraView(camera, turntable, bCtrlModifier? CameraView::OrthographicZneg : CameraView::OrthographicZ);
+				else if (key == SDLK_KP_9) SetCameraView(camera, turntable, CameraView::OrthographicYneg);
+				else if (key == SDLK_KP_3) SetCameraView(camera, turntable, bCtrlModifier ? CameraView::OrthographicXneg : CameraView::OrthographicX);
+				else if (key == SDLK_KP_5) SetCameraView(camera, turntable, CameraView::Perspective);
 			}
 
 			if (!ImGui::GetIO().WantCaptureMouse || interactingWithPreview)
