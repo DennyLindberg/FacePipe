@@ -171,14 +171,9 @@ protected:
 
 PythonThread Thread;
 
-PythonInterpreter::PythonInterpreter()
+void PythonInterpreter::Initialize()
 {
 	Thread.Start();
-}
-
-PythonInterpreter::~PythonInterpreter()
-{
-	Shutdown();
 }
 
 void PythonInterpreter::Shutdown()

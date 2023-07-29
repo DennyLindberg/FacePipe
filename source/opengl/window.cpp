@@ -57,26 +57,6 @@ void ShutdownIMGUI()
 	ImGui::DestroyContext();
 }
 
-OpenGLWindow::OpenGLWindow()
-{
-	Initialize(App::settings.windowWidth, App::settings.windowHeight, App::settings.fullscreen, App::settings.vsync);
-}
-
-OpenGLWindow::OpenGLWindow(int width, int height, bool fullscreenEnabled, bool vsync)
-{
-	Initialize(width, height, fullscreenEnabled, vsync);
-}
-
-OpenGLWindow::~OpenGLWindow()
-{
-	ShutdownIMGUI();
-	if (window)
-	{
-		SDL_GL_DeleteContext(maincontext);
-		SDL_DestroyWindow(window);
-	}
-}
-
 void OpenGLWindow::SetTitle(std::string newCaption)
 {
 	SDL_SetWindowTitle(window, newCaption.c_str());
@@ -181,5 +161,15 @@ void OpenGLWindow::Initialize(int width, int height, bool fullscreen, bool vsync
 	glScissor(0, 0, w, h);
 
 	InitIMGUI(window, maincontext);
+}
+
+void OpenGLWindow::Destroy()
+{
+	ShutdownIMGUI();
+	if (window)
+	{
+		SDL_GL_DeleteContext(maincontext);
+		SDL_DestroyWindow(window);
+	}
 }
 

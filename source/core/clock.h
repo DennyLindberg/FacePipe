@@ -5,8 +5,6 @@
 struct ApplicationClock
 {
 private:
-	uint64_t sdl_ms_previous = 0;
-	uint64_t sdl_ms_current = 0;
 	double lastTickTime = 0.0;
 
 public:
@@ -17,6 +15,6 @@ public:
 	~ApplicationClock() {}
 
 	void Tick();
-	static double SystemTime();
-	double TimeSinceLastTick() const { return SystemTime() - lastTickTime; }
+	static double SecondsSinceEpoch();
+	double TimeSinceLastTick() const { return SecondsSinceEpoch() - lastTickTime; }
 };

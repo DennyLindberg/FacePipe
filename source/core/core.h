@@ -9,7 +9,6 @@
 #include <filesystem>
 #include <functional>
 
-#include "application.h"
 #include "clock.h"
 #include "randomization.h"
 #include "threads.h"

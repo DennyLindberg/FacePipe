@@ -1,9 +1,4 @@
-#include "core/core.h"
-#include "opengl/opengl.h"
-#include "python/python.h"
-#include "imgui.h"
-#include "imgui_stdlib.h"
-#include "imnodes.h"
+#include "core/application.h"
 
 namespace fs = std::filesystem;
 
@@ -20,8 +15,9 @@ int main(int argc, char* args[])
 		.windowWidth = 1280,
 		.windowHeight = 720,
 		.fpsLimit = 0,
-		.windowRatio = 1280.0f / 720.0f,
-		.contentPath = fs::current_path().parent_path() / "content"
+		.sleepWhenFpsLimited = true,
+		.contentPath = fs::current_path().parent_path() / "content",
+		.clearColor = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f)
 	};
 	auto& settings = App::settings;
 
@@ -32,11 +28,9 @@ int main(int argc, char* args[])
 	const fs::path scriptsFolder = settings.contentPath / "scripts";
 
 	App::Initialize();
+	App::window.SetTitle("FacePipe");
 
 	UniformRandomGenerator uniformGenerator;
-
-	OpenGLWindow window;
-	window.SetTitle("FacePipe");
 
 	GLuint defaultVao = 0;
 	glGenVertexArrays(1, &defaultVao);
@@ -45,7 +39,6 @@ int main(int argc, char* args[])
 	//FileListener fileListener;
 	//fileListener.StartThread(scriptsFolder);
 
-	PythonInterpreter Python;
 	fs::path PythonTestScript(scriptsFolder / "test_cv2_webcam.py");
 
 printf(R"(
@@ -83,9 +76,7 @@ printf(R"(
 	turntable.sensitivity = 0.25f;
 	turntable.Set(-65.0f, 15.0f, 1.0f);
 
-	glm::vec4 ClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-	GLFramebuffers::Initialize(settings.windowWidth, settings.windowHeight, ClearColor);
-	GLuint RenderTarget = GLFramebuffers::Create(GLuint(settings.windowWidth*0.25f), GLuint(settings.windowHeight*0.25f), ClearColor);
+	GLuint RenderTarget = GLFramebuffers::Create(GLuint(settings.windowWidth*0.25f), GLuint(settings.windowHeight*0.25f), App::settings.clearColor);
 
 	/*
 		Load and initialize shaders
@@ -166,23 +157,25 @@ printf(R"(
 		IMGUI callback
 	*/
 	std::string input_field_string{"default text"};
-	window.imguiLayout = [&]() -> void {
+	App::window.imguiLayout = [&]() -> void {
 		ImGui::SetNextWindowSize(ImVec2(settings.windowWidth * 0.25f, settings.windowHeight * 1.0f));
 		ImGui::SetNextWindowPos(ImVec2(0, 0));
-		ImGui::Begin("Settings");
+
+		ImGui::Begin("App");
 		{
 			ImGui::Text("Scene");
+			ImGui::Text(("App - FPS: " + FpsString(App::clock.deltaTime)).c_str());
 			ImGui::Checkbox("Wireframe", &renderWireframe);
 			ImGui::Checkbox("Light follows camera", &lightFollowsCamera);
 			if (ImGui::Button("Run Python test script"))
 			{
-				Python.Execute(PythonTestScript);
+				App::python.Execute(PythonTestScript);
 			}
 
 			ImGui::InputTextMultiline( "ScriptInput", &input_field_string, ImVec2(0.0f, 200.0f) );
 			if (ImGui::Button("Execute"))
 			{
-				Python.Execute(input_field_string);
+				App::python.Execute(input_field_string);
 			}
 
 			GLuint Texture, TextureWidth, TextureHeight;
@@ -249,37 +242,26 @@ printf(R"(
 	bool captureMouse = false;
 	while (!quit)
 	{
-		if (settings.fpsLimit > 0 && App::clock.TimeSinceLastTick() < 1.0/settings.fpsLimit)
+		if (!App::ReadyToTick())
 		{
 			continue;
 		}
 
-		ScriptExecutionResponse ScriptResponse;
-		if (Python.PopScriptResponse(ScriptResponse))
-		{
-			if (ScriptResponse.Error == PythonScriptError::None)
-				std::cout << "Script executed fully" << std::endl;
-			else
-				std::cout << ScriptResponse.Exception.what();
-		}
-
 		App::Tick();
 
-		window.SetTitle("FPS: " + FpsString(App::clock.deltaTime));
 		shaderManager.CheckLiveShaders();
 		//fileListener.ProcessCallbacksOnMainThread();
 
 		SDL_Event event;
 		while (SDL_PollEvent(&event))
 		{
-			window.HandleImguiEvent(&event);
+			App::window.HandleImguiEvent(&event);
 			if (ImGui::GetIO().WantCaptureKeyboard)
 			{
 				continue;
 			}
 
 			quit = (event.type == SDL_QUIT) || (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE);
-			if (quit) break;
 
 			SDL_Keymod mod = SDL_GetModState();
 			bool bCtrlModifier = mod & KMOD_CTRL;
@@ -376,13 +358,11 @@ printf(R"(
 		//cubeMeshNormals.Draw();
 
 		// Done
-		window.RenderImgui();
-		window.SwapFramebuffer();
+		App::window.RenderImgui();
+		App::window.SwapFramebuffer();
 	}
 
-	Python.Shutdown();
+	App::Shutdown();
 
-	GLFramebuffers::Shutdown();
-
-	exit(0);
+	return 0;
 }

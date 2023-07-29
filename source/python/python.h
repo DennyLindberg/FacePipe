@@ -22,9 +22,10 @@ struct ScriptExecutionResponse
 class PythonInterpreter
 {
 public:
-	PythonInterpreter();
-	~PythonInterpreter();
+	PythonInterpreter() {}
+	~PythonInterpreter() {}
 
+	void Initialize();
 	void Shutdown();
 
 	void Execute(const std::string& Code, int ScriptID = -1);

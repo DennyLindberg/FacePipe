@@ -1,6 +1,5 @@
 #pragma once
-#include "../core/math.h"
-#include "../core/application.h"
+#include "core/math.h"
 
 // This camera uses a position and a focus point to determine orientation.
 // The getters and setters are used to ensure that the internals update.
@@ -46,14 +45,7 @@ public:
 		return glm::lookAt(position, focusPoint, upVector);
 	}
 
-	inline glm::mat4 ProjectionMatrix()
-	{
-		return glm::perspective(
-			glm::radians(fieldOfView),
-			App::settings.windowRatio,
-			nearClipPlane, farClipPlane
-		);
-	}
+	glm::mat4 ProjectionMatrix() const;
 
 	inline glm::mat4 ViewProjectionMatrix()
 	{

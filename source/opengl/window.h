@@ -9,14 +9,12 @@
 class OpenGLWindow
 {
 protected:
-	SDL_GLContext maincontext;
+	SDL_GLContext maincontext = nullptr;
 	SDL_Window* window = nullptr;
 
 public:
-	OpenGLWindow();
-	OpenGLWindow(int width, int height, bool fullscreenEnabled, bool vsync);
-
-	~OpenGLWindow();
+	OpenGLWindow() {}
+	~OpenGLWindow() {}
 
 	void SetTitle(std::string newCaption);
 	void SwapFramebuffer();
@@ -27,6 +25,6 @@ public:
 
 	std::function<void()> imguiLayout = [](auto&&...) {};
 
-protected:
 	void Initialize(int width, int height, bool fullscreenEnabled, bool vsync);
+	void Destroy();
 };

@@ -1,24 +1,26 @@
 #include "clock.h"
-#include "SDL2/SDL.h"
+#include <chrono>
+
+namespace chrono = std::chrono;
 
 ApplicationClock::ApplicationClock()
 {
-	time = SystemTime();
-	Tick();
+	time = SecondsSinceEpoch();
+	deltaTime = 0.1; // non-zero init
+	lastTickTime = time-deltaTime;
 }
 
 void ApplicationClock::Tick()
 {
-	sdl_ms_previous = sdl_ms_current;
-	sdl_ms_current = SDL_GetPerformanceCounter();
-	uint64_t sdl_ms_delta = sdl_ms_current - sdl_ms_previous;
-
-	deltaTime = (double)(sdl_ms_delta / (double)SDL_GetPerformanceFrequency());
+	double newtime = SecondsSinceEpoch();
+	deltaTime = newtime - lastTickTime;
 	lastTickTime = time + 0.0; // atomic bullshit
-	time = SystemTime();
+	time = newtime;
 }
 
-double ApplicationClock::SystemTime()
+double ApplicationClock::SecondsSinceEpoch()
 {
-	return SDL_GetTicks64() / 1000.0;
+	auto TimeSinceEpoch = chrono::system_clock::now().time_since_epoch();
+	auto DurationSinceEpoch = chrono::duration_cast<chrono::nanoseconds>(TimeSinceEpoch).count();
+	return 0.000000001 * DurationSinceEpoch; // to seconds
 }
