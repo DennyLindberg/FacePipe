@@ -25,24 +25,11 @@ int main(int argc, char* args[])
 
 	fs::path PythonTestScript = App::Path("content/scripts/test_cv2_webcam.py");
 
-printf(R"(
-====================================================================
-	
-    FacePipe
-
-    Controls:
-        Control the camera
-        Alt + LMB: Rotate
-        Alt + MMB: Move
-        Alt + RMB: Zoom
-
-        S:         Take screenshot
-        F:         Re-center camera on origin			       
-			       
-        ESC:       Close the application
-
-====================================================================
-)");
+	std::string helpString = R"(Controls:
+- Mouse buttons: Camera
+- S: Screenshot
+- F: Re-center camera
+)";
 
 	/*
 		Setup scene and controls
@@ -115,11 +102,13 @@ printf(R"(
 				App::python.Execute(PythonTestScript);
 			}
 
-			ImGui::InputTextMultiline( "ScriptInput", &input_field_string, ImVec2(0.0f, 200.0f) );
+			ImGui::InputTextMultiline( "ScriptInput", &input_field_string, ImVec2(0.0f, 100.0f) );
 			if (ImGui::Button("Execute"))
 			{
 				App::python.Execute(input_field_string);
 			}
+
+			ImGui::InputTextMultiline( "Help", &helpString, ImVec2(0.0f, 100.0f), ImGuiInputTextFlags_ReadOnly );
 
 			GLuint Texture, TextureWidth, TextureHeight;
 			if (GLFramebuffers::GetTexture(RenderTarget, Texture, TextureWidth, TextureHeight))
@@ -195,13 +184,14 @@ printf(R"(
 		SDL_Event event;
 		while (SDL_PollEvent(&event))
 		{
+			if (event.type == SDL_QUIT)
+				quit = true;
+
 			App::window.HandleImguiEvent(&event);
 			if (ImGui::GetIO().WantCaptureKeyboard)
 			{
 				continue;
 			}
-
-			quit = (event.type == SDL_QUIT) || (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE);
 
 			SDL_Keymod mod = SDL_GetModState();
 			bool bCtrlModifier = mod & KMOD_CTRL;
@@ -220,19 +210,16 @@ printf(R"(
 			{
 				if (event.type == SDL_MOUSEBUTTONDOWN)
 				{
-					//if (bAltModifier)
-					{
-						captureMouse = true;
-						SDL_ShowCursor(0);
-						SDL_SetRelativeMouseMode(SDL_TRUE);
+					captureMouse = true;
+					SDL_ShowCursor(0);
+					SDL_SetRelativeMouseMode(SDL_TRUE);
 
-						auto button = event.button.button;
-						if (button == SDL_BUTTON_LEFT)   turntable.inputState = TurntableInputState::Rotate;
-						else if (button == SDL_BUTTON_MIDDLE) turntable.inputState = TurntableInputState::Translate;
-						else if (button == SDL_BUTTON_RIGHT)  turntable.inputState = TurntableInputState::Zoom;
+					auto button = event.button.button;
+					if (button == SDL_BUTTON_LEFT)   turntable.inputState = TurntableInputState::Rotate;
+					else if (button == SDL_BUTTON_MIDDLE) turntable.inputState = TurntableInputState::Translate;
+					else if (button == SDL_BUTTON_RIGHT)  turntable.inputState = TurntableInputState::Zoom;
 
-						turntable.OnBeginInput();
-					}
+					turntable.OnBeginInput();
 				}
 				else if (event.type == SDL_MOUSEBUTTONUP)
 				{
