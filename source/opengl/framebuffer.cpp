@@ -217,6 +217,38 @@ bool GLFramebuffers::GetTexture(GLuint FBO, GLuint& Texture, GLuint& Width, GLui
 	return false;
 }
 
+void GLFramebuffers::SaveScreenshot(GLuint FBO)
+{
+	GLuint PreviousFBO = ActiveFBO;
+	bool bSwitchFBO = ActiveFBO != FBO;
+	if (bSwitchFBO)
+	{
+		Bind(FBO);
+	}
+
+	int width = App::settings.windowWidth;
+	int height = App::settings.windowHeight;
+
+	if (FBO != 0)
+	{
+		int miplevel = 0;
+		glGetTexLevelParameteriv(GL_TEXTURE_2D, miplevel, GL_TEXTURE_WIDTH, &width);
+		glGetTexLevelParameteriv(GL_TEXTURE_2D, miplevel, GL_TEXTURE_HEIGHT, &height);
+	}
+
+	int channelCount = 4;
+	std::vector<GLubyte> data(channelCount * width * height);
+	glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data.data());
+
+	GLTexture::FlipVertically(data, width, height, channelCount);
+	GLTexture::SaveAsPNG(data, width, height, "screenshot.png", true);
+
+	if (bSwitchFBO)
+	{
+		Bind(PreviousFBO);
+	}
+}
+
 bool GLFramebuffers::IsValid(GLuint FBO)
 {
 	return glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE;

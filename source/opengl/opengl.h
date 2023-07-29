@@ -5,6 +5,5 @@
 #include "mesh.h"
 #include "texture.h"
 #include "program.h"
-#include "screenshot.h"
 #include "canvas.h"
 #include "framebuffer.h"

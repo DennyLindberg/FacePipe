@@ -3,6 +3,7 @@
 #include <iostream>
 #include <memory>
 #include <algorithm>
+#include <fstream>
 #include "lodepng.h"
 
 #define INTERNAL_PIXEL_FORMAT GL_RGBA
@@ -136,16 +137,35 @@ void GLTexture::FillDebug()
 	}
 }
 
-void GLTexture::SaveAsPNG(std::filesystem::path filepath, bool incrementNewFile)
+void GLTexture::SaveAsPNG(std::vector<GLubyte>& glData, int width, int height, std::string filepath, bool incrementNewFile)
 {
-	unsigned error = lodepng::encode(filepath.string(), glData, (unsigned int)width, (unsigned int)height);
+	auto remove_extension = [](const std::string& filename) -> std::string {
+		size_t lastdot = filename.find_last_of(".");
+		if (lastdot == std::string::npos) return filename;
+		return filename.substr(0, lastdot);
+	};
+
+	auto file_exists = [](std::string filename) -> bool {
+		std::ifstream infile(filename);
+		return infile.good();
+	};
+
+	int count = 0;
+	std::string baseName = remove_extension(filepath);
+	do
+	{
+		count++;
+		filepath = baseName + std::string(5 - std::to_string(count).length(), '0') + std::to_string(count) + ".png";
+	} while (file_exists(filepath));
+
+	unsigned error = lodepng::encode(filepath, glData, (unsigned int)width, (unsigned int)height);
 	if (error)
 	{
 		std::cout << "encoder error " << error << ": " << lodepng_error_text(error) << std::endl;
 	}
 }
 
-void GLTexture::LoadPNG(std::filesystem::path filepath)
+void GLTexture::LoadPNG(std::filesystem::path filepath, bool bFlipVertically)
 {
 	unsigned sourceWidth, sourceHeight;
 
@@ -183,6 +203,31 @@ void GLTexture::LoadPNG(std::filesystem::path filepath)
 
 		size = width * height * lodepng_get_channels(&color);
 
+		if (bFlipVertically)
+		{
+			GLTexture::FlipVertically(glData, width, height);
+		}
+
 		UpdateParameters();
+	}
+}
+
+void GLTexture::FlipVertically(std::vector<GLubyte>& glData, int width, int height, int channelCount)
+{
+	int pixelSourceId = 0;
+	int pixelTargetId = 0;
+	std::vector<GLubyte> original = glData;
+	for (int x = 0; x < width; ++x)
+	{
+		for (int y = 0; y < height; ++y)
+		{
+			pixelSourceId = x * channelCount + y * width * channelCount;
+			pixelTargetId = x * channelCount + (height - y - 1) * width * channelCount;
+
+			glData[pixelTargetId] = original[pixelSourceId];
+			glData[pixelTargetId + 1] = original[pixelSourceId + 1];
+			glData[pixelTargetId + 2] = original[pixelSourceId + 2];
+			glData[pixelTargetId + 3] = original[pixelSourceId + 3];
+		}
 	}
 }

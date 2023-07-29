@@ -17,6 +17,7 @@ layout (std140, binding = 2) uniform Light
 };
 
 uniform sampler2D textureSampler;
+uniform bool useTexture;
 
 // World space attributes
 in VertexAttrib
@@ -46,5 +47,9 @@ void main()
     vec3 specularLight = vec3(0.0);
 
     vec4 totalLightContribution = vec4(ambientLight + diffuseLight + specularLight, 1.0);
-    color = totalLightContribution * vec4(0.5f, 0.5f, 0.5f, 1.0f);
+
+    if (useTexture)
+        color = totalLightContribution * texture(textureSampler, fragment.tcoord.xy); 
+    else
+        color = totalLightContribution * vec4(0.5f, 0.5f, 0.5f, 1.0f);
 }

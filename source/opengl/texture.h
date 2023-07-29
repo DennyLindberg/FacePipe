@@ -66,6 +66,7 @@ public:
 	void Fill(const FColor& color);
 
 	void FillDebug();
-	void SaveAsPNG(std::filesystem::path filepath, bool incrementNewFile = false);
-	void LoadPNG(std::filesystem::path filepath);
+	static void SaveAsPNG(std::vector<GLubyte>& glData, int width, int height, std::string filepath, bool incrementNewFile = false);
+	void LoadPNG(std::filesystem::path filepath, bool bFlipVertically = true);
+	static void FlipVertically(std::vector<GLubyte>& glData, int width, int height, int channelCount = 4);
 };

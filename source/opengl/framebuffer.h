@@ -48,5 +48,7 @@ public:
 	static void DrawOnQuad(class GLQuad& QuadMesh, GLuint FBO, float Opacity = 1.0f, glm::vec2 ScreenPos = { 0.5f, 0.5f }, glm::vec2 ScreenSize = { 1.0f, 1.0f });
 	static bool GetTexture(GLuint FBO, GLuint& Texture, GLuint& Width, GLuint& Height);
 
+	static void SaveScreenshot(GLuint FBO = 0);
+
 	static bool IsValid(GLuint FBO);
 };

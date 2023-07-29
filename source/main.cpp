@@ -76,10 +76,13 @@ printf(R"(
 	*/
 	GLTriangleMesh cubemesh, headmesh;
 	GLMesh::LoadPLY(App::Path("content/meshes/cube.ply"), cubemesh);
-	GLMesh::LoadPLY(App::Path("content/meshes/blender_suzanne.ply"), headmesh);
-	//GLMesh::LoadPLY(meshFolder/"ARFaceGeometry.ply", headmesh);
+	GLMesh::LoadPLY(App::Path("content/meshes/ARFaceGeometry.ply"), headmesh);
+	//GLMesh::LoadPLY("content/meshes/ARFaceGeometry.ply", headmesh);
 	cubemesh.transform.scale = glm::vec3(0.25f);
-	headmesh.transform.scale = glm::vec3(0.25f);
+	headmesh.transform.scale = glm::vec3(0.01f);
+
+	GLTexture DefaultTexture(App::Path("content/textures/default.png"));
+	DefaultTexture.CopyToGPU();
 
 	GLLine cubeMeshNormals;
 	GLMesh::LoadLinesFromMeshNormals(cubemesh, cubeMeshNormals, 0.2f);
@@ -212,7 +215,7 @@ printf(R"(
 			{
 				auto key = event.key.keysym.sym;
 
-				if      (key == SDLK_s) TakeScreenshot("screenshot.png", settings.windowWidth, settings.windowHeight);
+				if      (key == SDLK_s) GLFramebuffers::SaveScreenshot();
 				else if (key == SDLK_f) turntable.SnapToOrigin();
 			}
 
@@ -269,11 +272,15 @@ printf(R"(
 			
 			headShader.Use();
 			headShader.SetUniformMat4("model", headmesh.transform.ModelMatrix());
+			headShader.SetUniformInt("useTexture", 1);
+			DefaultTexture.UseForDrawing();
 			headmesh.Draw();
-
+			
 			if (auto F = GLFramebuffers::BindScoped(RenderTarget))
 			{
 				GLFramebuffers::ClearActive();
+				headShader.SetUniformMat4("model", cubemesh.transform.ModelMatrix());
+				headShader.SetUniformInt("useTexture", 0);
 				cubemesh.Draw();
 			}
 		}
