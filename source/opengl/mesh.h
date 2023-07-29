@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 #include "glad/glad.h"
-#include "../core/math.h"
+#include "core/math.h"
 #include <filesystem>
 
 struct GLQuadProperties
@@ -31,8 +31,11 @@ protected:
 public:
 	MeshTransform transform;
 
-	GLMeshInterface();
+	GLMeshInterface(bool bAutoGenVAO = true);
 	virtual ~GLMeshInterface();
+
+	void GenerateVAO();
+	void DeleteVAO();
 
 	// Behaves like glBufferData, but for std::vector<T>.
 	template <class T>
@@ -92,9 +95,11 @@ protected:
 	std::vector<glm::fvec4> colors;
 
 public:
-	GLLine();
+	GLLine() : GLMeshInterface(false) {}
+	~GLLine() {}
 
-	~GLLine();
+	void Initialize();
+	void Shutdown();
 
 	void AddLine(glm::fvec3 start, glm::fvec3 end, glm::fvec4 color);
 
@@ -177,6 +182,22 @@ public:
 
 	void SendToGPU();
 
+	void Draw();
+};
+
+class GLScreenSpaceQuad
+{
+protected:
+	GLuint vao = 0;
+	GLuint positionBuffer = 0;
+	GLuint texCoordBuffer = 0;
+
+public:
+	GLScreenSpaceQuad()	{}
+	~GLScreenSpaceQuad() { Shutdown(); }
+
+	void Initialize();
+	void Shutdown();
 	void Draw();
 };
 

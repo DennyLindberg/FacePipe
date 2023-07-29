@@ -29,16 +29,22 @@ void GLUBO::Allocate(GLuint numbytes)
 	allocated_size = numbytes;
 }
 
-GLProgram::GLProgram()
+void GLProgram::Initialize()
 {
+	if (programId != 0)
+		return;
+
 	programId = glCreateProgram();
 	fragment_shader_id = glCreateShader(GL_FRAGMENT_SHADER);
 	vertex_shader_id = glCreateShader(GL_VERTEX_SHADER);
 	// geometry_shader_id created on LoadGeometryShader (as it is optional)
 }
 
-GLProgram::~GLProgram()
+void GLProgram::Shutdown()
 {
+	if (programId == 0)
+		return;
+
 	glDeleteProgram(programId);
 	glDeleteShader(vertex_shader_id);
 	glDeleteShader(fragment_shader_id);
@@ -47,6 +53,8 @@ GLProgram::~GLProgram()
 	{
 		glDeleteShader(geometry_shader_id);
 	}
+
+	programId = 0;
 }
 
 void GLProgram::LoadFragmentShader(const std::string& shaderText)

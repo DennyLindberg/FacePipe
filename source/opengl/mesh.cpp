@@ -29,20 +29,40 @@ glm::mat4 MeshTransform::ModelMatrix() const
 }
 
 
-GLMeshInterface::GLMeshInterface()
+GLMeshInterface::GLMeshInterface(bool bAutoGenVAO)
 {
-	glGenVertexArrays(1, &vao);
-	glBindVertexArray(vao);
+	if (bAutoGenVAO)
+	{
+		GenerateVAO();
+	}
 }
 
 GLMeshInterface::~GLMeshInterface()
 {
-	glBindVertexArray(0);
-	glDeleteVertexArrays(1, &vao);
+	DeleteVAO();
 }
 
 
 
+
+void GLMeshInterface::GenerateVAO()
+{
+	if (vao == 0)
+	{
+		glGenVertexArrays(1, &vao);
+		glBindVertexArray(vao);
+	}
+}
+
+void GLMeshInterface::DeleteVAO()
+{
+	if (vao != 0)
+	{
+		glBindVertexArray(0);
+		glDeleteVertexArrays(1, &vao);
+		vao = 0;
+	}
+}
 
 GLTriangleMesh::GLTriangleMesh(bool allocate)
 {
@@ -213,11 +233,10 @@ void GLTriangleMesh::ApplyMatrix(glm::mat4 transform)
 	ApplyMatrix(transform, 0, int(positions.size() - 1));
 }
 
-
-
-
-GLLine::GLLine()
+void GLLine::Initialize()
 {
+	GenerateVAO();
+
 	// Generate buffers
 	glGenBuffers(1, &positionBuffer);
 	glGenBuffers(1, &colorBuffer);
@@ -233,14 +252,14 @@ GLLine::GLLine()
 	glEnableVertexAttribArray(colorAttribId);
 	glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
 	glVertexAttribPointer(colorAttribId, valuesPerPosition, GL_FLOAT, false, 0, 0);
-
-	SendToGPU();
 }
 
-GLLine::~GLLine()
+void GLLine::Shutdown()
 {
 	glDeleteBuffers(1, &positionBuffer);
 	glDeleteBuffers(1, &colorBuffer);
+
+	DeleteVAO();
 }
 
 void GLLine::AddLine(glm::fvec3 start, glm::fvec3 end, glm::fvec4 color)
@@ -265,11 +284,11 @@ void GLLine::SendToGPU()
 
 	// Positions
 	glBindBuffer(GL_ARRAY_BUFFER, positionBuffer);
-	glBufferVector(GL_ARRAY_BUFFER, lineSegments, GL_STATIC_DRAW);
+	GLMeshInterface::glBufferVector(GL_ARRAY_BUFFER, lineSegments, GL_STATIC_DRAW);
 
 	// Colors
 	glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
-	glBufferVector(GL_ARRAY_BUFFER, colors, GL_STATIC_DRAW);
+	GLMeshInterface::glBufferVector(GL_ARRAY_BUFFER, colors, GL_STATIC_DRAW);
 }
 
 void GLLine::Draw()
@@ -617,6 +636,57 @@ void GLBezierStrips::Draw()
 	}
 
 	glDisable(GL_PRIMITIVE_RESTART);
+}
+
+void GLScreenSpaceQuad::Initialize()
+{
+	if (vao != 0)
+		return;
+
+	// See shader initialization in GLFramebuffer::Initialize
+	const GLuint positionAttribId = 0;
+	const GLuint texCoordAttribId = 1;
+
+	glGenVertexArrays(1, &vao);
+	glBindVertexArray(vao);
+
+	GLuint valuesPerPosition, valuesPerCoord;
+	std::vector<float> positions, tcoords;
+	GLQuad::GenerateTriangles(positions, tcoords, valuesPerPosition, valuesPerCoord);
+
+	// Generate buffers
+	glGenBuffers(1, &positionBuffer);
+	glGenBuffers(1, &texCoordBuffer);
+
+	// Load positions
+	glBindBuffer(GL_ARRAY_BUFFER, positionBuffer);
+	glEnableVertexAttribArray(positionAttribId);
+	glVertexAttribPointer(positionAttribId, valuesPerPosition, GL_FLOAT, false, 0, 0);
+	GLMeshInterface::glBufferVector(GL_ARRAY_BUFFER, positions, GL_STATIC_DRAW);
+
+	// Load UVs
+	glBindBuffer(GL_ARRAY_BUFFER, texCoordBuffer);
+	glEnableVertexAttribArray(texCoordAttribId);
+	glVertexAttribPointer(texCoordAttribId, valuesPerCoord, GL_FLOAT, false, 0, 0);
+	GLMeshInterface::glBufferVector(GL_ARRAY_BUFFER, tcoords, GL_STATIC_DRAW);
+}
+
+void GLScreenSpaceQuad::Shutdown()
+{
+	if (vao == 0)
+		return;
+
+	glBindVertexArray(0);
+	glDeleteBuffers(1, &positionBuffer);
+	glDeleteBuffers(1, &texCoordBuffer);
+	glDeleteVertexArrays(1, &vao);
+	vao = 0;
+}
+
+void GLScreenSpaceQuad::Draw()
+{
+	glBindVertexArray(vao);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
 }
 
 void GLQuadProperties::MatchWindowDimensions()

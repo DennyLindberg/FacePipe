@@ -45,7 +45,7 @@ public:
 
 	static void ClearActive();
 	static void ClearActiveDepth();
-	static void DrawAsQuad(GLuint FBO, float Opacity = 1.0f, glm::vec2 ScreenPos = { 0.5f, 0.5f }, glm::vec2 ScreenSize = { 1.0f, 1.0f });
+	static void DrawOnQuad(class GLScreenSpaceQuad& QuadMesh, GLuint FBO, float Opacity = 1.0f, glm::vec2 ScreenPos = { 0.5f, 0.5f }, glm::vec2 ScreenSize = { 1.0f, 1.0f });
 	static bool GetTexture(GLuint FBO, GLuint& Texture, GLuint& Width, GLuint& Height);
 
 	static bool IsValid(GLuint FBO);

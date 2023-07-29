@@ -26,6 +26,7 @@ public:
 	~ShaderManager() = default;
 
 	void Initialize(std::filesystem::path shaderFolder);
+	void InitializeDefaultShaders();
 	void Shutdown();
 
 	void LoadLiveShader(GLProgram& targetProgram, std::wstring vertexFilename, std::wstring fragmentFilename, std::wstring geometryFilename = L"");
@@ -36,4 +37,9 @@ public:
 	void UpdateCameraUBO(class Camera& camera);
 	void UpdateLightUBOPosition(const glm::fvec3& position);
 	void UpdateLightUBOColor(const glm::fvec4& color);
+
+public:
+	GLProgram screenspaceQuadShader;
+	GLProgram canvasShader;
+	GLProgram gridShader;
 };

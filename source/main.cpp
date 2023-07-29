@@ -23,10 +23,6 @@ int main(int argc, char* args[])
 	App::Initialize();
 	App::window.SetTitle("FacePipe");
 
-	GLuint defaultVao = 0;
-	glGenVertexArrays(1, &defaultVao);
-	glBindVertexArray(defaultVao);
-
 	fs::path PythonTestScript = App::Path("content/scripts/test_cv2_webcam.py");
 
 printf(R"(
@@ -93,20 +89,6 @@ printf(R"(
 	GLLine cubeMeshNormals;
 	GLMesh::LoadLinesFromMeshNormals(cubemesh, cubeMeshNormals, 0.2f);
 	cubeMeshNormals.transform.scale = cubemesh.transform.scale;
-
-	/*
-		Coordinate Axis Lines
-	*/
-	GLLine coordinateReferenceLines;
-	GLMesh::AppendCoordinateAxis(
-		coordinateReferenceLines, 
-		glm::fvec3{ 0.0f, 0.0f, 0.0f }, 
-		glm::fvec3{ 1.0f, 0.0f, 0.0f }, 
-		glm::fvec3{ 0.0f, 1.0f, 0.0f }, 
-		glm::fvec3{ 0.0f, 0.0f, 1.0f },
-		0.1f
-	);
-	coordinateReferenceLines.SendToGPU();
 
 	/*
 		User interaction parameters in the UI
@@ -309,9 +291,10 @@ printf(R"(
 		GLFramebuffers::ClearActiveDepth();
 		lineShader.Use();
 		lineShader.SetUniformFloat("useUniformColor", false);
-		coordinateReferenceLines.Draw();
+		lineShader.SetUniformMat4("model", glm::fmat4(1.0f));
+		App::geometry.coordinateAxis.Draw();
 
-		//lineShader.SetUniformMat4("model", cubeMeshNormals.transform.ModelMatrix());
+		lineShader.SetUniformMat4("model", cubeMeshNormals.transform.ModelMatrix());
 		//cubeMeshNormals.Draw();
 
 		// Done

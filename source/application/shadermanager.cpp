@@ -1,6 +1,7 @@
 #include "shadermanager.h"
 #include "opengl/camera.h"
 #include "core/utilities.h"
+#include "application/application.h"
 
 namespace fs = std::filesystem;
 
@@ -20,10 +21,115 @@ void ShaderManager::Initialize(std::filesystem::path shaderFolder)
 	// defaults until user changes it
 	UpdateLightUBOPosition(glm::fvec3{ 999999.0f });
 	UpdateLightUBOColor(glm::fvec4{ 1.0f });
+
+	InitializeDefaultShaders();
+}
+
+void ShaderManager::InitializeDefaultShaders()
+{
+	screenspaceQuadShader.Initialize();
+	screenspaceQuadShader.LoadVertexShader(R"(
+		#version 330
+
+		layout(location = 0) in vec3 aPos;
+		layout(location = 1) in vec4 aTexCoords;
+
+		uniform vec2 uPos;
+		uniform vec2 uSize;
+
+		out vec2 TexCoords;
+
+		void main()
+		{
+			// Scale based on center
+			gl_Position.x = aPos.x*uSize.x + uPos.x - 1.0f;
+			gl_Position.y = aPos.y*uSize.y - uPos.y + 1.0f;
+			gl_Position.z = aPos.z;
+			gl_Position.w = 1.0f;
+
+			TexCoords = vec2(aTexCoords.x, 1.0f-aTexCoords.y);
+		}
+	)");
+	screenspaceQuadShader.LoadFragmentShader(R"(
+		#version 330
+
+		in vec2 TexCoords;
+
+		uniform sampler2D quadTexture;
+		uniform float uOpacity;
+
+		out vec4 FragColor; 
+
+		void main()
+		{
+			FragColor = texture(quadTexture, TexCoords);
+			FragColor.a *= uOpacity;
+		}
+	)");
+	screenspaceQuadShader.CompileAndLink();
+
+	canvasShader.Initialize();
+	std::string fragment, vertex;
+	if (LoadText(App::Path("content/shaders/basic_fragment.glsl"), fragment) && LoadText(App::Path("content/shaders/basic_vertex.glsl"), vertex))
+	{
+		canvasShader.LoadFragmentShader(fragment);
+		canvasShader.LoadVertexShader(vertex);
+		canvasShader.CompileAndLink();
+	}
+
+	gridShader.Initialize();
+	gridShader.LoadFragmentShader(R"glsl(
+		#version 330
+
+		in vec4 TCoord;
+		in vec3 position;
+
+		layout(location = 0) out vec4 color;
+		uniform float gridSpacing;
+		uniform float opacity;
+			
+		void main() 
+		{
+			// Antialiased grid, slightly modified
+			// http://madebyevan.com/shaders/grid/
+
+			float gridScaling = 0.5f/gridSpacing;
+			vec2 lineCoords = position.xy * gridScaling;
+			vec2 grid = abs(fract(lineCoords-0.5)-0.5) / fwidth(lineCoords);
+			float lineMask = min(1.0, min(grid.x, grid.y));
+
+			color = vec4(lineMask, lineMask, lineMask, lineMask*opacity);
+		}
+	)glsl");
+
+	gridShader.LoadVertexShader(R"glsl(
+		#version 330
+
+		layout(location = 0) in vec3 vertexPosition;
+		layout(location = 1) in vec4 vertexTCoord;
+		uniform mat4 mvp;
+		uniform float size;
+
+		out vec4 TCoord;
+		out vec3 position;
+
+		void main()
+		{
+			gl_Position = mvp * vec4(vertexPosition*size, 1.0f);
+			TCoord = vertexTCoord;
+			position = vertexPosition*size;
+		}
+	)glsl");
+	gridShader.CompileAndLink();
+	glBindAttribLocation(gridShader.Id(), 0, "vertexPosition");
+	glBindAttribLocation(gridShader.Id(), 1, "vertexTCoord");
 }
 
 void ShaderManager::Shutdown()
 {
+	canvasShader.Shutdown();
+	screenspaceQuadShader.Shutdown();
+
 	cameraUBO.Shutdown();
 	lightUBO.Shutdown();
 	fileListener.Shutdown();
@@ -86,6 +192,7 @@ void ShaderManager::LoadShader(GLProgram& targetProgram, std::wstring vertexFile
 		}
 	}
 
+	targetProgram.Initialize();
 	targetProgram.LoadFragmentShader(fragment);
 	targetProgram.LoadVertexShader(vertex);
 	if (bShouldLoadGeometryShader)

@@ -4,6 +4,7 @@
 #include "python/python.h"
 
 #include "shadermanager.h"
+#include "geometrymanager.h"
 
 #include "imgui.h"
 #include "imgui_stdlib.h"
@@ -38,7 +39,9 @@ public:
 	static ApplicationClock clock;
 	static OpenGLWindow window;
 	static PythonInterpreter python;
+
 	static ShaderManager shaders;
+	static GeometryManager geometry;
 
 	static UniformRandomGenerator random;
 };

@@ -1,4 +1,5 @@
 #include "framebuffer.h"
+#include "application/application.h"
 
 #include <iostream>
 #include <memory>
@@ -12,63 +13,8 @@
 #include "program.h"
 #include "mesh.h"
 
-class GLFramebufferQuad
-{
-protected:
-	GLuint vao = 0;
-	GLuint positionBuffer = 0;
-	GLuint texCoordBuffer = 0;
-
-public:
-	GLFramebufferQuad()
-	{	
-		// See shader initialization in GLFramebuffer::Initialize
-		const GLuint positionAttribId = 0;
-		const GLuint texCoordAttribId = 1;
-
-		glGenVertexArrays(1, &vao);
-		glBindVertexArray(vao);
-
-		GLuint valuesPerPosition, valuesPerCoord;
-		std::vector<float> positions, tcoords;
-		GLQuad::GenerateTriangles(positions, tcoords, valuesPerPosition, valuesPerCoord);
-
-		// Generate buffers
-		glGenBuffers(1, &positionBuffer);
-		glGenBuffers(1, &texCoordBuffer);
-
-		// Load positions
-		glBindBuffer(GL_ARRAY_BUFFER, positionBuffer);
-		glEnableVertexAttribArray(positionAttribId);
-		glVertexAttribPointer(positionAttribId, valuesPerPosition, GL_FLOAT, false, 0, 0);
-		GLMeshInterface::glBufferVector(GL_ARRAY_BUFFER, positions, GL_STATIC_DRAW);
-
-		// Load UVs
-		glBindBuffer(GL_ARRAY_BUFFER, texCoordBuffer);
-		glEnableVertexAttribArray(texCoordAttribId);
-		glVertexAttribPointer(texCoordAttribId, valuesPerCoord, GL_FLOAT, false, 0, 0);
-		GLMeshInterface::glBufferVector(GL_ARRAY_BUFFER, tcoords, GL_STATIC_DRAW);
-	}
-
-	~GLFramebufferQuad()
-	{
-		glBindVertexArray(0);
-		glDeleteBuffers(1, &positionBuffer);
-		glDeleteBuffers(1, &texCoordBuffer);
-		glDeleteVertexArrays(1, &vao);
-	}
-
-	void Draw()
-	{
-		glBindVertexArray(vao);
-		glDrawArrays(GL_TRIANGLES, 0, 6);
-	}
-};
-
 bool bIsInitialized = false;
 GLuint ActiveFBO = 0;
-GLProgram* QuadShader = nullptr;
-GLFramebufferQuad* QuadMesh = nullptr;
 
 struct RenderTarget
 {
@@ -133,58 +79,6 @@ void GLFramebuffers::Initialize(GLuint Width, GLuint Height, glm::vec4 DefaultCl
 	DefaultRenderTarget.height = Height;
 	DefaultRenderTarget.clearColor = DefaultClearColor;
 	RenderTargets.push_back(DefaultRenderTarget);
-
-	if (!QuadShader)
-	{
-		QuadShader = new GLProgram();
-
-		QuadShader->LoadVertexShader(R"(
-			#version 330
-
-			layout(location = 0) in vec3 aPos;
-			layout(location = 1) in vec4 aTexCoords;
-
-			uniform vec2 uPos;
-			uniform vec2 uSize;
-
-			out vec2 TexCoords;
-
-			void main()
-			{
-				// Scale based on center
-				gl_Position.x = aPos.x*uSize.x + uPos.x - 1.0f;
-				gl_Position.y = aPos.y*uSize.y - uPos.y + 1.0f;
-				gl_Position.z = aPos.z;
-				gl_Position.w = 1.0f;
-
-				TexCoords = vec2(aTexCoords.x, 1.0f-aTexCoords.y);
-			}
-		)");
-
-		QuadShader->LoadFragmentShader(R"(
-			#version 330
-
-			in vec2 TexCoords;
-
-			uniform sampler2D quadTexture;
-			uniform float uOpacity;
-
-			out vec4 FragColor; 
-
-			void main()
-			{
-				FragColor = texture(quadTexture, TexCoords);
-				FragColor.a *= uOpacity;
-			}
-		)");
-
-		QuadShader->CompileAndLink();
-	}
-
-	if (!QuadMesh)
-	{
-		QuadMesh = new GLFramebufferQuad();
-	}
 }
 
 void GLFramebuffers::Shutdown()
@@ -195,18 +89,6 @@ void GLFramebuffers::Shutdown()
 		DestroyRenderTarget(target);
 	}
 	RenderTargets.clear();
-
-	if (QuadShader)
-	{
-		delete QuadShader;
-		QuadShader = nullptr;
-	}
-
-	if (QuadMesh)
-	{
-		delete QuadMesh;
-		QuadMesh = nullptr;
-	}
 }
 
 GLuint GLFramebuffers::Create(GLuint Width, GLuint Height, glm::vec4 ClearColor)
@@ -306,17 +188,18 @@ void GLFramebuffers::ClearActiveDepth()
 	}
 }
 
-void GLFramebuffers::DrawAsQuad(GLuint FBO, float Opacity, glm::vec2 ScreenPos, glm::vec2 ScreenSize)
+void GLFramebuffers::DrawOnQuad(class GLScreenSpaceQuad& QuadMesh, GLuint FBO, float Opacity, glm::vec2 ScreenPos, glm::vec2 ScreenSize)
 {
-	QuadShader->Use();
-	QuadShader->SetUniformFloat("uOpacity", Opacity);
-	QuadShader->SetUniformVec2("uPos", ScreenPos*2.0f);
-	QuadShader->SetUniformVec2("uSize", ScreenSize);
+	auto& shader = App::shaders.screenspaceQuadShader;
+	shader.Use();
+	shader.SetUniformFloat("uOpacity", Opacity);
+	shader.SetUniformVec2("uPos", ScreenPos*2.0f);
+	shader.SetUniformVec2("uSize", ScreenSize);
 	if (RenderTarget* Target = FindRenderTarget(FBO))
 	{
 		glBindTexture(GL_TEXTURE_2D, Target->texture);
 	}
-	QuadMesh->Draw();
+	QuadMesh.Draw();
 }
 
 bool GLFramebuffers::GetTexture(GLuint FBO, GLuint& Texture, GLuint& Width, GLuint& Height)

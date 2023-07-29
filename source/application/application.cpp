@@ -6,7 +6,9 @@ ApplicationSettings App::settings = ApplicationSettings();
 ApplicationClock App::clock = ApplicationClock();
 OpenGLWindow App::window = OpenGLWindow();
 PythonInterpreter App::python = PythonInterpreter();
+
 ShaderManager App::shaders = ShaderManager();
+GeometryManager App::geometry = GeometryManager();
 
 UniformRandomGenerator App::random = UniformRandomGenerator();
 
@@ -15,15 +17,17 @@ void App::Initialize()
 	App::settings.windowRatio = App::settings.windowWidth / (float)App::settings.windowHeight;
 	App::window.Initialize(App::settings.windowWidth, App::settings.windowHeight, App::settings.fullscreen, App::settings.vsync);
 	App::python.Initialize();
-	GLFramebuffers::Initialize(settings.windowWidth, settings.windowHeight, App::settings.clearColor);
+	App::geometry.Initialize();
 	App::shaders.Initialize(App::Path("content/shaders"));
+	GLFramebuffers::Initialize(settings.windowWidth, settings.windowHeight, App::settings.clearColor);
 }
 
 void App::Shutdown()
 {
+	GLFramebuffers::Shutdown();
+	App::geometry.Shutdown();
 	App::shaders.Shutdown();
 	App::python.Shutdown();
-	GLFramebuffers::Shutdown();
 	App::window.Destroy();
 	exit(0);
 }

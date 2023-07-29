@@ -123,8 +123,11 @@ protected:
 	std::map<std::string, UniformMat4> mat4Uniforms;
 
 public:
-	GLProgram();
-	~GLProgram();
+	GLProgram() {}
+	~GLProgram() { Shutdown(); }
+
+	void Initialize();
+	void Shutdown();
 
 	bool HasGeometryShader() { return geometry_shader_id != -1; }
 	void LoadFragmentShader(const std::string& shaderText);

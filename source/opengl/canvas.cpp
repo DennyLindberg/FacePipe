@@ -1,8 +1,6 @@
 #include "canvas.h"
 #include "application/application.h"
 
-std::shared_ptr<GLProgram> canvasShader;
-
 void DrawBresenhamLine(GLTexture& texture, float x1, float y1, float x2, float y2, Color& color)
 {
 	// Taken from Rosetta Code
@@ -76,7 +74,7 @@ void Canvas2D::RenderToScreen()
 		texture->CopyToGPU();
 	}
 
-	canvasShader->Use();
+	App::shaders.canvasShader.Use();
 	texture->UseForDrawing();
 	quad->Draw();
 }
@@ -87,18 +85,6 @@ void Canvas2D::Initialize(GLQuadProperties properties)
 	minY = int(properties.positionY);
 	maxX = minX + int(properties.width);
 	maxY = minY + int(properties.height);
-
-	if (!canvasShader)
-	{
-		canvasShader = std::make_shared<GLProgram>();
-		std::string fragment, vertex;
-		if (LoadText(App::Path("content/shaders/basic_fragment.glsl"), fragment) && LoadText(App::Path("content/shaders/basic_vertex.glsl"), vertex))
-		{
-			canvasShader->LoadFragmentShader(fragment);
-			canvasShader->LoadVertexShader(vertex);
-			canvasShader->CompileAndLink();
-		}
-	}
 
 	quad = std::make_shared<GLQuad>(properties);
 	texture = std::make_shared<GLTexture>(int(properties.width), int(properties.height));
