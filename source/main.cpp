@@ -54,7 +54,7 @@ printf(R"(
 	Camera camera;
 	camera.fieldOfView = CAMERA_FOV;
 
-	GLQuad backgroundQuad;
+	GLQuad quadMesh;
 	GLGrid grid;
 	grid.size = 5.0f;
 	grid.gridSpacing = 0.1f;
@@ -299,7 +299,7 @@ printf(R"(
 
 		// Background color gradient
 		backgroundShader.Use();
-		backgroundQuad.Draw();
+		quadMesh.Draw();
 		GLFramebuffers::ClearActiveDepth();
 		
 		// Set scene render properties
@@ -331,7 +331,7 @@ printf(R"(
 
 		// Grid
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		grid.Draw(projectionmatrix * viewmatrix);
+		grid.Draw(quadMesh, projectionmatrix * viewmatrix);
 		
 		// Coordinate axis' xray on top of scene
 		GLFramebuffers::ClearActiveDepth();

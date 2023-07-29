@@ -3,11 +3,10 @@
 #include "program.h"
 #include <memory>
 
-class GLGrid : public GLQuad
+class GLGrid
 {
 protected:
 	GLProgram gridShaderProgram;
-	std::shared_ptr<GLQuad> mesh;
 
 	GLuint mvpUniform = 0;
 	GLuint gridUniform = 0;
@@ -22,5 +21,5 @@ public:
 	GLGrid();
 	~GLGrid() = default;
 
-	void Draw(const glm::mat4& mvp);
+	void Draw(GLQuad& mesh, const glm::mat4& mvp);
 };

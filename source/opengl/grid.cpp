@@ -4,8 +4,6 @@ glm::mat4 planeRotationMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f)
 
 GLGrid::GLGrid()
 {
-	mesh = std::make_shared<GLQuad>();
-
 	gridShaderProgram.LoadFragmentShader(R"glsl(
 			#version 330
 
@@ -58,7 +56,7 @@ GLGrid::GLGrid()
 	opacityUniform = glGetUniformLocation(gridShaderProgram.Id(), "opacity");
 }
 
-void GLGrid::Draw(const glm::mat4& mvp)
+void GLGrid::Draw(GLQuad& mesh, const glm::mat4& mvp)
 {
 	glm::mat4 mvpOffset = mvp * planeRotationMatrix;
 	
@@ -67,5 +65,5 @@ void GLGrid::Draw(const glm::mat4& mvp)
 	glUniform1fv(sizeUniform, 1, &size);
 	glUniform1fv(opacityUniform, 1, &opacity);
 	glUniformMatrix4fv(mvpUniform, 1, GL_FALSE, &mvpOffset[0][0]);
-	mesh->Draw();
+	mesh.Draw();
 }
