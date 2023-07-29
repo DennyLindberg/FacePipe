@@ -45,6 +45,7 @@ public:
 	void UpdateLightUBOColor(const glm::fvec4& color);
 
 public:
+	GLProgram defaultMeshShader;
 	GLProgram screenspaceQuadShader;
 	GLProgram canvasShader;
 	GLProgram gridShader;

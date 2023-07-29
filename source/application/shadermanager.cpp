@@ -27,6 +27,12 @@ void ShaderManager::Initialize(std::filesystem::path shaderFolder)
 
 void ShaderManager::InitializeDefaultShaders()
 {
+	defaultMeshShader.Initialize();
+	LoadShader(defaultMeshShader, L"defaultmesh_vertex.glsl", L"defaultmesh_fragment.glsl", L"defaultmesh_geometry.glsl");
+	defaultMeshShader.SetUniformMat4("model", glm::fmat4(1.0f));
+	defaultMeshShader.SetUniformInt("useTexture", 0);
+	defaultMeshShader.SetUniformInt("useFlatShading", 0);
+
 	screenspaceQuadShader.Initialize();
 	screenspaceQuadShader.LoadVertexShader(R"(
 		#version 330

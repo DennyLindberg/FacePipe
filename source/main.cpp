@@ -64,11 +64,10 @@ printf(R"(
 	defaultTexture.UseForDrawing();
 
 	// Change each LoadShader call to LoadLiveShader for live editing
-	GLProgram lineShader, backgroundShader, headShader, bezierLinesShader;
+	GLProgram& meshShader = App::shaders.defaultMeshShader;
+	GLProgram lineShader, backgroundShader, bezierLinesShader;
 	App::shaders.LoadShader(lineShader, L"line_vertex.glsl", L"line_fragment.glsl");
 	App::shaders.LoadShader(backgroundShader, L"background_vertex.glsl", L"background_fragment.glsl");
-
-	App::shaders.LoadLiveShader(headShader, L"head_vertex.glsl", L"head_fragment.glsl");//, L"head_geometry.glsl");
 	App::shaders.LoadLiveShader(bezierLinesShader, L"bezier_vertex.glsl", L"line_fragment.glsl", L"bezier_lines_geometry.glsl");
 
 	/*
@@ -270,17 +269,18 @@ printf(R"(
 			// Debug: Test changing the mesh transform over time
 			//headmesh.transform.rotation = glm::vec3(0.0f, 360.0f*sinf((float) App::clock.time), 0.0f);
 			
-			headShader.Use();
-			headShader.SetUniformMat4("model", headmesh.transform.ModelMatrix());
-			headShader.SetUniformInt("useTexture", 1);
+			meshShader.Use();
+			meshShader.SetUniformMat4("model", headmesh.transform.ModelMatrix());
+			meshShader.SetUniformInt("useTexture", 1);
+			meshShader.SetUniformInt("useFlatShading", 0);
 			DefaultTexture.UseForDrawing();
 			headmesh.Draw();
 			
 			if (auto F = GLFramebuffers::BindScoped(RenderTarget))
 			{
 				GLFramebuffers::ClearActive();
-				headShader.SetUniformMat4("model", cubemesh.transform.ModelMatrix());
-				headShader.SetUniformInt("useTexture", 0);
+				meshShader.SetUniformMat4("model", cubemesh.transform.ModelMatrix());
+				meshShader.SetUniformInt("useTexture", 0);
 				cubemesh.Draw();
 			}
 		}
