@@ -648,57 +648,6 @@ void GLBezierStrips::Draw()
 	glDisable(GL_PRIMITIVE_RESTART);
 }
 
-void GLScreenSpaceQuad::Initialize()
-{
-	if (vao != 0)
-		return;
-
-	// See shader initialization in GLFramebuffer::Initialize
-	const GLuint positionAttribId = 0;
-	const GLuint texCoordAttribId = 1;
-
-	glGenVertexArrays(1, &vao);
-	glBindVertexArray(vao);
-
-	GLuint valuesPerPosition, valuesPerCoord;
-	std::vector<float> positions, tcoords;
-	GLQuad::GenerateTriangles(positions, tcoords, valuesPerPosition, valuesPerCoord);
-
-	// Generate buffers
-	glGenBuffers(1, &positionBuffer);
-	glGenBuffers(1, &texCoordBuffer);
-
-	// Load positions
-	glBindBuffer(GL_ARRAY_BUFFER, positionBuffer);
-	glEnableVertexAttribArray(positionAttribId);
-	glVertexAttribPointer(positionAttribId, valuesPerPosition, GL_FLOAT, false, 0, 0);
-	GLMeshInterface::glBufferVector(GL_ARRAY_BUFFER, positions, GL_STATIC_DRAW);
-
-	// Load UVs
-	glBindBuffer(GL_ARRAY_BUFFER, texCoordBuffer);
-	glEnableVertexAttribArray(texCoordAttribId);
-	glVertexAttribPointer(texCoordAttribId, valuesPerCoord, GL_FLOAT, false, 0, 0);
-	GLMeshInterface::glBufferVector(GL_ARRAY_BUFFER, tcoords, GL_STATIC_DRAW);
-}
-
-void GLScreenSpaceQuad::Shutdown()
-{
-	if (vao == 0)
-		return;
-
-	glBindVertexArray(0);
-	glDeleteBuffers(1, &positionBuffer);
-	glDeleteBuffers(1, &texCoordBuffer);
-	glDeleteVertexArrays(1, &vao);
-	vao = 0;
-}
-
-void GLScreenSpaceQuad::Draw()
-{
-	glBindVertexArray(vao);
-	glDrawArrays(GL_TRIANGLES, 0, 6);
-}
-
 void GLQuad::Initialize()
 {
 	if (vao != 0)

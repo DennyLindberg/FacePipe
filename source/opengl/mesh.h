@@ -188,22 +188,6 @@ public:
 	void Draw();
 };
 
-class GLScreenSpaceQuad
-{
-protected:
-	GLuint vao = 0;
-	GLuint positionBuffer = 0;
-	GLuint texCoordBuffer = 0;
-
-public:
-	GLScreenSpaceQuad()	{}
-	~GLScreenSpaceQuad() { Shutdown(); }
-
-	void Initialize();
-	void Shutdown();
-	void Draw();
-};
-
 class GLQuad : public GLMeshInterface
 {
 protected:
