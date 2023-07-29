@@ -7,15 +7,13 @@ ApplicationClock::ApplicationClock()
 {
 	time = SecondsSinceEpoch();
 	deltaTime = 0.1; // non-zero init
-	lastTickTime = time-deltaTime;
 }
 
 void ApplicationClock::Tick()
 {
-	double newtime = SecondsSinceEpoch();
-	deltaTime = newtime - lastTickTime;
-	lastTickTime = time + 0.0; // atomic bullshit
-	time = newtime;
+	double previousTime = time;
+	time = SecondsSinceEpoch();
+	deltaTime = time - previousTime;
 }
 
 double ApplicationClock::SecondsSinceEpoch()
