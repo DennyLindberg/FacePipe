@@ -47,6 +47,8 @@ public:
 public:
 	GLProgram defaultMeshShader;
 	GLProgram screenspaceQuadShader;
-	GLProgram canvasShader;
 	GLProgram gridShader;
+	GLProgram lineShader; 
+	GLProgram backgroundShader;
+	GLProgram bezierLinesShader;
 };

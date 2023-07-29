@@ -27,124 +27,31 @@ void ShaderManager::Initialize(std::filesystem::path shaderFolder)
 
 void ShaderManager::InitializeDefaultShaders()
 {
-	defaultMeshShader.Initialize();
 	LoadShader(defaultMeshShader, L"defaultmesh_vertex.glsl", L"defaultmesh_fragment.glsl", L"defaultmesh_geometry.glsl");
 	defaultMeshShader.SetUniformMat4("model", glm::fmat4(1.0f));
 	defaultMeshShader.SetUniformInt("useTexture", 0);
 	defaultMeshShader.SetUniformInt("useFlatShading", 0);
 
-	screenspaceQuadShader.Initialize();
-	screenspaceQuadShader.LoadVertexShader(R"(
-		#version 330
-
-		layout(location = 0) in vec3 vertexPosition;
-		layout(location = 3) in vec4 vertexTCoord;
-
-		uniform vec2 uPos;
-		uniform vec2 uSize;
-		uniform bool uFlipY;
-
-		out vec2 TexCoords;
-
-		void main()
-		{
-			// Scale based on center
-			gl_Position.x = vertexPosition.x*uSize.x + uPos.x - 1.0f;
-			gl_Position.y = vertexPosition.y*uSize.y - uPos.y + 1.0f;
-			gl_Position.z = vertexPosition.z;
-			gl_Position.w = 1.0f;
-
-			if (uFlipY)
-				TexCoords = vec2(vertexTCoord.x, vertexTCoord.y);
-			else
-				TexCoords = vec2(vertexTCoord.x, 1.0f - vertexTCoord.y);
-		}
-	)");
-	screenspaceQuadShader.LoadFragmentShader(R"(
-		#version 330
-
-		in vec2 TexCoords;
-
-		uniform sampler2D quadTexture;
-		uniform float uOpacity;
-
-		out vec4 FragColor; 
-
-		void main()
-		{
-			FragColor = texture(quadTexture, TexCoords);
-			FragColor.a *= uOpacity;
-		}
-	)");
-	screenspaceQuadShader.CompileAndLink();
-	glBindAttribLocation(screenspaceQuadShader.Id(), ShaderManager::positionAttribId, "vertexPosition");
-	glBindAttribLocation(screenspaceQuadShader.Id(), ShaderManager::texCoordAttribId, "vertexTCoord");
+	LoadShader(screenspaceQuadShader, L"screenspacequad_vertex.glsl", L"screenspacequad_fragment.glsl");
 	screenspaceQuadShader.SetUniformFloat("uOpacity", 1.0f);
 	screenspaceQuadShader.SetUniformVec2("uPos", glm::fvec2(1.0f));
 	screenspaceQuadShader.SetUniformVec2("uSize", glm::fvec2(1.0f));
 	screenspaceQuadShader.SetUniformInt("uFlipY", 0);
 
-	canvasShader.Initialize();
-	std::string fragment, vertex;
-	if (LoadText(App::Path("content/shaders/basic_fragment.glsl"), fragment) && LoadText(App::Path("content/shaders/basic_vertex.glsl"), vertex))
-	{
-		canvasShader.LoadFragmentShader(fragment);
-		canvasShader.LoadVertexShader(vertex);
-		canvasShader.CompileAndLink();
-	}
+	LoadShader(gridShader, L"grid_vertex.glsl", L"grid_fragment.glsl");
+	LoadShader(lineShader, L"line_vertex.glsl", L"line_fragment.glsl");
+	lineShader.SetUniformMat4("model", glm::fmat4(1.0f));
+	lineShader.SetUniformFloat("useUniformColor", false);
 
-	gridShader.Initialize();
-	gridShader.LoadFragmentShader(R"glsl(
-		#version 330
-
-		in vec4 TCoord;
-		in vec3 position;
-
-		layout(location = 0) out vec4 color;
-		uniform float gridSpacing;
-		uniform float opacity;
-			
-		void main() 
-		{
-			// Antialiased grid, slightly modified
-			// http://madebyevan.com/shaders/grid/
-
-			float gridScaling = 0.5f/gridSpacing;
-			vec2 lineCoords = position.xy * gridScaling;
-			vec2 grid = abs(fract(lineCoords-0.5)-0.5) / fwidth(lineCoords);
-			float lineMask = min(1.0, min(grid.x, grid.y));
-
-			color = vec4(lineMask, lineMask, lineMask, lineMask*opacity);
-		}
-	)glsl");
-
-	gridShader.LoadVertexShader(R"glsl(
-		#version 330
-
-		layout(location = 0) in vec3 vertexPosition;
-		layout(location = 3) in vec4 vertexTCoord;
-		uniform mat4 mvp;
-		uniform float size;
-
-		out vec4 TCoord;
-		out vec3 position;
-
-		void main()
-		{
-			gl_Position = mvp * vec4(vertexPosition*size, 1.0f);
-			TCoord = vertexTCoord;
-			position = vertexPosition*size;
-		}
-	)glsl");
-	gridShader.CompileAndLink();
-	glBindAttribLocation(gridShader.Id(), ShaderManager::positionAttribId, "vertexPosition");
-	glBindAttribLocation(gridShader.Id(), ShaderManager::texCoordAttribId, "vertexTCoord");
+	LoadShader(backgroundShader, L"background_vertex.glsl", L"background_fragment.glsl");
+	LoadShader(bezierLinesShader, L"bezier_vertex.glsl", L"line_fragment.glsl", L"bezier_lines_geometry.glsl");
 }
 
 void ShaderManager::Shutdown()
 {
-	canvasShader.Shutdown();
+	defaultMeshShader.Shutdown();
 	screenspaceQuadShader.Shutdown();
+	gridShader.Shutdown();
 
 	cameraUBO.Shutdown();
 	lightUBO.Shutdown();

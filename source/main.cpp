@@ -63,12 +63,10 @@ printf(R"(
 	GLTexture defaultTexture{ App::Path("content/textures/default.png") };
 	defaultTexture.UseForDrawing();
 
-	// Change each LoadShader call to LoadLiveShader for live editing
 	GLProgram& meshShader = App::shaders.defaultMeshShader;
-	GLProgram lineShader, backgroundShader, bezierLinesShader;
-	App::shaders.LoadShader(lineShader, L"line_vertex.glsl", L"line_fragment.glsl");
-	App::shaders.LoadShader(backgroundShader, L"background_vertex.glsl", L"background_fragment.glsl");
-	App::shaders.LoadLiveShader(bezierLinesShader, L"bezier_vertex.glsl", L"line_fragment.glsl", L"bezier_lines_geometry.glsl");
+	GLProgram& lineShader = App::shaders.lineShader;
+	GLProgram& backgroundShader = App::shaders.backgroundShader;
+	GLProgram& bezierLinesShader = App::shaders.bezierLinesShader;
 
 	/*
 		Load head mesh
@@ -292,8 +290,6 @@ printf(R"(
 		// Coordinate axis' xray on top of scene
 		GLFramebuffers::ClearActiveDepth();
 		lineShader.Use();
-		lineShader.SetUniformFloat("useUniformColor", false);
-		lineShader.SetUniformMat4("model", glm::fmat4(1.0f));
 		App::geometry.coordinateAxis.Draw();
 
 		lineShader.SetUniformMat4("model", cubeMeshNormals.transform.ModelMatrix());
