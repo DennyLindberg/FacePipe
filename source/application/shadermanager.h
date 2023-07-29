@@ -22,6 +22,12 @@ protected:
 	GLUBO lightUBO;
 
 public:
+	static const GLuint positionAttribId = 0;
+	static const GLuint normalAttribId = 1;
+	static const GLuint colorAttribId = 2;
+	static const GLuint texCoordAttribId = 3;
+
+public:
 	ShaderManager() = default;
 	~ShaderManager() = default;
 

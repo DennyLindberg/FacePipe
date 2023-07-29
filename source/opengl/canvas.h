@@ -26,6 +26,7 @@ public:
 	Canvas drawing methods
 */
 public:
-	void Fill(Color& color);
-	void DrawLine(glm::fvec2 start, glm::fvec2 end, Color& color);
+	void Fill(const Color& color);
+	void Fill(const FColor& color);
+	void DrawLine(glm::fvec2 start, glm::fvec2 end, const Color& color);
 };

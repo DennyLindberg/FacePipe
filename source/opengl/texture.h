@@ -51,19 +51,19 @@ public:
 	void SetPixel(unsigned int x, unsigned int y, GLubyte r, GLubyte g, GLubyte b, GLubyte a);
 	void SetPixel(unsigned int x, unsigned int y, double r, double g, double b, double a);
 
-	void SetPixel(unsigned int x, unsigned int y, Color& color);
-	void SetPixel(unsigned int x, unsigned int y, FColor& color);
+	void SetPixel(unsigned int x, unsigned int y, const Color& color);
+	void SetPixel(unsigned int x, unsigned int y, const FColor& color);
 
-	void SetPixelSafe(int x, int y, Color& color);
-	void SetPixelSafe(int x, int y, FColor& color);
+	void SetPixelSafe(int x, int y, const Color& color);
+	void SetPixelSafe(int x, int y, const FColor& color);
 
 	unsigned int PixelArrayIndex(unsigned int x, unsigned int y);
 
 	void UseForDrawing(unsigned int TextureUnit = 0);
 	void CopyToGPU();
 
-	void Fill(Color& color);
-	void Fill(FColor& color);
+	void Fill(const Color& color);
+	void Fill(const FColor& color);
 
 	void FillDebug();
 	void SaveAsPNG(std::filesystem::path filepath, bool incrementNewFile = false);

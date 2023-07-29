@@ -31,23 +31,27 @@ void ShaderManager::InitializeDefaultShaders()
 	screenspaceQuadShader.LoadVertexShader(R"(
 		#version 330
 
-		layout(location = 0) in vec3 aPos;
-		layout(location = 1) in vec4 aTexCoords;
+		layout(location = 0) in vec3 vertexPosition;
+		layout(location = 3) in vec4 vertexTCoord;
 
 		uniform vec2 uPos;
 		uniform vec2 uSize;
+		uniform bool uFlipY;
 
 		out vec2 TexCoords;
 
 		void main()
 		{
 			// Scale based on center
-			gl_Position.x = aPos.x*uSize.x + uPos.x - 1.0f;
-			gl_Position.y = aPos.y*uSize.y - uPos.y + 1.0f;
-			gl_Position.z = aPos.z;
+			gl_Position.x = vertexPosition.x*uSize.x + uPos.x - 1.0f;
+			gl_Position.y = vertexPosition.y*uSize.y - uPos.y + 1.0f;
+			gl_Position.z = vertexPosition.z;
 			gl_Position.w = 1.0f;
 
-			TexCoords = vec2(aTexCoords.x, 1.0f-aTexCoords.y);
+			if (uFlipY)
+				TexCoords = vec2(vertexTCoord.x, vertexTCoord.y);
+			else
+				TexCoords = vec2(vertexTCoord.x, 1.0f - vertexTCoord.y);
 		}
 	)");
 	screenspaceQuadShader.LoadFragmentShader(R"(
@@ -67,6 +71,12 @@ void ShaderManager::InitializeDefaultShaders()
 		}
 	)");
 	screenspaceQuadShader.CompileAndLink();
+	glBindAttribLocation(screenspaceQuadShader.Id(), ShaderManager::positionAttribId, "vertexPosition");
+	glBindAttribLocation(screenspaceQuadShader.Id(), ShaderManager::texCoordAttribId, "vertexTCoord");
+	screenspaceQuadShader.SetUniformFloat("uOpacity", 1.0f);
+	screenspaceQuadShader.SetUniformVec2("uPos", glm::fvec2(1.0f));
+	screenspaceQuadShader.SetUniformVec2("uSize", glm::fvec2(1.0f));
+	screenspaceQuadShader.SetUniformInt("uFlipY", 0);
 
 	canvasShader.Initialize();
 	std::string fragment, vertex;
@@ -106,7 +116,7 @@ void ShaderManager::InitializeDefaultShaders()
 		#version 330
 
 		layout(location = 0) in vec3 vertexPosition;
-		layout(location = 1) in vec4 vertexTCoord;
+		layout(location = 3) in vec4 vertexTCoord;
 		uniform mat4 mvp;
 		uniform float size;
 
@@ -121,8 +131,8 @@ void ShaderManager::InitializeDefaultShaders()
 		}
 	)glsl");
 	gridShader.CompileAndLink();
-	glBindAttribLocation(gridShader.Id(), 0, "vertexPosition");
-	glBindAttribLocation(gridShader.Id(), 1, "vertexTCoord");
+	glBindAttribLocation(gridShader.Id(), ShaderManager::positionAttribId, "vertexPosition");
+	glBindAttribLocation(gridShader.Id(), ShaderManager::texCoordAttribId, "vertexTCoord");
 }
 
 void ShaderManager::Shutdown()

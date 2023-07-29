@@ -188,13 +188,15 @@ void GLFramebuffers::ClearActiveDepth()
 	}
 }
 
-void GLFramebuffers::DrawOnQuad(class GLScreenSpaceQuad& QuadMesh, GLuint FBO, float Opacity, glm::vec2 ScreenPos, glm::vec2 ScreenSize)
+void GLFramebuffers::DrawOnQuad(class GLQuad& QuadMesh, GLuint FBO, float Opacity, glm::vec2 ScreenPos, glm::vec2 ScreenSize)
 {
 	auto& shader = App::shaders.screenspaceQuadShader;
 	shader.Use();
 	shader.SetUniformFloat("uOpacity", Opacity);
 	shader.SetUniformVec2("uPos", ScreenPos*2.0f);
 	shader.SetUniformVec2("uSize", ScreenSize);
+	shader.SetUniformInt("uFlipY", 0);
+
 	if (RenderTarget* Target = FindRenderTarget(FBO))
 	{
 		glBindTexture(GL_TEXTURE_2D, Target->texture);

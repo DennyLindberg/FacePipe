@@ -93,7 +93,7 @@ printf(R"(
 	bool renderBezierLines = false;
 	bool lightFollowsCamera = false;
 	bool drawDebugNormals = false;
-	
+
 	/*
 		IMGUI callback
 	*/

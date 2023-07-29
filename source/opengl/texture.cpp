@@ -41,7 +41,7 @@ void GLTexture::SetPixel(unsigned int x, unsigned int y, double r, double g, dou
 	SetPixel(x, y, GLubyte(r*255.0), GLubyte(g*255.0), GLubyte(b*255.0), GLubyte(a*255.0));
 }
 
-void GLTexture::SetPixel(unsigned int x, unsigned int y, Color& color)
+void GLTexture::SetPixel(unsigned int x, unsigned int y, const Color& color)
 {
 	unsigned int pixelIndex = PixelArrayIndex(x, y);
 	glData[pixelIndex + 0] = color.r;
@@ -50,7 +50,7 @@ void GLTexture::SetPixel(unsigned int x, unsigned int y, Color& color)
 	glData[pixelIndex + 3] = color.a;
 }
 
-void GLTexture::SetPixel(unsigned int x, unsigned int y, FColor& color)
+void GLTexture::SetPixel(unsigned int x, unsigned int y, const FColor& color)
 {
 	unsigned int pixelIndex = PixelArrayIndex(x, y);
 	glData[pixelIndex + 0] = GLubyte(std::max(std::min(1.0f, color.r), 0.0f) * 255);
@@ -59,7 +59,7 @@ void GLTexture::SetPixel(unsigned int x, unsigned int y, FColor& color)
 	glData[pixelIndex + 3] = GLubyte(std::max(std::min(1.0f, color.a), 0.0f) * 255);
 }
 
-void GLTexture::SetPixelSafe(int x, int y, Color& color)
+void GLTexture::SetPixelSafe(int x, int y, const Color& color)
 {
 	if (x > 0 && y > 0 && x < width && y < height)
 	{
@@ -67,7 +67,7 @@ void GLTexture::SetPixelSafe(int x, int y, Color& color)
 	}
 }
 
-void GLTexture::SetPixelSafe(int x, int y, FColor& color)
+void GLTexture::SetPixelSafe(int x, int y, const FColor& color)
 {
 	if (x > 0 && y > 0 && x < width && y < height)
 	{
@@ -93,7 +93,7 @@ void GLTexture::CopyToGPU()
 	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, PIXEL_FORMAT, PIXEL_TYPE, (GLvoid*)glData.data());
 }
 
-void GLTexture::Fill(Color& color)
+void GLTexture::Fill(const Color& color)
 {
 	for (int x = 0; x < width; ++x)
 	{
@@ -104,7 +104,7 @@ void GLTexture::Fill(Color& color)
 	}
 }
 
-void GLTexture::Fill(FColor& color)
+void GLTexture::Fill(const FColor& color)
 {
 	Color remapped;
 	remapped.r = GLubyte(std::max(std::min(1.0f, color.r), 0.0f) * 255);

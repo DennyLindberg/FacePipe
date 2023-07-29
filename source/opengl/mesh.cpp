@@ -11,11 +11,6 @@
 #include <string>
 #include <iostream>
 
-const GLuint positionAttribId = 0;
-const GLuint normalAttribId = 1;
-const GLuint colorAttribId = 2;
-const GLuint texCoordAttribId = 3;
-
 glm::mat4 MeshTransform::ModelMatrix() const
 {
 	glm::mat4 s = glm::scale(glm::mat4{ 1.0f }, scale);
@@ -94,23 +89,23 @@ GLTriangleMesh::GLTriangleMesh(bool allocate)
 
 	// Position buffer
 	glBindBuffer(GL_ARRAY_BUFFER, positionBuffer);
-	glEnableVertexAttribArray(positionAttribId);
-	glVertexAttribPointer(positionAttribId, 3, GL_FLOAT, false, 0, 0);
+	glEnableVertexAttribArray(ShaderManager::positionAttribId);
+	glVertexAttribPointer(ShaderManager::positionAttribId, 3, GL_FLOAT, false, 0, 0);
 
 	// Normal buffer
 	glBindBuffer(GL_ARRAY_BUFFER, normalBuffer);
-	glEnableVertexAttribArray(normalAttribId);
-	glVertexAttribPointer(normalAttribId, 3, GL_FLOAT, false, 0, 0);
+	glEnableVertexAttribArray(ShaderManager::normalAttribId);
+	glVertexAttribPointer(ShaderManager::normalAttribId, 3, GL_FLOAT, false, 0, 0);
 	
 	// Color buffer
 	glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
-	glEnableVertexAttribArray(colorAttribId);
-	glVertexAttribPointer(colorAttribId, 4, GL_FLOAT, false, 0, 0);
+	glEnableVertexAttribArray(ShaderManager::colorAttribId);
+	glVertexAttribPointer(ShaderManager::colorAttribId, 4, GL_FLOAT, false, 0, 0);
 
 	// TexCoord buffer
 	glBindBuffer(GL_ARRAY_BUFFER, texCoordBuffer);
-	glEnableVertexAttribArray(texCoordAttribId);
-	glVertexAttribPointer(texCoordAttribId, 4, GL_FLOAT, false, 0, 0);
+	glEnableVertexAttribArray(ShaderManager::texCoordAttribId);
+	glVertexAttribPointer(ShaderManager::texCoordAttribId, 4, GL_FLOAT, false, 0, 0);
 
 	// Index buffer
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
@@ -258,15 +253,15 @@ void GLLine::Initialize()
 
 	// Load positions
 	int valuesPerPosition = 3; // glm::fvec3 has 3 floats
-	glEnableVertexAttribArray(positionAttribId);
+	glEnableVertexAttribArray(ShaderManager::positionAttribId);
 	glBindBuffer(GL_ARRAY_BUFFER, positionBuffer);
-	glVertexAttribPointer(positionAttribId, valuesPerPosition, GL_FLOAT, false, 0, 0);
+	glVertexAttribPointer(ShaderManager::positionAttribId, valuesPerPosition, GL_FLOAT, false, 0, 0);
 
 	// Load colors
 	valuesPerPosition = 4; // glm::fvec4 has 4 floats
-	glEnableVertexAttribArray(colorAttribId);
+	glEnableVertexAttribArray(ShaderManager::colorAttribId);
 	glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
-	glVertexAttribPointer(colorAttribId, valuesPerPosition, GL_FLOAT, false, 0, 0);
+	glVertexAttribPointer(ShaderManager::colorAttribId, valuesPerPosition, GL_FLOAT, false, 0, 0);
 }
 
 void GLLine::Shutdown()
@@ -326,9 +321,9 @@ GLLineStrips::GLLineStrips()
 	
 	// Load positions
 	int valuesPerPosition = 3; // glm::fvec3 has 3 floats
-	glEnableVertexAttribArray(positionAttribId);
+	glEnableVertexAttribArray(ShaderManager::positionAttribId);
 	glBindBuffer(GL_ARRAY_BUFFER, positionBuffer);
-	glVertexAttribPointer(positionAttribId, valuesPerPosition, GL_FLOAT, false, 0, 0);
+	glVertexAttribPointer(ShaderManager::positionAttribId, valuesPerPosition, GL_FLOAT, false, 0, 0);
 
 	// Index buffer
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
@@ -736,14 +731,14 @@ void GLQuad::Initialize()
 
 	// Load positions
 	glBindBuffer(GL_ARRAY_BUFFER, positionBuffer);
-	glEnableVertexAttribArray(positionAttribId);
-	glVertexAttribPointer(positionAttribId, valuesPerPosition, GL_FLOAT, false, 0, 0);
+	glEnableVertexAttribArray(ShaderManager::positionAttribId);
+	glVertexAttribPointer(ShaderManager::positionAttribId, valuesPerPosition, GL_FLOAT, false, 0, 0);
 	glBufferVector(GL_ARRAY_BUFFER, positions, GL_STATIC_DRAW);
 
 	// Load UVs
 	glBindBuffer(GL_ARRAY_BUFFER, texCoordBuffer);
-	glEnableVertexAttribArray(texCoordAttribId);
-	glVertexAttribPointer(texCoordAttribId, valuesPerCoord, GL_FLOAT, false, 0, 0);
+	glEnableVertexAttribArray(ShaderManager::texCoordAttribId);
+	glVertexAttribPointer(ShaderManager::texCoordAttribId, valuesPerCoord, GL_FLOAT, false, 0, 0);
 	glBufferVector(GL_ARRAY_BUFFER, tcoords, GL_STATIC_DRAW);
 }
 

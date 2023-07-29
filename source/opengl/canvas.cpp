@@ -1,7 +1,7 @@
 #include "canvas.h"
 #include "application/application.h"
 
-void DrawBresenhamLine(GLTexture& texture, float x1, float y1, float x2, float y2, Color& color)
+void DrawBresenhamLine(GLTexture& texture, float x1, float y1, float x2, float y2, const Color& color)
 {
 	// Taken from Rosetta Code
 	// https://rosettacode.org/wiki/Bitmap/Bresenham%27s_line_algorithm#C.2B.2B
@@ -57,7 +57,7 @@ void Canvas2D::RenderToScreen()
 		texture->CopyToGPU();
 	}
 
-	App::shaders.canvasShader.Use();
+	App::shaders.screenspaceQuadShader.Use();
 	texture->UseForDrawing();
 
 	// TODO: Transform quad by setting uniforms in shader
@@ -81,13 +81,19 @@ void Canvas2D::Shutdown()
 /*
 	Canvas drawing methods
 */
-void Canvas2D::Fill(Color& color)
+void Canvas2D::Fill(const Color& color)
 {
 	bDirty = true;
 	texture->Fill(color);
 }
 
-void Canvas2D::DrawLine(glm::fvec2 start, glm::fvec2 end, Color& color)
+void Canvas2D::Fill(const FColor& color)
+{
+	bDirty = true;
+	texture->Fill(color);
+}
+
+void Canvas2D::DrawLine(glm::fvec2 start, glm::fvec2 end, const Color& color)
 {
 	bDirty = true;
 	DrawBresenhamLine(*texture, start.x, start.y, end.x, end.y, color);
