@@ -50,8 +50,6 @@ printf(R"(
 	Camera camera;
 	camera.fieldOfView = CAMERA_FOV;
 
-	GLQuad quadMesh;
-
 	TurntableController turntable(camera);
 	turntable.position = glm::vec3{0.0f, 0.15f, 0.0f};
 	turntable.sensitivity = 0.25f;
@@ -256,7 +254,7 @@ printf(R"(
 
 		// Background color gradient
 		backgroundShader.Use();
-		quadMesh.Draw();
+		App::geometry.quad.Draw();
 		GLFramebuffers::ClearActiveDepth();
 		
 		// Set scene render properties
@@ -282,7 +280,7 @@ printf(R"(
 
 		// Grid
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		App::geometry.grid.Draw(quadMesh, camera.ViewProjectionMatrix());
+		App::geometry.grid.Draw(App::geometry.quad, camera.ViewProjectionMatrix());
 		
 		// Coordinate axis' xray on top of scene
 		GLFramebuffers::ClearActiveDepth();

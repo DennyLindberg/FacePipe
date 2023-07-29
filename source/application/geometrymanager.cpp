@@ -12,9 +12,12 @@ void GeometryManager::Initialize()
 	coordinateAxis.AddLine(origin, origin + glm::fvec3(0.0f, 1.0f, 0.0f), glm::fvec4(0.0f, 1.0f, 0.0f, 1.0f)); // y is green
 	coordinateAxis.AddLine(origin, origin + glm::fvec3(0.0f, 0.0f, 1.0f), glm::fvec4(0.0f, 0.0f, 1.0f, 1.0f)); // z is blue
 	coordinateAxis.SendToGPU();
+
+	quad.Initialize();
 }
 
 void GeometryManager::Shutdown()
 {
+	quad.Shutdown();
 	coordinateAxis.Shutdown();
 }

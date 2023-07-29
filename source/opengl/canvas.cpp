@@ -49,23 +49,6 @@ void DrawBresenhamLine(GLTexture& texture, float x1, float y1, float x2, float y
 	}
 }
 
-Canvas2D::Canvas2D()
-{
-	GLQuadProperties properties;
-	properties.MatchWindowDimensions();
-	Initialize(properties);
-}
-
-Canvas2D::Canvas2D(int width, int height)
-{
-	Initialize(GLQuadProperties{ 0.0f, 0.0f, float(width), float(height) });
-}
-
-Canvas2D::Canvas2D(GLQuadProperties properties)
-{
-	Initialize(properties);
-}
-
 void Canvas2D::RenderToScreen()
 {
 	if (bDirty)
@@ -76,18 +59,23 @@ void Canvas2D::RenderToScreen()
 
 	App::shaders.canvasShader.Use();
 	texture->UseForDrawing();
-	quad->Draw();
+
+	// TODO: Transform quad by setting uniforms in shader
+	App::geometry.quad.Draw();
 }
 
-void Canvas2D::Initialize(GLQuadProperties properties)
+void Canvas2D::Initialize(int width, int height)
 {
-	minX = int(properties.positionX);
-	minY = int(properties.positionY);
-	maxX = minX + int(properties.width);
-	maxY = minY + int(properties.height);
+	texture = new GLTexture(width, height);
+}
 
-	quad = std::make_shared<GLQuad>(properties);
-	texture = std::make_shared<GLTexture>(int(properties.width), int(properties.height));
+void Canvas2D::Shutdown()
+{
+	if (texture)
+	{
+		delete texture;
+		texture = nullptr;
+	}
 }
 
 /*

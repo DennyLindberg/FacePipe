@@ -4,16 +4,6 @@
 #include "core/math.h"
 #include <filesystem>
 
-struct GLQuadProperties
-{
-	float positionX;
-	float positionY;
-	float width;
-	float height;
-
-	void MatchWindowDimensions();
-};
-
 struct MeshTransform
 {
 	glm::fvec3 position{ 0.0f };
@@ -221,25 +211,16 @@ protected:
 	GLuint texCoordBuffer = 0;
 
 public:
-	GLQuad();
-	GLQuad(GLQuadProperties properties);
-	~GLQuad();
+	GLQuad() : GLMeshInterface(false) {}
+	~GLQuad() { Shutdown(); }
+
+	void Initialize();
+	void Shutdown();
+
 	void Draw();
 
-protected:
-	struct MeshBufferProperties
-	{
-		float left = -1.0f;
-		float right = 1.0f;
-		float top = 1.0f;
-		float bottom = -1.0f;
-	};
-
-	void CreateMeshBuffer(MeshBufferProperties properties);
-
 public:
-	static void GenerateTriangles(std::vector<float>& Positions, std::vector<float>& TexCoords, GLuint& NumValuesPerPos, GLuint& NumValuesPerCoord);
-	static void GenerateTriangles(MeshBufferProperties properties, std::vector<float>& Positions, std::vector<float>& TexCoords, GLuint& NumValuesPerPos, GLuint& NumValuesPerCoord);
+	static void GenerateTriangles(std::vector<float>& Positions, std::vector<float>& TexCoords, GLuint& NumValuesPerPos, GLuint& NumValuesPerCoord, float left = -1.0f, float right = 1.0f, float top = 1.0f, float bottom = -1.0f);
 };
 
 namespace GLMesh

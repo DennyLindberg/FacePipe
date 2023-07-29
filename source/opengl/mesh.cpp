@@ -704,63 +704,35 @@ void GLScreenSpaceQuad::Draw()
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 }
 
-void GLQuadProperties::MatchWindowDimensions()
+void GLQuad::Initialize()
 {
-	positionX = 0.0f;
-	positionY = 0.0f;
-	width = float(App::settings.windowWidth);
-	height = float(App::settings.windowHeight);
-}
+	if (vao != 0)
+		return;
 
-GLQuad::GLQuad()
-{
-	CreateMeshBuffer(MeshBufferProperties());
-}
+	GenerateVAO();
+	glGenBuffers(1, &positionBuffer);
+	glGenBuffers(1, &texCoordBuffer);
 
-GLQuad::GLQuad(GLQuadProperties properties)
-{
 	float windowWidth = float(App::settings.windowWidth);
 	float windowHeight = float(App::settings.windowHeight);
 
+	// TODO: Repair this
+	
 	// GL coordinate system has the origin in the middle of the screen and
 	// ranges between -1.0 to 1.0. UI coordinates must be remapped.
-	float relativeWidth  = properties.width     / windowWidth;
-	float relativeHeight = properties.height    / windowHeight;
-	float relativeX      = properties.positionX / windowWidth;
-	float relativeY      = properties.positionY / windowHeight;
+	//float relativeWidth = properties.width / windowWidth;
+	//float relativeHeight = properties.height / windowHeight;
+	//float relativeX = properties.positionX / windowWidth;
+	//float relativeY = properties.positionY / windowHeight;
 
-	MeshBufferProperties bufferProperties{
-		-1.0f + 2.0f*relativeX,						// left edge
-		-1.0f + 2.0f*(relativeX + relativeWidth),	// right edge
-		 1.0f - 2.0f*relativeY,			     		// top edge
-		 1.0f - 2.0f*(relativeY + relativeHeight),  // bottom edge
-	};
-	CreateMeshBuffer(bufferProperties);
-}
+	float left = -1.0f; //-1.0f + 2.0f * relativeX;
+	float right = 1.0f; //-1.0f + 2.0f * (relativeX + relativeWidth);
+	float top = 1.0f; //1.0f - 2.0f * relativeY;
+	float bottom = -1.0f; //1.0f - 2.0f * (relativeY + relativeHeight);
 
-GLQuad::~GLQuad()
-{
-	glDeleteBuffers(1, &positionBuffer);
-	glDeleteBuffers(1, &texCoordBuffer);
-}
-
-void GLQuad::Draw()
-{
-	glBindVertexArray(vao);
-	glDrawArrays(GL_TRIANGLES, 0, 6);
-}
-
-void GLQuad::CreateMeshBuffer(MeshBufferProperties properties)
-{
 	GLuint valuesPerPosition, valuesPerCoord;
 	std::vector<float> positions, tcoords;
-	GLQuad::GenerateTriangles(properties, positions, tcoords, valuesPerPosition, valuesPerCoord);
-
-	glBindVertexArray(vao);
-
-	// Generate buffers
-	glGenBuffers(1, &positionBuffer);
-	glGenBuffers(1, &texCoordBuffer);
+	GLQuad::GenerateTriangles(positions, tcoords, valuesPerPosition, valuesPerCoord, left, right, top, bottom);
 
 	// Load positions
 	glBindBuffer(GL_ARRAY_BUFFER, positionBuffer);
@@ -775,18 +747,24 @@ void GLQuad::CreateMeshBuffer(MeshBufferProperties properties)
 	glBufferVector(GL_ARRAY_BUFFER, tcoords, GL_STATIC_DRAW);
 }
 
-void GLQuad::GenerateTriangles(std::vector<float>& Positions, std::vector<float>& TexCoords, GLuint& NumValuesPerPos, GLuint& NumValuesPerCoord)
+void GLQuad::Shutdown()
 {
-	GenerateTriangles(MeshBufferProperties(), Positions, TexCoords, NumValuesPerPos, NumValuesPerCoord);
+	if (vao == 0)
+		return;
+
+	glDeleteBuffers(1, &positionBuffer);
+	glDeleteBuffers(1, &texCoordBuffer);
+	DeleteVAO();
 }
 
-void GLQuad::GenerateTriangles(MeshBufferProperties properties, std::vector<float>& Positions, std::vector<float>& TexCoords, GLuint& NumValuesPerPos, GLuint& NumValuesPerCoord)
+void GLQuad::Draw()
 {
-	float left = properties.left;
-	float right = properties.right;
-	float top = properties.top;
-	float bottom = properties.bottom;
+	glBindVertexArray(vao);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+}
 
+void GLQuad::GenerateTriangles(std::vector<float>& Positions, std::vector<float>& TexCoords, GLuint& NumValuesPerPos, GLuint& NumValuesPerCoord, float left, float right, float top, float bottom)
+{
 	NumValuesPerPos = 3;
 	Positions = {
 		// Triangle 1

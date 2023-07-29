@@ -9,29 +9,18 @@ class Canvas2D
 {
 protected:
 	bool bDirty = true;
-	std::shared_ptr<GLQuad> quad;
-	std::shared_ptr<GLTexture> texture;
-
-	int minX;
-	int maxX;
-	int minY;
-	int maxY;
+	GLTexture* texture = nullptr;
 
 public:
-	Canvas2D();
-	Canvas2D(int width, int height);
-	Canvas2D(GLQuadProperties properties);
-	~Canvas2D() = default;
+	Canvas2D() {}
+	~Canvas2D() { Shutdown(); }
 
-	std::shared_ptr<GLTexture> GetTexture()
-	{
-		return texture;
-	}
+	void Initialize(int width, int height);
+	void Shutdown();
+
+	GLTexture* GetTexture() const { return texture; }
 
 	void RenderToScreen();
-
-protected:
-	void Initialize(GLQuadProperties properties);
 
 /*
 	Canvas drawing methods
