@@ -621,11 +621,10 @@ void GLBezierStrips::Draw()
 
 void GLQuadProperties::MatchWindowDimensions()
 {
-	ApplicationSettings settings = GetApplicationSettings();
 	positionX = 0.0f;
 	positionY = 0.0f;
-	width = float(settings.windowWidth);
-	height = float(settings.windowHeight);
+	width = float(App::settings.windowWidth);
+	height = float(App::settings.windowHeight);
 }
 
 GLQuad::GLQuad()
@@ -635,9 +634,8 @@ GLQuad::GLQuad()
 
 GLQuad::GLQuad(GLQuadProperties properties)
 {
-	ApplicationSettings settings = GetApplicationSettings();
-	float windowWidth = float(settings.windowWidth);
-	float windowHeight = float(settings.windowHeight);
+	float windowWidth = float(App::settings.windowWidth);
+	float windowHeight = float(App::settings.windowHeight);
 
 	// GL coordinate system has the origin in the middle of the screen and
 	// ranges between -1.0 to 1.0. UI coordinates must be remapped.

@@ -1,5 +1,6 @@
 #pragma once
 #include <filesystem>
+#include "clock.h"
 
 struct ApplicationSettings
 {
@@ -12,7 +13,15 @@ struct ApplicationSettings
 	std::filesystem::path contentPath;
 };
 
-void InitializeApplication(ApplicationSettings newInfo);
-ApplicationSettings GetApplicationSettings();
-void SetThreadedTime(double newTime);
-double GetThreadedTime();
+class App
+{
+public:
+	App() = delete;
+	~App() = delete;
+
+	static void Initialize();
+	static void Tick();
+
+	static ApplicationSettings settings;
+	static ApplicationClock clock;
+};

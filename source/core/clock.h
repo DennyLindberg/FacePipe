@@ -1,20 +1,22 @@
 #pragma once
 
+#include <atomic>
+
 struct ApplicationClock
 {
 private:
-	struct SDL2Time;
-	SDL2Time* msTime;
-
-public:
-	double deltaTime = 0.0;
-	double tickTime = 0.0;
+	uint64_t sdl_ms_previous = 0;
+	uint64_t sdl_ms_current = 0;
 	double lastTickTime = 0.0;
 
-	ApplicationClock();
-	~ApplicationClock();
-	void Tick();
+public:
+	std::atomic<double> time = 0.0;
+	std::atomic<double> deltaTime = 0.0;
 
-	static double Time();
-	double TimeSinceLastTick() const { return Time() - lastTickTime; }
+	ApplicationClock();
+	~ApplicationClock() {}
+
+	void Tick();
+	static double SystemTime();
+	double TimeSinceLastTick() const { return SystemTime() - lastTickTime; }
 };

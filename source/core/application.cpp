@@ -1,25 +1,15 @@
 #include "application.h"
 #include <atomic>
 
-std::atomic<double> threadedTime = 0.0;
-ApplicationSettings info;
+ApplicationSettings App::settings = ApplicationSettings();
+ApplicationClock App::clock = ApplicationClock();
 
-void InitializeApplication(ApplicationSettings newInfo)
+void App::Initialize()
 {
-	info = newInfo;
+
 }
 
-ApplicationSettings GetApplicationSettings()
+void App::Tick()
 {
-	return info;
-}
-
-void SetThreadedTime(double newTime)
-{
-	threadedTime = newTime;
-}
-
-double GetThreadedTime()
-{
-	return threadedTime;
+	App::clock.Tick();
 }

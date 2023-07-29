@@ -50,7 +50,7 @@ public:
 	{
 		return glm::perspective(
 			glm::radians(fieldOfView),
-			GetApplicationSettings().windowRatio,
+			App::settings.windowRatio,
 			nearClipPlane, farClipPlane
 		);
 	}

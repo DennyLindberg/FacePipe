@@ -61,7 +61,7 @@ void ListenToFileChange(std::atomic_bool* stopThread, std::filesystem::path fold
 			{
 				if (filename == (*fileCallbacks)[i].fileName)
 				{
-					(*fileCallbacks)[i].lastModifiedTimestamp = GetThreadedTime();
+					(*fileCallbacks)[i].lastModifiedTimestamp = App::clock.time;
 					(*fileModifiedStates)[i] = true;
 					// don't break, we can have multiple listeners on the same file
 				}
@@ -108,7 +108,7 @@ void FileListener::StartThread(std::filesystem::path listenToFolder)
 void FileListener::ProcessCallbacksOnMainThread()
 {
 	auto& modified = *fileModifiedStates;
-	double currentTime = GetThreadedTime();
+	double currentTime = App::clock.time;
 
 	for (int i = 0; i < callbacks.size(); ++i)
 	{

@@ -1,38 +1,24 @@
 #include "clock.h"
 #include "SDL2/SDL.h"
 
-struct ApplicationClock::SDL2Time
-{
-	Uint64 previous = 0;
-	Uint64 current = 0;
-	Uint64 delta()
-	{
-		return current - previous;
-	}
-};
-
 ApplicationClock::ApplicationClock()
 {
-	msTime = new SDL2Time();
-	tickTime = Time();
+	time = SystemTime();
 	Tick();
-}
-
-ApplicationClock::~ApplicationClock()
-{
-	delete msTime;
 }
 
 void ApplicationClock::Tick()
 {
-	msTime->previous = msTime->current;
-	msTime->current = SDL_GetPerformanceCounter();
-	deltaTime = (double)(msTime->delta() / (double)SDL_GetPerformanceFrequency());
-	lastTickTime = tickTime;
-	tickTime = Time();
+	sdl_ms_previous = sdl_ms_current;
+	sdl_ms_current = SDL_GetPerformanceCounter();
+	uint64_t sdl_ms_delta = sdl_ms_current - sdl_ms_previous;
+
+	deltaTime = (double)(sdl_ms_delta / (double)SDL_GetPerformanceFrequency());
+	lastTickTime = time + 0.0; // atomic bullshit
+	time = SystemTime();
 }
 
-double ApplicationClock::Time()
+double ApplicationClock::SystemTime()
 {
-	return SDL_GetTicks() / 1000.0;
+	return SDL_GetTicks64() / 1000.0;
 }

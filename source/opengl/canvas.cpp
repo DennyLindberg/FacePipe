@@ -92,7 +92,7 @@ void Canvas2D::Initialize(GLQuadProperties properties)
 
 	if (!canvasShader)
 	{
-		ApplicationSettings s = GetApplicationSettings();
+		auto& s = App::settings;
 
 		canvasShader = std::make_shared<GLProgram>();
 		std::string fragment, vertex;

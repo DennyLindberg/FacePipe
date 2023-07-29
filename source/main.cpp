@@ -7,36 +7,33 @@
 
 namespace fs = std::filesystem;
 
-/*
-	Program configurations
-*/
 const float CAMERA_FOV = 45.0f;
-
-const ApplicationSettings settings = {
-	.vsync = true,
-	.fullscreen = 0,
-	.windowWidth = 1280,
-	.windowHeight = 720,
-	.fpsLimit = 0,
-	.windowRatio = 1280.0f / 720.0f,
-	.contentPath = fs::current_path().parent_path() / "content"
-};
-
-const fs::path textureFolder = settings.contentPath / "textures";
-const fs::path shaderFolder = settings.contentPath / "shaders";
-const fs::path meshFolder = settings.contentPath / "meshes";
-const fs::path curvesFolder = settings.contentPath / "curves";
-const fs::path scriptsFolder = settings.contentPath / "scripts";
 
 /*
 	Application
 */
 int main(int argc, char* args[])
 {
-	InitializeApplication(settings);
+	App::settings = {
+		.vsync = true,
+		.fullscreen = 0,
+		.windowWidth = 1280,
+		.windowHeight = 720,
+		.fpsLimit = 0,
+		.windowRatio = 1280.0f / 720.0f,
+		.contentPath = fs::current_path().parent_path() / "content"
+	};
+	auto& settings = App::settings;
+
+	const fs::path textureFolder = settings.contentPath / "textures";
+	const fs::path shaderFolder = settings.contentPath / "shaders";
+	const fs::path meshFolder = settings.contentPath / "meshes";
+	const fs::path curvesFolder = settings.contentPath / "curves";
+	const fs::path scriptsFolder = settings.contentPath / "scripts";
+
+	App::Initialize();
 
 	UniformRandomGenerator uniformGenerator;
-	ApplicationClock clock;
 
 	OpenGLWindow window;
 	window.SetTitle("FacePipe");
@@ -252,7 +249,7 @@ printf(R"(
 	bool captureMouse = false;
 	while (!quit)
 	{
-		if (settings.fpsLimit > 0 && clock.TimeSinceLastTick() < 1.0/settings.fpsLimit)
+		if (settings.fpsLimit > 0 && App::clock.TimeSinceLastTick() < 1.0/settings.fpsLimit)
 		{
 			continue;
 		}
@@ -266,10 +263,9 @@ printf(R"(
 				std::cout << ScriptResponse.Exception.what();
 		}
 
-		clock.Tick();
-		SetThreadedTime(clock.tickTime);
+		App::Tick();
 
-		window.SetTitle("FPS: " + FpsString(clock.deltaTime));
+		window.SetTitle("FPS: " + FpsString(App::clock.deltaTime));
 		shaderManager.CheckLiveShaders();
 		//fileListener.ProcessCallbacksOnMainThread();
 
@@ -302,7 +298,7 @@ printf(R"(
 			{
 				if (event.type == SDL_MOUSEBUTTONDOWN)
 				{
-					if (bAltModifier)
+					//if (bAltModifier)
 					{
 						captureMouse = true;
 						SDL_ShowCursor(0);

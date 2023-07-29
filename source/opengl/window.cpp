@@ -59,8 +59,7 @@ void ShutdownIMGUI()
 
 OpenGLWindow::OpenGLWindow()
 {
-	ApplicationSettings settings = GetApplicationSettings();
-	Initialize(settings.windowWidth, settings.windowHeight, settings.fullscreen, settings.vsync);
+	Initialize(App::settings.windowWidth, App::settings.windowHeight, App::settings.fullscreen, App::settings.vsync);
 }
 
 OpenGLWindow::OpenGLWindow(int width, int height, bool fullscreenEnabled, bool vsync)
