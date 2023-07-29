@@ -285,7 +285,10 @@ int main(int argc, char* args[])
 			
 		// Grid
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		App::geometry.grid.Draw(App::geometry.quad, camera.ViewProjectionMatrix());
+		if (camera.GetView() == CameraView::Perspective)
+			App::geometry.grid.Draw(App::geometry.quad, camera.ViewProjectionMatrix());
+		else
+			App::geometry.grid.Draw(App::geometry.quad, camera.ViewProjectionMatrix(), camera.ForwardVector(), camera.SideVector());
 		
 		// Coordinate axis' xray on top of scene
 		GLFramebuffers::ClearActiveDepth();

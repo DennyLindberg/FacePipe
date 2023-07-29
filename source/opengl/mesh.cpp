@@ -58,9 +58,16 @@ void GLMeshInterface::DeleteVAO()
 
 
 
-void GLGrid::Draw(GLQuad& mesh, const glm::mat4& mvp)
+void GLGrid::Draw(GLQuad& mesh, const glm::mat4& mvp, const glm::fvec3& planeUp, const glm::fvec3& planeSide)
 {
-	const glm::mat4 planeRotationMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3{ 1.0f, 0.0f, 0.0f });
+	glm::fvec3 forward = glm::cross(planeSide, planeUp);
+	const glm::mat4 planeRotationMatrix (
+		glm::fvec4(planeSide.x, planeSide.y, planeSide.z, 0.0f), 
+		glm::fvec4(forward.x, forward.y, forward.z, 0.0f),
+		glm::fvec4(planeUp.x, planeUp.y, planeUp.z, 0.0f),
+		glm::fvec4(0.0f, 0.0f, 0.0f, 1.0f)
+	);
+
 	glm::mat4 mvpOffset = mvp * planeRotationMatrix;
 
 	auto& shader = App::shaders.gridShader;

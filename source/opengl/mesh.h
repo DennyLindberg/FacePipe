@@ -47,7 +47,7 @@ public:
 	GLGrid() {}
 	~GLGrid() {};
 
-	void Draw(class GLQuad& mesh, const glm::mat4& mvp);
+	void Draw(class GLQuad& mesh, const glm::mat4& mvp, const glm::fvec3& planeUp = glm::fvec3(0.0f, 1.0f, 0.0f), const glm::fvec3& planeSide = glm::fvec3(1.0f, 0.0f, 0.0f));
 };
 
 class GLTriangleMesh : public GLMeshInterface
