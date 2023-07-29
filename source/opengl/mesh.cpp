@@ -167,13 +167,13 @@ void GLTriangleMesh::SendToGPU()
 	glBufferVector(GL_ELEMENT_ARRAY_BUFFER, indices, GL_STATIC_DRAW);
 }
 
-void GLTriangleMesh::Draw()
+void GLTriangleMesh::Draw(GLenum drawMode)
 {
 	if (allocated && positions.size() > 0 && indices.size() > 0)
 	{
 		glBindVertexArray(vao);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
-		glDrawElements(GL_TRIANGLES, GLsizei(indices.size()), GL_UNSIGNED_INT, (void*)0);
+		glDrawElements(drawMode, GLsizei(indices.size()), GL_UNSIGNED_INT, (void*)0);
 	}
 }
 
@@ -926,6 +926,7 @@ namespace GLMesh
 
 		OutMesh.positions.reserve(VertexCount);
 		OutMesh.normals.reserve(VertexCount);
+		OutMesh.colors.reserve(VertexCount);
 		OutMesh.texCoords.reserve(VertexCount);
 		while (VertexCount > 0 && std::getline(fileStream, line))
 		{
@@ -950,6 +951,7 @@ namespace GLMesh
 
 			OutMesh.positions.push_back(glm::fvec3(Entry.x, Entry.y, Entry.z));
 			OutMesh.normals.push_back(glm::fvec3(Entry.nx, Entry.ny, Entry.nz));
+			OutMesh.colors.push_back(glm::fvec4(1.0f));
 			OutMesh.texCoords.push_back(glm::fvec4(Entry.s, Entry.t, 1.0f, 1.0f));
 		}
 

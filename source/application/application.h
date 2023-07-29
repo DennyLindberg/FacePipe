@@ -20,6 +20,7 @@ struct ApplicationSettings
 	bool sleepWhenFpsLimited = true;
 	float windowRatio = 0;
 	glm::vec4 clearColor = glm::vec4(0.0f);
+	float pointCloudSize = 0.001f;
 };
 
 class App

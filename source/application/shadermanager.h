@@ -51,4 +51,5 @@ public:
 	GLProgram lineShader; 
 	GLProgram backgroundShader;
 	GLProgram bezierLinesShader;
+	GLProgram pointCloudShader;
 };

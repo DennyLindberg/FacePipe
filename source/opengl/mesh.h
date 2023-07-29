@@ -72,7 +72,7 @@ public:
 
 	void Clear();
 	void SendToGPU();
-	void Draw();
+	void Draw(GLenum drawMode = GL_TRIANGLES);
 	void AddVertex(glm::fvec3 pos, glm::fvec4 color, glm::fvec4 texcoord);
 	void AddVertex(glm::fvec3 pos, glm::fvec3 normal, glm::fvec4 color, glm::fvec4 texcoord);
 	void DefineNewTriangle(unsigned int index1, unsigned int index2, unsigned int index3);

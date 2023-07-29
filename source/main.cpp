@@ -42,9 +42,9 @@ int main(int argc, char* args[])
 
 	TurntableController turntable(camera);
 	TurntableController turntableCube(cameraCube);
-	turntable.position = glm::vec3{0.0f, 0.15f, 0.0f};
+	turntable.position = glm::vec3{-0.15f, 0.0f, 0.0f};
 	turntable.sensitivity = 0.25f;
-	turntable.Set(-65.0f, 15.0f, 1.0f);
+	turntable.Set(-65.0f, 15.0f, 0.75f);
 	turntableCube.position = turntable.position;
 	turntableCube.sensitivity = turntable.sensitivity;
 	turntableCube.Set(-65.0f, 15.0f, 1.0f);
@@ -66,16 +66,19 @@ int main(int argc, char* args[])
 	GLProgram& lineShader = App::shaders.lineShader;
 	GLProgram& backgroundShader = App::shaders.backgroundShader;
 	GLProgram& bezierLinesShader = App::shaders.bezierLinesShader;
+	GLProgram& pointCloudShader = App::shaders.pointCloudShader;
 
 	/*
 		Load head mesh
 	*/
-	GLTriangleMesh cubemesh, headmesh;
+	GLTriangleMesh cubemesh, headmesh, armesh;
 	GLMesh::LoadPLY(App::Path("content/meshes/cube.ply"), cubemesh);
-	GLMesh::LoadPLY(App::Path("content/meshes/ARFaceGeometry.ply"), headmesh);
-	//GLMesh::LoadPLY("content/meshes/ARFaceGeometry.ply", headmesh);
-	cubemesh.transform.scale = glm::vec3(0.25f);
-	headmesh.transform.scale = glm::vec3(0.001f);
+	GLMesh::LoadPLY(App::Path("content/meshes/blender_suzanne.ply"), headmesh);
+	GLMesh::LoadPLY(App::Path("content/meshes/ARFaceGeometry.ply"), armesh);
+	cubemesh.transform.scale = glm::vec3(0.1f);
+	headmesh.transform.scale = glm::vec3(0.1f);
+	headmesh.transform.position.x = -0.25f;
+	armesh.transform.scale = glm::vec3(0.001f);
 
 	GLTexture DefaultTexture(App::Path("content/textures/default.png"));
 	DefaultTexture.CopyToGPU();
@@ -108,6 +111,7 @@ int main(int argc, char* args[])
 			ImGui::InputInt("MaxFPS", &App::settings.maxFPS, 0);
 			ImGui::Checkbox("Wireframe", &renderWireframe);
 			ImGui::Checkbox("Light follows camera", &lightFollowsCamera);
+			ImGui::SliderFloat("PointSize", &App::settings.pointCloudSize, 0.0005f, 0.01f, "%.5f");
 			if (ImGui::Button("Run Python test script"))
 			{
 				App::python.Execute(PythonTestScript);
@@ -275,10 +279,15 @@ int main(int argc, char* args[])
 
 		// Debug: Test changing the mesh transform over time
 		//headmesh.transform.rotation = glm::vec3(0.0f, 360.0f*sinf((float) App::clock.time), 0.0f);
-			
+
+		pointCloudShader.Use();
+		pointCloudShader.SetUniformMat4("model", armesh.transform.ModelMatrix());
+		pointCloudShader.SetUniformFloat("size", App::settings.pointCloudSize);
+		armesh.Draw(GL_POINTS);
+
 		meshShader.Use();
 		meshShader.SetUniformMat4("model", headmesh.transform.ModelMatrix());
-		meshShader.SetUniformInt("useTexture", 1);
+		meshShader.SetUniformInt("useTexture", 0);
 		meshShader.SetUniformInt("useFlatShading", 0);
 		DefaultTexture.UseForDrawing();
 		headmesh.Draw();
