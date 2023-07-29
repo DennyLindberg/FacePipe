@@ -3,12 +3,12 @@
 #include <string>
 #include <iostream>
 
-GLUBO::GLUBO()
+void GLUBO::Initialize()
 {
 	glGenBuffers(1, &uboId);
 }
 
-GLUBO::~GLUBO()
+void GLUBO::Shutdown()
 {
 	glDeleteBuffers(1, &uboId);
 }

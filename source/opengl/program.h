@@ -77,8 +77,11 @@ protected:
 	GLuint allocated_size = 0;
 
 public:
-	GLUBO();
-	~GLUBO();
+	GLUBO() {}
+	~GLUBO() {}
+
+	void Initialize();
+	void Shutdown();
 
 	// Set point to the same binding value as used in the glsl shader
 	void Bind(GLuint point);

@@ -18,6 +18,9 @@ protected:
 	std::filesystem::path rootFolder;
 	FileListener fileListener;
 
+	GLUBO cameraUBO;
+	GLUBO lightUBO;
+
 public:
 	ShaderManager() = default;
 	~ShaderManager() = default;
@@ -29,4 +32,8 @@ public:
 	void LoadShader(GLProgram& targetProgram, std::wstring vertexFilename, std::wstring fragmentFilename, std::wstring geometryFilename = L"");
 	void UpdateShader(GLProgram& targetProgram, std::filesystem::path filePath, ShaderType type);
 	void CheckLiveShaders();
+
+	void UpdateCameraUBO(class Camera& camera);
+	void UpdateLightUBOPosition(const glm::fvec3& position);
+	void UpdateLightUBOColor(const glm::fvec4& color);
 };

@@ -72,13 +72,6 @@ printf(R"(
 	GLTexture defaultTexture{ App::Path("content/textures/default.png") };
 	defaultTexture.UseForDrawing();
 
-	// Uniform Buffer Object containing matrices and light information
-	GLUBO CameraUBO, LightUBO;
-	CameraUBO.Bind(1);
-	CameraUBO.Allocate(16 * 8 + 16); // 2 matrices => 8 columns => 16 bytes per column, +vec3 16 bytes
-	LightUBO.Bind(2);
-	LightUBO.Allocate(16 * 2);
-
 	// Change each LoadShader call to LoadLiveShader for live editing
 	GLProgram lineShader, backgroundShader, headShader, bezierLinesShader;
 	App::shaders.LoadShader(lineShader, L"line_vertex.glsl", L"line_fragment.glsl");
@@ -95,12 +88,6 @@ printf(R"(
 	headShader.SetUniformMat4("model", identity_transform);
 	bezierLinesShader.Use();
 	bezierLinesShader.SetUniformMat4("model", identity_transform);
-
-	// Initialize light source in shaders
-	glm::vec4 lightColor{ 1.0f, 1.0f, 1.0f, 1.0f };
-	glm::vec3 lightPosition{ 999999.0f };
-	LightUBO.SetData(glm::value_ptr(lightPosition), 0, 12);
-	LightUBO.SetData(glm::value_ptr(lightColor), 16, 16);
 
 	/*
 		Load head mesh
@@ -304,14 +291,8 @@ printf(R"(
 		
 		// Set scene render properties
 		glPolygonMode(GL_FRONT_AND_BACK, (renderWireframe? GL_LINE : GL_FILL));
-		glm::mat4 viewmatrix = camera.ViewMatrix();
-		glm::mat4 projectionmatrix = camera.ProjectionMatrix();
-		CameraUBO.SetData(glm::value_ptr(projectionmatrix), 0, 64);
-		CameraUBO.SetData(glm::value_ptr(viewmatrix), 64, 64);
-		CameraUBO.SetData(glm::value_ptr(camera.GetPosition()), 128, 16);
-
-		// Update light source
-		LightUBO.SetData(glm::value_ptr(lightFollowsCamera? camera.GetPosition() : lightPosition), 0, 12);
+		App::shaders.UpdateCameraUBO(camera);
+		App::shaders.UpdateLightUBOPosition(lightFollowsCamera? camera.GetPosition() : glm::fvec3{ 999999.0f });
 
 		if (renderHead)
 		{
@@ -331,7 +312,7 @@ printf(R"(
 
 		// Grid
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		grid.Draw(quadMesh, projectionmatrix * viewmatrix);
+		grid.Draw(quadMesh, camera.ViewProjectionMatrix());
 		
 		// Coordinate axis' xray on top of scene
 		GLFramebuffers::ClearActiveDepth();

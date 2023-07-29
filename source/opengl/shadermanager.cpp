@@ -1,4 +1,5 @@
 #include "shadermanager.h"
+#include "camera.h"
 #include "../core/utilities.h"
 
 namespace fs = std::filesystem;
@@ -7,10 +8,24 @@ void ShaderManager::Initialize(std::filesystem::path shaderFolder)
 {
 	rootFolder = shaderFolder;
 	fileListener.Initialize(shaderFolder);
+	
+	cameraUBO.Initialize();
+	cameraUBO.Bind(1);
+	cameraUBO.Allocate(16 * 8 + 16); // 2 matrices => 8 columns => 16 bytes per column, +vec3 16 bytes
+
+	lightUBO.Initialize();
+	lightUBO.Bind(2);
+	lightUBO.Allocate(16 * 2);
+
+	// defaults until user changes it
+	UpdateLightUBOPosition(glm::fvec3{ 999999.0f });
+	UpdateLightUBOColor(glm::fvec4{ 1.0f });
 }
 
 void ShaderManager::Shutdown()
 {
+	cameraUBO.Shutdown();
+	lightUBO.Shutdown();
 	fileListener.Shutdown();
 }
 
@@ -124,4 +139,23 @@ void ShaderManager::UpdateShader(GLProgram& targetProgram, fs::path filePath, Sh
 void ShaderManager::CheckLiveShaders()
 {
 	fileListener.ProcessCallbacksOnMainThread();
+}
+
+void ShaderManager::UpdateCameraUBO(Camera& camera)
+{
+	/*glm::mat4 viewmatrix = camera.ViewMatrix();
+	glm::mat4 projectionmatrix = camera.ProjectionMatrix();*/
+	cameraUBO.SetData(glm::value_ptr(camera.ProjectionMatrix()), 0, 64);
+	cameraUBO.SetData(glm::value_ptr(camera.ViewMatrix()), 64, 64);
+	cameraUBO.SetData(glm::value_ptr(camera.GetPosition()), 128, 16);
+}
+
+void ShaderManager::UpdateLightUBOPosition(const glm::fvec3& position)
+{
+	lightUBO.SetData(glm::value_ptr(position), 0, 12);
+}
+
+void ShaderManager::UpdateLightUBOColor(const glm::fvec4& color)
+{
+	lightUBO.SetData(glm::value_ptr(color), 16, 16);
 }
