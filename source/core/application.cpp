@@ -8,6 +8,8 @@ OpenGLWindow App::window = OpenGLWindow();
 PythonInterpreter App::python = PythonInterpreter();
 ShaderManager App::shaders = ShaderManager();
 
+UniformRandomGenerator App::random = UniformRandomGenerator();
+
 void App::Initialize()
 {
 	App::settings.windowRatio = App::settings.windowWidth / (float)App::settings.windowHeight;

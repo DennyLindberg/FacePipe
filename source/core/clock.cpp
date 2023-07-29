@@ -5,14 +5,15 @@ namespace chrono = std::chrono;
 
 ApplicationClock::ApplicationClock()
 {
-	time = SecondsSinceEpoch();
+	applicationStartTime = SecondsSinceEpoch();
+	time = TimeSinceAppStart();
 	deltaTime = 0.1; // non-zero init
 }
 
 void ApplicationClock::Tick()
 {
 	double previousTime = time;
-	time = SecondsSinceEpoch();
+	time = TimeSinceAppStart();
 	deltaTime = time - previousTime;
 }
 

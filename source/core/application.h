@@ -36,4 +36,6 @@ public:
 	static OpenGLWindow window;
 	static PythonInterpreter python;
 	static ShaderManager shaders;
+
+	static UniformRandomGenerator random;
 };

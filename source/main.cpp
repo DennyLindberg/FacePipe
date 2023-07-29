@@ -23,14 +23,9 @@ int main(int argc, char* args[])
 	App::Initialize();
 	App::window.SetTitle("FacePipe");
 
-	UniformRandomGenerator uniformGenerator;
-
 	GLuint defaultVao = 0;
 	glGenVertexArrays(1, &defaultVao);
 	glBindVertexArray(defaultVao);
-
-	//FileListener fileListener;
-	//fileListener.StartThread(scriptsFolder);
 
 	fs::path PythonTestScript = App::Path("content/scripts/test_cv2_webcam.py");
 
@@ -156,6 +151,7 @@ printf(R"(
 		{
 			ImGui::Text("Scene");
 			ImGui::Text(("App - FPS: " + FpsString(App::clock.deltaTime)).c_str());
+			ImGui::Text(("App - Time: " + std::to_string(App::clock.time)).c_str());
 			ImGui::InputInt("MaxFPS", &App::settings.maxFPS, 0);
 			ImGui::Checkbox("Wireframe", &renderWireframe);
 			ImGui::Checkbox("Light follows camera", &lightFollowsCamera);
@@ -241,8 +237,6 @@ printf(R"(
 
 		App::Tick();
 
-		//fileListener.ProcessCallbacksOnMainThread();
-
 		SDL_Event event;
 		while (SDL_PollEvent(&event))
 		{
@@ -322,8 +316,8 @@ printf(R"(
 		if (renderHead)
 		{
 			// Debug: Test changing the mesh transform over time
-			//headmesh.transform.rotation = glm::vec3(0.0f, 360.0f*sinf((float) clock.tickTime), 0.0f);
-
+			//headmesh.transform.rotation = glm::vec3(0.0f, 360.0f*sinf((float) App::clock.time), 0.0f);
+			
 			headShader.Use();
 			headShader.SetUniformMat4("model", headmesh.transform.ModelMatrix());
 			headmesh.Draw();
