@@ -6,6 +6,5 @@
 #include "texture.h"
 #include "program.h"
 #include "screenshot.h"
-#include "grid.h"
 #include "canvas.h"
 #include "framebuffer.h"

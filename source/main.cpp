@@ -51,9 +51,6 @@ printf(R"(
 	camera.fieldOfView = CAMERA_FOV;
 
 	GLQuad quadMesh;
-	GLGrid grid;
-	grid.size = 5.0f;
-	grid.gridSpacing = 0.1f;
 
 	TurntableController turntable(camera);
 	turntable.position = glm::vec3{0.0f, 0.15f, 0.0f};
@@ -285,7 +282,7 @@ printf(R"(
 
 		// Grid
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		grid.Draw(quadMesh, camera.ViewProjectionMatrix());
+		App::geometry.grid.Draw(quadMesh, camera.ViewProjectionMatrix());
 		
 		// Coordinate axis' xray on top of scene
 		GLFramebuffers::ClearActiveDepth();

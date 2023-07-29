@@ -13,4 +13,5 @@ public:
 
 public:
 	GLLine coordinateAxis;
+	GLGrid grid;
 };

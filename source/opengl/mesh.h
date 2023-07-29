@@ -47,6 +47,19 @@ public:
 	}
 };
 
+class GLGrid
+{
+public:
+	float size = 5.0f;
+	float gridSpacing = 0.1f;
+	float opacity = 0.2f;
+
+	GLGrid() {}
+	~GLGrid() {};
+
+	void Draw(class GLQuad& mesh, const glm::mat4& mvp);
+};
+
 class GLTriangleMesh : public GLMeshInterface
 {
 protected:
