@@ -80,15 +80,6 @@ printf(R"(
 	App::shaders.LoadLiveShader(headShader, L"head_vertex.glsl", L"head_fragment.glsl");//, L"head_geometry.glsl");
 	App::shaders.LoadLiveShader(bezierLinesShader, L"bezier_vertex.glsl", L"line_fragment.glsl", L"bezier_lines_geometry.glsl");
 
-	// Initialize model values
-	glm::mat4 identity_transform{ 1.0f };
-	lineShader.Use();
-	lineShader.SetUniformMat4("model", identity_transform);
-	headShader.Use(); 
-	headShader.SetUniformMat4("model", identity_transform);
-	bezierLinesShader.Use();
-	bezierLinesShader.SetUniformMat4("model", identity_transform);
-
 	/*
 		Load head mesh
 	*/

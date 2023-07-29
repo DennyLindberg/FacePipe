@@ -108,6 +108,8 @@ public:
 class GLProgram
 {
 protected:
+	static GLuint activeProgramId;
+
 	GLuint programId = 0;
 	GLint vertex_shader_id = 0;
 	GLint fragment_shader_id = 0;
@@ -132,11 +134,32 @@ public:
 	void CompileAndLink();
 	void Use();
 	GLuint Id();
-	void SetUniformInt(const std::string& name, int value);
-	void SetUniformFloat(const std::string& name, float value);
-	void SetUniformVec2(const std::string& name, glm::fvec2 value);
-	void SetUniformVec3(const std::string& name, glm::fvec3 value);
-	void SetUniformVec4(const std::string& name, glm::fvec4 value);
-	void SetUniformMat4(const std::string& name, glm::mat4 value);
+
+	template<typename T, typename U>
+	void SetUniform(const std::string& name, const T value, std::map<std::string, U>& uniformMap)
+	{
+		Use();
+
+		auto it = uniformMap.find(name);
+		if (it == uniformMap.end())
+		{
+			auto pair = uniformMap.emplace(name, U{
+				.id = glGetUniformLocation(programId, name.c_str()),
+				.value = value
+			});
+			it = pair.first;
+		}
+
+		it->second.value = value;
+		it->second.Upload();
+	}
+
+	inline void SetUniformInt(const std::string& name, int value)			{ SetUniform<int, UniformInt>(name, value, intUniforms); }
+	inline void SetUniformFloat(const std::string& name, float value)		{ SetUniform<float, UniformFloat>(name, value, floatUniforms); }
+	inline void SetUniformVec2(const std::string& name, glm::fvec2 value)	{ SetUniform<glm::fvec2, UniformVec2>(name, value, vec2Uniforms); }
+	inline void SetUniformVec3(const std::string& name, glm::fvec3 value)	{ SetUniform<glm::fvec3, UniformVec3>(name, value, vec3Uniforms); }
+	inline void SetUniformVec4(const std::string& name, glm::fvec4 value)	{ SetUniform<glm::fvec4, UniformVec4>(name, value, vec4Uniforms); }
+	inline void SetUniformMat4(const std::string& name, glm::mat4 value)	{ SetUniform<glm::mat4, UniformMat4>(name, value, mat4Uniforms); }
+
 	void ReloadUniforms();
 };

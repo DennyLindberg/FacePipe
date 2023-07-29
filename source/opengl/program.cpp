@@ -3,6 +3,8 @@
 #include <string>
 #include <iostream>
 
+GLuint GLProgram::activeProgramId = 0;
+
 void GLUBO::Initialize()
 {
 	glGenBuffers(1, &uboId);
@@ -174,120 +176,16 @@ void GLProgram::CompileAndLink()
 
 void GLProgram::Use()
 {
-	glUseProgram(programId);
+	if (programId != activeProgramId)
+	{
+		activeProgramId = activeProgramId;
+		glUseProgram(programId);
+	}
 }
 
 GLuint GLProgram::Id()
 {
 	return programId;
-}
-
-void GLProgram::SetUniformInt(const std::string& name, int value)
-{
-	if (intUniforms.count(name) == 0)
-	{
-		intUniforms[name] = {
-			glGetUniformLocation(programId, name.c_str()),
-			value
-		};
-		intUniforms[name].Upload();
-	}
-	else
-	{
-		auto& u = intUniforms[name];
-		u.value = value;
-		u.Upload();
-	}
-}
-
-void GLProgram::SetUniformFloat(const std::string& name, float value)
-{
-	if (floatUniforms.count(name) == 0)
-	{
-		floatUniforms[name] = {
-			glGetUniformLocation(programId, name.c_str()),
-			value
-		};
-		floatUniforms[name].Upload();
-	}
-	else
-	{
-		auto& u = floatUniforms[name];
-		u.value = value;
-		u.Upload();
-	}
-}
-
-void GLProgram::SetUniformVec2(const std::string& name, glm::fvec2 value)
-{
-	if (vec2Uniforms.count(name) == 0)
-	{
-		vec2Uniforms[name] = {
-			glGetUniformLocation(programId, name.c_str()),
-			value
-		};
-		vec2Uniforms[name].Upload();
-	}
-	else
-	{
-		auto& u = vec2Uniforms[name];
-		u.value = value;
-		u.Upload();
-	}
-}
-
-void GLProgram::SetUniformVec3(const std::string& name, glm::fvec3 value)
-{
-	if (vec3Uniforms.count(name) == 0)
-	{
-		vec3Uniforms[name] = {
-			glGetUniformLocation(programId, name.c_str()),
-			value
-		};
-		vec3Uniforms[name].Upload();
-	}
-	else
-	{
-		auto& u = vec3Uniforms[name];
-		u.value = value;
-		u.Upload();
-	}
-}
-
-void GLProgram::SetUniformVec4(const std::string& name, glm::fvec4 value)
-{
-	if (vec4Uniforms.count(name) == 0)
-	{
-		vec4Uniforms[name] = {
-			glGetUniformLocation(programId, name.c_str()),
-			value
-		};
-		vec4Uniforms[name].Upload();
-	}
-	else
-	{
-		auto& u = vec4Uniforms[name];
-		u.value = value;
-		u.Upload();
-	}
-}
-
-void GLProgram::SetUniformMat4(const std::string& name, glm::mat4 value)
-{
-	if (mat4Uniforms.count(name) == 0)
-	{
-		mat4Uniforms[name] = {
-			glGetUniformLocation(programId, name.c_str()),
-			value
-		};
-		mat4Uniforms[name].Upload();
-	}
-	else
-	{
-		auto& u = mat4Uniforms[name];
-		u.value = value;
-		u.Upload();
-	}
 }
 
 void GLProgram::ReloadUniforms()
