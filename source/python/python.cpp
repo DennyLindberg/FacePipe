@@ -93,7 +93,10 @@ public:
 		if (bRunning)
 		{
 			bRunning = false;
-			Thread.join();
+			if (Thread.joinable())
+			{
+				Thread.join();
+			}
 			Thread = std::thread();
 		}
 	}

@@ -24,17 +24,20 @@ protected:
 	std::atomic_bool stopThread = false;
 	std::thread listenerThread;
 	std::vector<OnFileChangeCallback> callbacks;
-	std::deque<std::atomic_bool>* fileModifiedStates;
+	std::deque<std::atomic_bool>* fileModifiedStates = nullptr;
 
 public:
-	FileListener();
+	FileListener() {}
 	~FileListener();
 
 	FileListener(const FileListener &other) = delete;
 
+	bool IsRunning() const { return !stopThread; }
+
 	void Bind(std::wstring filename, FileCallbackSignature callback);
 
-	void StartThread(std::filesystem::path listenToFolder);
+	void Initialize(std::filesystem::path listenToFolder);
+	void Shutdown();
 
 	void ProcessCallbacksOnMainThread();
 };

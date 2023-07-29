@@ -3,10 +3,15 @@
 
 namespace fs = std::filesystem;
 
-void ShaderManager::InitializeFolder(std::filesystem::path shaderFolder)
+void ShaderManager::Initialize(std::filesystem::path shaderFolder)
 {
 	rootFolder = shaderFolder;
-	fileListener.StartThread(shaderFolder);
+	fileListener.Initialize(shaderFolder);
+}
+
+void ShaderManager::Shutdown()
+{
+	fileListener.Shutdown();
 }
 
 void ShaderManager::LoadLiveShader(GLProgram& targetProgram, std::wstring vertexFilename, std::wstring fragmentFilename, std::wstring geometryFilename)

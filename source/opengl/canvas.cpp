@@ -92,11 +92,9 @@ void Canvas2D::Initialize(GLQuadProperties properties)
 
 	if (!canvasShader)
 	{
-		auto& s = App::settings;
-
 		canvasShader = std::make_shared<GLProgram>();
 		std::string fragment, vertex;
-		if (LoadText(s.contentPath/"basic_fragment.glsl", fragment) && LoadText(s.contentPath/"basic_vertex.glsl", vertex))
+		if (LoadText(App::Path("content/shaders/basic_fragment.glsl"), fragment) && LoadText(App::Path("content/shaders/basic_vertex.glsl"), vertex))
 		{
 			canvasShader->LoadFragmentShader(fragment);
 			canvasShader->LoadVertexShader(vertex);

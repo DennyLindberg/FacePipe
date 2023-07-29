@@ -14,18 +14,11 @@ int main(int argc, char* args[])
 		.fullscreen = 0,
 		.windowWidth = 1280,
 		.windowHeight = 720,
-		.fpsLimit = 0,
+		.maxFPS = 0,
 		.sleepWhenFpsLimited = true,
-		.contentPath = fs::current_path().parent_path() / "content",
 		.clearColor = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f)
 	};
 	auto& settings = App::settings;
-
-	const fs::path textureFolder = settings.contentPath / "textures";
-	const fs::path shaderFolder = settings.contentPath / "shaders";
-	const fs::path meshFolder = settings.contentPath / "meshes";
-	const fs::path curvesFolder = settings.contentPath / "curves";
-	const fs::path scriptsFolder = settings.contentPath / "scripts";
 
 	App::Initialize();
 	App::window.SetTitle("FacePipe");
@@ -39,7 +32,7 @@ int main(int argc, char* args[])
 	//FileListener fileListener;
 	//fileListener.StartThread(scriptsFolder);
 
-	fs::path PythonTestScript(scriptsFolder / "test_cv2_webcam.py");
+	fs::path PythonTestScript = App::Path("content/scripts/test_cv2_webcam.py");
 
 printf(R"(
 ====================================================================
@@ -81,7 +74,7 @@ printf(R"(
 	/*
 		Load and initialize shaders
 	*/
-	GLTexture defaultTexture{ textureFolder / "default.png" };
+	GLTexture defaultTexture{ App::Path("content/textures/default.png") };
 	defaultTexture.UseForDrawing();
 
 	// Uniform Buffer Object containing matrices and light information
@@ -93,13 +86,11 @@ printf(R"(
 
 	// Change each LoadShader call to LoadLiveShader for live editing
 	GLProgram lineShader, backgroundShader, headShader, bezierLinesShader;
-	ShaderManager shaderManager;
-	shaderManager.InitializeFolder(shaderFolder);
-	shaderManager.LoadShader(lineShader, L"line_vertex.glsl", L"line_fragment.glsl");
-	shaderManager.LoadShader(backgroundShader, L"background_vertex.glsl", L"background_fragment.glsl");
+	App::shaders.LoadShader(lineShader, L"line_vertex.glsl", L"line_fragment.glsl");
+	App::shaders.LoadShader(backgroundShader, L"background_vertex.glsl", L"background_fragment.glsl");
 
-	shaderManager.LoadLiveShader(headShader, L"head_vertex.glsl", L"head_fragment.glsl");//, L"head_geometry.glsl");
-	shaderManager.LoadLiveShader(bezierLinesShader, L"bezier_vertex.glsl", L"line_fragment.glsl", L"bezier_lines_geometry.glsl");
+	App::shaders.LoadLiveShader(headShader, L"head_vertex.glsl", L"head_fragment.glsl");//, L"head_geometry.glsl");
+	App::shaders.LoadLiveShader(bezierLinesShader, L"bezier_vertex.glsl", L"line_fragment.glsl", L"bezier_lines_geometry.glsl");
 
 	// Initialize model values
 	glm::mat4 identity_transform{ 1.0f };
@@ -120,8 +111,8 @@ printf(R"(
 		Load head mesh
 	*/
 	GLTriangleMesh cubemesh, headmesh;
-	GLMesh::LoadPLY(meshFolder/"cube.ply", cubemesh);
-	GLMesh::LoadPLY(meshFolder/"blender_suzanne.ply", headmesh);
+	GLMesh::LoadPLY(App::Path("content/meshes/cube.ply"), cubemesh);
+	GLMesh::LoadPLY(App::Path("content/meshes/blender_suzanne.ply"), headmesh);
 	//GLMesh::LoadPLY(meshFolder/"ARFaceGeometry.ply", headmesh);
 	cubemesh.transform.scale = glm::vec3(0.25f);
 	headmesh.transform.scale = glm::vec3(0.25f);
@@ -165,6 +156,7 @@ printf(R"(
 		{
 			ImGui::Text("Scene");
 			ImGui::Text(("App - FPS: " + FpsString(App::clock.deltaTime)).c_str());
+			ImGui::InputInt("MaxFPS", &App::settings.maxFPS, 0);
 			ImGui::Checkbox("Wireframe", &renderWireframe);
 			ImGui::Checkbox("Light follows camera", &lightFollowsCamera);
 			if (ImGui::Button("Run Python test script"))
@@ -249,7 +241,6 @@ printf(R"(
 
 		App::Tick();
 
-		shaderManager.CheckLiveShaders();
 		//fileListener.ProcessCallbacksOnMainThread();
 
 		SDL_Event event;

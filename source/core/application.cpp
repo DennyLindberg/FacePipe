@@ -6,6 +6,7 @@ ApplicationSettings App::settings = ApplicationSettings();
 ApplicationClock App::clock = ApplicationClock();
 OpenGLWindow App::window = OpenGLWindow();
 PythonInterpreter App::python = PythonInterpreter();
+ShaderManager App::shaders = ShaderManager();
 
 void App::Initialize()
 {
@@ -13,10 +14,12 @@ void App::Initialize()
 	App::window.Initialize(App::settings.windowWidth, App::settings.windowHeight, App::settings.fullscreen, App::settings.vsync);
 	App::python.Initialize();
 	GLFramebuffers::Initialize(settings.windowWidth, settings.windowHeight, App::settings.clearColor);
+	App::shaders.Initialize(App::Path("content/shaders"));
 }
 
 void App::Shutdown()
 {
+	App::shaders.Shutdown();
 	App::python.Shutdown();
 	GLFramebuffers::Shutdown();
 	App::window.Destroy();
@@ -25,10 +28,10 @@ void App::Shutdown()
 
 bool App::ReadyToTick()
 {
-	if (settings.fpsLimit <= 0)
+	if (settings.maxFPS <= 0)
 		return true;
 
-	double timeLimit = 1.0 / settings.fpsLimit;
+	double timeLimit = 1.0 / settings.maxFPS;
 	if (App::clock.TimeSinceLastTick() >= timeLimit)
 		return true;
 
@@ -50,4 +53,6 @@ void App::Tick()
 		else
 			std::cout << ScriptResponse.Exception.what();
 	}
+
+	App::shaders.CheckLiveShaders();
 }

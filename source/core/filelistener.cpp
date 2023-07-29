@@ -2,18 +2,18 @@
 #include <Windows.h>
 #include "application.h"
 
-void ListenToFileChange(std::atomic_bool* stopThread, std::filesystem::path folder, std::vector<OnFileChangeCallback>* fileCallbacks, std::deque<std::atomic_bool>* fileModifiedStates)
+void ListenToFileChange(FileListener* Listener, std::filesystem::path folder, std::vector<OnFileChangeCallback>* fileCallbacks, std::deque<std::atomic_bool>* fileModifiedStates)
 {
 	/*
 		Setup the listener
 	*/
-	HANDLE hDir = CreateFile(
+	HANDLE hDir = ::CreateFile(
 		folder.c_str(),
 		FILE_LIST_DIRECTORY,
 		FILE_SHARE_WRITE | FILE_SHARE_READ | FILE_SHARE_DELETE,
 		NULL,
 		OPEN_EXISTING,
-		FILE_FLAG_BACKUP_SEMANTICS,
+		FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED, // overlapped is needed for async operation
 		NULL
 	);
 
@@ -28,21 +28,33 @@ void ListenToFileChange(std::atomic_bool* stopThread, std::filesystem::path fold
 	*/
 	BYTE buffer[4096];
 	DWORD dwBytesReturned = 0;
+	DWORD error = 0;
 
-	while (!(*stopThread))
+	OVERLAPPED ovl = { 0 };
+	ovl.hEvent = ::CreateEvent(NULL, TRUE, FALSE, NULL);
+
+	if (NULL == ovl.hEvent)
 	{
-		bool retrievedChanges = ReadDirectoryChangesW(
+		printf("\nFile listener failed...");
+		return;
+	}
+
+	while (Listener->IsRunning())
+	{
+		::ResetEvent(ovl.hEvent);
+		error = ::ReadDirectoryChangesW(
 			hDir,
 			buffer, sizeof(buffer),
 			FALSE,
 			FILE_NOTIFY_CHANGE_LAST_WRITE,
-			&dwBytesReturned, NULL, NULL
-		);
+			&dwBytesReturned, &ovl, NULL);
 
-		if (!retrievedChanges)
+		DWORD dw;
+		DWORD result = ::WaitForSingleObject(ovl.hEvent, 500);
+
+		if (result == WAIT_TIMEOUT || result != WAIT_OBJECT_0 || !::GetOverlappedResult(hDir, &ovl, &dw, FALSE))
 		{
-			printf("\r\nFile listener failed...");
-			break;
+			continue;
 		}
 
 		/*
@@ -67,26 +79,15 @@ void ListenToFileChange(std::atomic_bool* stopThread, std::filesystem::path fold
 				}
 			}
 
-
 			if (!info->NextEntryOffset) break;
 			p += info->NextEntryOffset;
 		}
 	}
 }
 
-FileListener::FileListener()
-{
-	fileModifiedStates = new std::deque<std::atomic_bool>{};
-}
-
 FileListener::~FileListener()
 {
-	stopThread = true;
-	if (listenerThread.joinable())
-	{
-		listenerThread.join();
-	}
-	delete fileModifiedStates;
+	Shutdown();
 }
 
 void FileListener::Bind(std::wstring filename, FileCallbackSignature callback)
@@ -99,10 +100,26 @@ void FileListener::Bind(std::wstring filename, FileCallbackSignature callback)
 	fileModifiedStates->emplace_back(false);
 }
 
-void FileListener::StartThread(std::filesystem::path listenToFolder)
+void FileListener::Initialize(std::filesystem::path listenToFolder)
 {
+	fileModifiedStates = new std::deque<std::atomic_bool>{};
+
 	rootFolder = listenToFolder;
-	listenerThread = std::thread(ListenToFileChange, &stopThread, rootFolder, &callbacks, fileModifiedStates);
+	listenerThread = std::thread(ListenToFileChange, this, rootFolder, &callbacks, fileModifiedStates);
+}
+
+void FileListener::Shutdown()
+{
+	if (IsRunning())
+	{
+		stopThread = true;
+		if (listenerThread.joinable())
+		{
+			listenerThread.join();
+		}
+		delete fileModifiedStates;
+		fileModifiedStates = nullptr;
+	}
 }
 
 void FileListener::ProcessCallbacksOnMainThread()

@@ -12,10 +12,9 @@ struct ApplicationSettings
 	bool fullscreen = false;
 	int windowWidth = 0;
 	int windowHeight = 0;
-	int fpsLimit = 0;
+	int maxFPS = 0;
 	bool sleepWhenFpsLimited = true;
 	float windowRatio = 0;
-	std::filesystem::path contentPath;
 	glm::vec4 clearColor = glm::vec4(0.0f);
 };
 
@@ -30,8 +29,11 @@ public:
 	static bool ReadyToTick();
 	static void Tick();
 
+	static inline std::filesystem::path Path(const std::string& RelativePath) { return std::filesystem::current_path().parent_path() / std::filesystem::path(RelativePath); }
+
 	static ApplicationSettings settings;
 	static ApplicationClock clock;
 	static OpenGLWindow window;
 	static PythonInterpreter python;
+	static ShaderManager shaders;
 };
