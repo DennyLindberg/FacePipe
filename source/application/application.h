@@ -2,6 +2,9 @@
 #include "core/core.h"
 #include "opengl/opengl.h"
 #include "python/python.h"
+
+#include "shadermanager.h"
+
 #include "imgui.h"
 #include "imgui_stdlib.h"
 #include "imnodes.h"

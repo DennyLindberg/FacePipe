@@ -1,9 +1,7 @@
 #pragma once
 
 #include "core/math.h"
-#include "camera.h"
-
-class Camera;
+#include "opengl/camera.h"
 
 class Scene
 {

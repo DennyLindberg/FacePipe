@@ -1,6 +1,6 @@
 #include "shadermanager.h"
-#include "camera.h"
-#include "../core/utilities.h"
+#include "opengl/camera.h"
+#include "core/utilities.h"
 
 namespace fs = std::filesystem;
 

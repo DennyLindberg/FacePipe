@@ -1,6 +1,6 @@
 #include "filelistener.h"
 #include <Windows.h>
-#include "application.h"
+#include "application/application.h"
 
 void ListenToFileChange(FileListener* Listener, std::filesystem::path folder, std::vector<OnFileChangeCallback>* fileCallbacks, std::deque<std::atomic_bool>* fileModifiedStates)
 {

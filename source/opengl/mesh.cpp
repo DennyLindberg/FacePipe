@@ -1,5 +1,5 @@
 #include "mesh.h"
-#include "../core/application.h"
+#include "application/application.h"
 
 #pragma warning(push,0)
 #include "tiny_obj_loader.h"

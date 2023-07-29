@@ -1,5 +1,5 @@
 #include "camera.h"
-#include "core/application.h"
+#include "application/application.h"
 
 glm::mat4 Camera::ProjectionMatrix() const
 {

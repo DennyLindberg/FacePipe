@@ -1,4 +1,4 @@
-#include "core/application.h"
+#include "application/application.h"
 
 namespace fs = std::filesystem;
 

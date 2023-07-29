@@ -1,7 +1,5 @@
 #include "canvas.h"
-#include "program.h"
-#include "../core/utilities.h"
-#include "../core/application.h"
+#include "application/application.h"
 
 std::shared_ptr<GLProgram> canvasShader;
 

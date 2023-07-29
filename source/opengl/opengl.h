@@ -8,5 +8,4 @@
 #include "screenshot.h"
 #include "grid.h"
 #include "canvas.h"
-#include "shadermanager.h"
 #include "framebuffer.h"
