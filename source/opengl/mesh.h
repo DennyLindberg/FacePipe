@@ -76,6 +76,7 @@ public:
 class GLLine
 {
 protected:
+	ObjectId poolId = 0;
 	GLuint vao = 0;
 	GLuint positionBuffer = 0;
 	GLuint colorBuffer = 0;
@@ -90,6 +91,9 @@ protected:
 	std::vector<glm::fvec4> colors;
 
 public:
+	friend class ObjectPool<GLLine, OBJECTTYPE_GLLine>;
+	static ObjectPool<GLLine, OBJECTTYPE_GLLine> Pool;
+
 	GLLine() {}
 	~GLLine() {}
 

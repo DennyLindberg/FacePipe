@@ -331,10 +331,10 @@ int main(int argc, char* args[])
 		else
 			App::geometry.grid.Draw(App::geometry.quad, camera.ViewProjectionMatrix(), camera.ForwardVector(), camera.SideVector());
 		
-		// Coordinate axis' xray on top of scene
-		GLFramebuffers::ClearActiveDepth();
-		lineShader.Use();
-		App::geometry.coordinateAxis.Draw();
+		// Test debug lines
+		App::debuglines->AddLine({ 0.0f, 0.0f, 0.0f }, Transform::Position(head->ComputeWorldMatrix()), { 0.0f, 1.0f, 0.0f, 1.0f });
+		GLMesh::AppendCoordinateAxis(*App::debuglines, head->ComputeWorldMatrix());
+		App::Render(camera);
 
 		if (auto F = GLFramebuffers::BindScoped(RenderTarget))
 		{

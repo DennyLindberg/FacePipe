@@ -13,6 +13,7 @@ typedef uint32_t ObjectId;
 #define OBJECTTYPE_LIGHT 3
 #define OBJECTTYPE_MESH 4
 #define OBJECTTYPE_TEXTURE 5
+#define OBJECTTYPE_GLLine 6
 
 // Contains a vector index and generator safeguard to ensure that the id references the same object
 // safeguard 0 means uninitialized ptr

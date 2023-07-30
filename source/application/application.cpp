@@ -13,6 +13,7 @@ GeometryManager App::geometry = GeometryManager();
 UniformRandomGenerator App::random = UniformRandomGenerator();
 
 WeakObjectPtr<Object> App::world = WeakObjectPtr<Object>();
+WeakObjectPtr<GLLine> App::debuglines = WeakObjectPtr<GLLine>();
 
 void App::Initialize()
 {
@@ -24,6 +25,7 @@ void App::Initialize()
 	GLFramebuffers::Initialize(settings.windowWidth, settings.windowHeight, App::settings.clearColor);
 
 	App::world = Object::Pool.CreateWeak();
+	App::debuglines = GLLine::Pool.CreateWeak();
 }
 
 void App::Shutdown()
@@ -33,9 +35,10 @@ void App::Shutdown()
 	App::shaders.Shutdown();
 
 	// Empty pools here
-	Object::Pool.EmptyPool();
 	GLTriangleMesh::Pool.EmptyPool();
 	GLTexture::Pool.EmptyPool();
+	GLLine::Pool.EmptyPool();
+	Object::Pool.EmptyPool();
 
 	App::python.Shutdown();
 	App::window.Destroy();
@@ -71,4 +74,17 @@ void App::Tick()
 	}
 
 	App::shaders.CheckLiveShaders();
+}
+
+void App::Render(Camera& camera)
+{
+	GLFramebuffers::ClearActiveDepth();
+	
+	App::shaders.lineShader.Use();
+	App::shaders.UpdateCameraUBO(camera);
+
+	App::geometry.coordinateAxis.Draw();
+	App::debuglines->SendToGPU();
+	App::debuglines->Draw();
+	App::debuglines->Clear();
 }

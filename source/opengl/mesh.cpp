@@ -9,6 +9,7 @@
 #include <iostream>
 
 ObjectPool<GLTriangleMesh, OBJECTTYPE_MESH> GLTriangleMesh::Pool;
+ObjectPool<GLLine, OBJECTTYPE_GLLine> GLLine::Pool;
 
 void InitializeVAOAndBuffers(GLuint& vao, std::function<void()> f)
 {
