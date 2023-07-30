@@ -33,7 +33,7 @@ public:
 	static void Shutdown();
 	static bool ReadyToTick();
 	static void Tick();
-	static void Render(Camera& camera);
+	static void Render(WeakPtr<Camera> camera);
 
 	static inline std::filesystem::path Path(const std::string& RelativePath) { return std::filesystem::current_path().parent_path() / std::filesystem::path(RelativePath); }
 

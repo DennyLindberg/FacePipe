@@ -33,18 +33,14 @@ int main(int argc, char* args[])
 - F: Re-center camera
 )";
 	
-	// Testing of object pool with weak ptr support
-	ObjectId cameraId = Camera::Pool.Create();
-	WeakPtr<Camera> cameraTest = Camera::Pool.CreateWeak();
-
 	/*
 		Setup scene and controls
 	*/
-	Camera& camera = Camera::Pool[cameraId];
-	camera.fieldOfView = CAMERA_FOV;
+	WeakPtr<Camera> camera = Camera::Pool.CreateWeak();
+	camera->fieldOfView = CAMERA_FOV;
 
-	Camera cameraCube;
-	cameraCube.fieldOfView = CAMERA_FOV;
+	WeakPtr<Camera> cameraCube = Camera::Pool.CreateWeak();
+	cameraCube->fieldOfView = CAMERA_FOV;
 
 	TurntableController turntable(camera);
 	TurntableController turntableCube(cameraCube);
@@ -55,8 +51,8 @@ int main(int argc, char* args[])
 	turntableCube.sensitivity = turntable.sensitivity;
 	turntableCube.Set(-65.0f, 15.0f, 1.0f);
 
-	auto SetCameraView = [](Camera& camera, TurntableController& controller, CameraView view) -> void {
-		camera.SetView(view);
+	auto SetCameraView = [](WeakPtr<Camera> camera, TurntableController& controller, CameraView view) -> void {
+		camera->SetView(view);
 		controller.SetDistance(view == CameraView::Perspective? 1.0f : 1.0f);
 	};
 
@@ -88,13 +84,12 @@ int main(int argc, char* args[])
 	App::world->AddChild(cube);
 	App::world->AddChild(head);
 	App::world->AddChild(arhead);
-	head->AddChild(cube);
 
 	cube->AddComponent(cubemesh);
 	head->AddComponent(headmesh);
 	arhead->AddComponent(armesh);
 
-	//cube->transform.scale = glm::vec3(0.1f);
+	cube->transform.scale = glm::vec3(0.1f);
 	head->transform.scale = glm::vec3(0.1f);
 	//head->transform.position.x = -0.25f;
 	arhead->transform.scale = glm::vec3(0.001f);
@@ -138,7 +133,7 @@ int main(int argc, char* args[])
 				if (head->GetParent())
 					head->DetachFromParent();
 				else
-					App::world->AddChild(head);
+					head->AttachTo(cube);
 			}
 
 			ImGui::InputTextMultiline( "ScriptInput", &input_field_string, ImVec2(0.0f, 100.0f) );
@@ -299,15 +294,13 @@ int main(int argc, char* args[])
 		// Set scene render properties
 		glPolygonMode(GL_FRONT_AND_BACK, (renderWireframe? GL_LINE : GL_FILL));
 		App::shaders.UpdateCameraUBO(camera);
-		App::shaders.UpdateLightUBOPosition(lightFollowsCamera? camera.GetPosition() : glm::fvec3{ 999999.0f });
+		App::shaders.UpdateLightUBOPosition(lightFollowsCamera? camera->GetPosition() : glm::fvec3{ 999999.0f });
 
 		// Debug: Test changing the mesh transform over time
-		cube->transform.position.y = 10.0f*abs(sinf((float)App::clock.time));
+		cube->transform.rotation.y = sinf((float)App::clock.time);
 		head->transform.position.z = abs(sinf((float)App::clock.time));
 		head->transform.rotation.x = (float)App::clock.time*2.0f;
-		head->transform.scale = glm::vec3(0.1f*abs(sinf((float)App::clock.time*0.5f)));
-		App::world->transform.rotation.y = (float)App::clock.time;
-		App::world->transform.scale.y = sinf((float)App::clock.time);
+		//head->transform.scale = glm::vec3(0.1f*abs(sinf((float)App::clock.time*0.5f)));
 
 		pointCloudShader.Use();
 		pointCloudShader.SetUniformMat4("model", arhead->ComputeWorldMatrix());
@@ -320,16 +313,13 @@ int main(int argc, char* args[])
 		meshShader.SetUniformInt("useFlatShading", 0);
 		DefaultTexture->UseForDrawing();
 		headmesh->Draw();
-
-		meshShader.SetUniformMat4("model", cube->ComputeWorldMatrix());
-		cubemesh->Draw();
 			
 		// Grid
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		if (camera.GetView() == CameraView::Perspective)
-			App::geometry.grid.Draw(App::geometry.quad, camera.ViewProjectionMatrix());
+		if (camera->GetView() == CameraView::Perspective)
+			App::geometry.grid.Draw(App::geometry.quad, camera->ViewProjectionMatrix());
 		else
-			App::geometry.grid.Draw(App::geometry.quad, camera.ViewProjectionMatrix(), camera.ForwardVector(), camera.SideVector());
+			App::geometry.grid.Draw(App::geometry.quad, camera->ViewProjectionMatrix(), camera->ForwardVector(), camera->SideVector());
 		
 		// Test debug lines
 		App::debuglines->AddLine({ 0.0f, 0.0f, 0.0f }, Transform::Position(head->ComputeWorldMatrix()), { 0.0f, 1.0f, 0.0f, 1.0f });
@@ -340,7 +330,7 @@ int main(int argc, char* args[])
 		{
 			GLFramebuffers::ClearActive();
 			App::shaders.UpdateCameraUBO(cameraCube);
-			App::shaders.UpdateLightUBOPosition(lightFollowsCamera? cameraCube.GetPosition() : glm::fvec3{ 999999.0f });
+			App::shaders.UpdateLightUBOPosition(lightFollowsCamera? cameraCube->GetPosition() : glm::fvec3{ 999999.0f });
 			meshShader.SetUniformMat4("model", cube->transform.Matrix());
 			meshShader.SetUniformInt("useTexture", 0);
 			cubemesh->Draw();

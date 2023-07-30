@@ -1,14 +1,20 @@
 #include "input.h"
-#include "../opengl/camera.h"
+#include "opengl/camera.h"
 
-TurntableController::TurntableController(Camera& controlledCamera)
+Camera* TurntableController::GetCamera() const
 {
-	camera = &controlledCamera;
+	return Camera::Pool.Get(cameraWeakPtr);
+}
+
+TurntableController::TurntableController(WeakPtrGeneric cam)
+	: cameraWeakPtr(cam)
+{
 }
 
 void TurntableController::OnBeginInput()
 {
-	bFlipYaw = camera->flipUpDirection;
+	if (Camera* camera = GetCamera())
+		bFlipYaw = camera->flipUpDirection;
 }
 
 void TurntableController::SetDistance(float newDistance)
@@ -35,6 +41,9 @@ void TurntableController::Offset(float yawOffset, float pitchOffset, float dista
 
 void TurntableController::ApplyMouseInput(int deltaX, int deltaY)
 {
+	Camera* camera = GetCamera();
+	if (!camera) return;
+
 	float relativeSensitivity = 0.1f*log(1.0f + distance);
 
 	switch (inputState)
@@ -86,6 +95,9 @@ glm::vec3 PlacementVector(float yaw, float pitch)
 
 void TurntableController::UpdateCamera()
 {
+	Camera* camera = GetCamera();
+	if (!camera) return;
+
 	if (camera->GetView() == CameraView::Perspective)
 	{
 		yaw = fmod(yaw, 360.0f);

@@ -6,7 +6,17 @@ void Object::DetachFromParent()
 {
 	if (Object* p = parent.Get())
 	{
-		p->RemoveChild(Pool.GetWeakPtr(poolId));
+		p->RemoveChild(GetWeakPtr());
+	}
+}
+
+void Object::AttachTo(WeakPtr<Object> newParent)
+{
+	DetachFromParent();
+
+	if (Object* p = newParent.Get())
+	{
+		p->AddChild(GetWeakPtr());
 	}
 }
 
@@ -14,7 +24,7 @@ void Object::AddChild(WeakPtr<Object> newChild)
 {
 	if (Object* obj = newChild.Get())
 	{
-		obj->parent = Pool.GetWeakPtr(poolId);
+		obj->parent = GetWeakPtr();
 
 		for (WeakPtr<Object>& child : children)
 		{

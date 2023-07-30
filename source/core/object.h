@@ -25,9 +25,13 @@ public:
 	void Initialize() {}
 	void Destroy() {}
 
+	WeakPtr<Object> GetWeakPtr() const { return Object::Pool.GetWeakPtr(poolId); }
+
 	WeakPtr<Object> GetParent() const { return parent; }
 
 	void DetachFromParent();
+
+	void AttachTo(WeakPtr<Object> newParent);
 
 	void AddChild(WeakPtr<Object> newChild);
 

@@ -1,6 +1,7 @@
 #pragma once
 #include "opengl/program.h"
 #include "core/filelistener.h"
+#include "core/objectptr.h"
 #include <string>
 #include <filesystem>
 
@@ -40,7 +41,7 @@ public:
 	void UpdateShader(GLProgram& targetProgram, std::filesystem::path filePath, ShaderType type);
 	void CheckLiveShaders();
 
-	void UpdateCameraUBO(class Camera& camera);
+	void UpdateCameraUBO(WeakPtrGeneric camera);
 	void UpdateLightUBOPosition(const glm::fvec3& position);
 	void UpdateLightUBOColor(const glm::fvec4& color);
 

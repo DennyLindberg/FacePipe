@@ -1,5 +1,7 @@
 #pragma once
+
 #include "math.h"
+#include "objectptr.h"
 
 enum class TurntableInputState
 {
@@ -12,12 +14,13 @@ enum class TurntableInputState
 class TurntableController
 {
 protected:
-	// Not owned by class
-	class Camera* camera = nullptr;
+	WeakPtrGeneric cameraWeakPtr;
 	float yaw = 0.0f;
 	float pitch = 0.0f;
 	float distance = 1.0f;
 	bool bFlipYaw = false; // used to reverse direction when up-side down
+
+	class Camera* GetCamera() const;
 
 public:
 	glm::vec3 position = glm::vec3{ 0.0f };
@@ -26,7 +29,7 @@ public:
 	
 	TurntableInputState inputState = TurntableInputState::Rotate;
 
-	TurntableController(class Camera& controlledCamera);
+	TurntableController(WeakPtrGeneric cam);
 	~TurntableController() = default;
 
 	void OnBeginInput();

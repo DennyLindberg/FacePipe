@@ -76,7 +76,7 @@ void App::Tick()
 	App::shaders.CheckLiveShaders();
 }
 
-void App::Render(Camera& camera)
+void App::Render(WeakPtr<Camera> camera)
 {
 	GLFramebuffers::ClearActiveDepth();
 	

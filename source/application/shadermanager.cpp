@@ -175,13 +175,14 @@ void ShaderManager::CheckLiveShaders()
 	fileListener.ProcessCallbacksOnMainThread();
 }
 
-void ShaderManager::UpdateCameraUBO(Camera& camera)
+void ShaderManager::UpdateCameraUBO(WeakPtrGeneric camera)
 {
-	/*glm::mat4 viewmatrix = camera.ViewMatrix();
-	glm::mat4 projectionmatrix = camera.ProjectionMatrix();*/
-	cameraUBO.SetData(glm::value_ptr(camera.ProjectionMatrix()), 0, 64);
-	cameraUBO.SetData(glm::value_ptr(camera.ViewMatrix()), 64, 64);
-	cameraUBO.SetData(glm::value_ptr(camera.GetPosition()), 128, 16);
+	if (Camera* cam = Camera::Pool.Get(camera))
+	{
+		cameraUBO.SetData(glm::value_ptr(cam->ProjectionMatrix()), 0, 64);
+		cameraUBO.SetData(glm::value_ptr(cam->ViewMatrix()), 64, 64);
+		cameraUBO.SetData(glm::value_ptr(cam->GetPosition()), 128, 16);
+	}
 }
 
 void ShaderManager::UpdateLightUBOPosition(const glm::fvec3& position)
