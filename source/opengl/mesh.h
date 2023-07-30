@@ -36,6 +36,7 @@ public:
 class GLTriangleMesh
 {
 protected:
+	ObjectId poolId = 0;
 	GLuint vao = 0;
 	GLuint positionBuffer = 0;
 	GLuint normalBuffer = 0;
@@ -44,6 +45,7 @@ protected:
 	GLuint indexBuffer = 0;
 
 public:
+	friend class ObjectPool<GLTriangleMesh, OBJECTTYPE_MESH>;
 	static ObjectPool<GLTriangleMesh, OBJECTTYPE_MESH> Pool;
 
 	std::vector<glm::fvec3> positions;

@@ -29,6 +29,7 @@ void App::Shutdown()
 	App::shaders.Shutdown();
 
 	// Empty pools here
+	Object::Pool.EmptyPool();
 	GLTriangleMesh::Pool.EmptyPool();
 	GLTexture::Pool.EmptyPool();
 

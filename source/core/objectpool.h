@@ -5,7 +5,7 @@
 #include <vector>
 #include <cassert>
 
-#include "object.h"
+#include "objectptr.h"
 
 template<typename T, ObjectType OT>
 class ObjectPool
@@ -89,6 +89,8 @@ public:
 		UpdateNextFreeSlot();
 
 		objects[newId].Initialize();
+		objects[newId].poolId = newId;
+
 		return newId;
 	}
 

@@ -18,9 +18,11 @@ enum class CameraView
 class Camera
 {
 public:
+	friend class ObjectPool<Camera, OBJECTTYPE_CAMERA>;
 	static ObjectPool<Camera, OBJECTTYPE_CAMERA> Pool;
 
 protected:
+	ObjectId poolId = 0;
 	bool bDirty = true;
 	glm::vec3 forwardVector = { 0.0f, 0.0f, 1.0f };
 	glm::vec3 upVector = { 0.0f, 1.0f, 0.0f };

@@ -11,6 +11,7 @@
 #include <stdint.h> // uint32_t ...
 
 #include "transform.h"
+#include "object.h"
 #include "clock.h"
 #include "randomization.h"
 #include "threads.h"

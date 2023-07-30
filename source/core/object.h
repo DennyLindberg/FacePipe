@@ -1,79 +1,87 @@
 #pragma once
 
-#include <functional>
-#include <vector>
-#include "core/transform.h"
-
-typedef uint8_t ObjectType;
-typedef uint32_t ObjectId;
-
-#define OBJECTTYPE_UNKNOWN 0
-#define OBJECTTYPE_CAMERA 1
-#define OBJECTTYPE_LIGHT 2
-#define OBJECTTYPE_MESH 3
-#define OBJECTTYPE_TEXTURE 4
-
-// Contains a vector index and generator safeguard to ensure that the id references the same object
-// safeguard 0 means uninitialized ptr
-struct GenericWeakObjectPtr
-{
-public:
-	GenericWeakObjectPtr(ObjectType t) : type(t) {}
-
-	ObjectType type = OBJECTTYPE_UNKNOWN;	// what type of object this refers to
-	ObjectId id = 0;						// index to vector
-	uint32_t safeguard = 0;					// based on generator
-
-	bool operator==(const GenericWeakObjectPtr& b) const { return type == b.type && id == b.id && safeguard == b.safeguard; }
-};
-
-template<typename T>
-struct WeakObjectPtr : public GenericWeakObjectPtr
-{
-public:
-	WeakObjectPtr() : GenericWeakObjectPtr(T::Pool.Type) {}
-
-public:
-	void Destroy() { T::Pool.Destroy(*this); }
-
-	inline ObjectId GetId() const { return id; }
-	inline uint32_t GetSafeguard() const { return safeguard; }
-	inline T* Get() const { return T::Pool.GetSafe(id, safeguard); }
-
-	operator bool() const { return Get() != nullptr; }
-	T* operator->() const { return Get(); }
-	T& operator*(void) const { return *Get(); }
-
-	operator T* () const { return Get(); }
-};
+#include <string>
+#include "objectpool.h"
 
 class Object
 {
 public:
+	friend class ObjectPool<Object, OBJECTTYPE_OBJECT>;
+	static ObjectPool<Object, OBJECTTYPE_OBJECT> Pool;
+
 	Object() {}
 	~Object() {}
 
+	void Initialize() {}
+	void Destroy() {}
+
 	Transform transform;
 
-	void AddChild(GenericWeakObjectPtr weakPtr)
+	void AddChild(WeakObjectPtr<Object> newChild)
 	{
-		for (const GenericWeakObjectPtr& child : children)
+		if (Object* obj = newChild.Get())
+		{
+			obj->parent = Pool.GetWeakPtr(poolId);
+
+			for (WeakObjectPtr<Object>& child : children)
+			{
+				if (child == newChild)
+					return; // already a child
+			}
+
+			children.push_back(newChild);
+		}
+	}
+
+	void RemoveChild(WeakObjectPtr<Object> child)
+	{
+		if (Object* obj = child.Get())
+		{
+			obj->parent.Clear();
+		}
+
+		for (size_t i=0; i<children.size(); ++i)
+		{
+			if (children[i] == child)
+			{
+				children[i].Clear();
+			}
+		}
+	}
+
+	void AddComponent(GenericWeakObjectPtr weakPtr)
+	{
+		for (const GenericWeakObjectPtr& child : components)
 		{
 			if (child == weakPtr)
 				return; // already added
 		}
 
-		children.push_back(weakPtr);
+		components.push_back(weakPtr);
 	}
 
 	template<class T>
-	void AddChild(WeakObjectPtr<T> weakPtr)
+	void AddComponent(WeakObjectPtr<T> weakPtr)
 	{
-		AddChild(GenericWeakObjectPtr(weakPtr));
+		AddComponent(GenericWeakObjectPtr(weakPtr));
+	}
+
+	glm::mat4 ComputeWorldMatrix()
+	{
+		glm::mat4 mat = transform.Matrix();
+
+		Object* p = parent.Get();
+		while (p)
+		{
+			mat = p->transform.Matrix() * mat;
+			p = p->parent.Get();
+		}
+
+		return mat;
 	}
 
 	// TODO: Scene graph must check generic objects against known object pools
-	//void CleanupDestroyedChildren(std::function<void(const GenericWeakObjectPtr& child)> IsInvalidChild)
+	//void CleanupDestroyedComponents(std::function<void(const GenericWeakObjectPtr& child)> IsInvalidChild)
 	//{
 	//	children.erase(
 	//		std::remove_if(children.begin(), children.end(), IsInvalidChild),
@@ -81,6 +89,12 @@ public:
 	//	);
 	//}
 
+public:
+	std::string name = "Object";
+
 protected:
-	std::vector<GenericWeakObjectPtr> children;
+	ObjectId poolId = 0;
+	WeakObjectPtr<Object> parent;
+	std::vector<WeakObjectPtr<Object>> children;
+	std::vector<GenericWeakObjectPtr> components;
 };

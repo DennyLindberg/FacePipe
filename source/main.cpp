@@ -81,14 +81,24 @@ int main(int argc, char* args[])
 	GLMesh::LoadPLY(App::Path("content/meshes/blender_suzanne.ply"), *headmesh);
 	GLMesh::LoadPLY(App::Path("content/meshes/ARFaceGeometry.ply"), *armesh);
 
-	Object cube, head, arhead;
-	//cube.AddChild(cubemesh);
-	//head.AddChild(headmesh);
-	//arhead.AddChild(armesh);
-	cube.transform.scale = glm::vec3(0.1f);
-	head.transform.scale = glm::vec3(0.1f);
-	head.transform.position.x = -0.25f;
-	arhead.transform.scale = glm::vec3(0.001f);
+	WeakObjectPtr<Object> world = Object::Pool.CreateWeak();
+	WeakObjectPtr<Object> cube = Object::Pool.CreateWeak();
+	WeakObjectPtr<Object> head = Object::Pool.CreateWeak();
+	WeakObjectPtr<Object> arhead = Object::Pool.CreateWeak();
+
+	world->AddChild(cube);
+	world->AddChild(head);
+	world->AddChild(arhead);
+	head->AddChild(cube);
+
+	cube->AddComponent(cubemesh);
+	head->AddComponent(headmesh);
+	arhead->AddComponent(armesh);
+
+	//cube->transform.scale = glm::vec3(0.1f);
+	head->transform.scale = glm::vec3(0.1f);
+	//head->transform.position.x = -0.25f;
+	arhead->transform.scale = glm::vec3(0.001f);
 
 	WeakObjectPtr<GLTexture> DefaultTexture = GLTexture::Pool.CreateWeak();
 	DefaultTexture->LoadPNG(App::Path("content/textures/default.png"));
@@ -285,19 +295,27 @@ int main(int argc, char* args[])
 		App::shaders.UpdateLightUBOPosition(lightFollowsCamera? camera.GetPosition() : glm::fvec3{ 999999.0f });
 
 		// Debug: Test changing the mesh transform over time
-		head.transform.rotation = glm::fvec3(0.0f, Math::Pi*sinf((float) App::clock.time), 0.0f);
+		cube->transform.position.y = 10.0f*abs(sinf((float)App::clock.time));
+		head->transform.position.z = abs(sinf((float)App::clock.time));
+		head->transform.rotation.x = (float)App::clock.time*2.0f;
+		head->transform.scale = glm::vec3(0.1f*abs(sinf((float)App::clock.time*0.5f)));
+		world->transform.rotation.y = (float)App::clock.time;
+		world->transform.scale.y = sinf((float)App::clock.time);
 
 		pointCloudShader.Use();
-		pointCloudShader.SetUniformMat4("model", arhead.transform.Matrix());
+		pointCloudShader.SetUniformMat4("model", arhead->ComputeWorldMatrix());
 		pointCloudShader.SetUniformFloat("size", App::settings.pointCloudSize);
 		armesh->Draw(GL_POINTS);
 
 		meshShader.Use();
-		meshShader.SetUniformMat4("model", head.transform.Matrix());
+		meshShader.SetUniformMat4("model", head->ComputeWorldMatrix());
 		meshShader.SetUniformInt("useTexture", 0);
 		meshShader.SetUniformInt("useFlatShading", 0);
 		DefaultTexture->UseForDrawing();
 		headmesh->Draw();
+
+		meshShader.SetUniformMat4("model", cube->ComputeWorldMatrix());
+		cubemesh->Draw();
 			
 		// Grid
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -316,7 +334,7 @@ int main(int argc, char* args[])
 			GLFramebuffers::ClearActive();
 			App::shaders.UpdateCameraUBO(cameraCube);
 			App::shaders.UpdateLightUBOPosition(lightFollowsCamera? cameraCube.GetPosition() : glm::fvec3{ 999999.0f });
-			meshShader.SetUniformMat4("model", cube.transform.Matrix());
+			meshShader.SetUniformMat4("model", cube->transform.Matrix());
 			meshShader.SetUniformInt("useTexture", 0);
 			cubemesh->Draw();
 		}
