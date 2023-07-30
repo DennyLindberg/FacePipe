@@ -45,4 +45,6 @@ public:
 	static GeometryManager geometry;
 
 	static UniformRandomGenerator random;
+
+	static WeakObjectPtr<Object> world;
 };

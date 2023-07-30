@@ -12,6 +12,8 @@ GeometryManager App::geometry = GeometryManager();
 
 UniformRandomGenerator App::random = UniformRandomGenerator();
 
+WeakObjectPtr<Object> App::world = WeakObjectPtr<Object>();
+
 void App::Initialize()
 {
 	App::settings.windowRatio = App::settings.windowWidth / (float)App::settings.windowHeight;
@@ -20,6 +22,8 @@ void App::Initialize()
 	App::geometry.Initialize();
 	App::shaders.Initialize(App::Path("content/shaders"));
 	GLFramebuffers::Initialize(settings.windowWidth, settings.windowHeight, App::settings.clearColor);
+
+	App::world = Object::Pool.CreateWeak();
 }
 
 void App::Shutdown()

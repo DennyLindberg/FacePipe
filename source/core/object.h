@@ -17,6 +17,16 @@ public:
 
 	Transform transform;
 
+	WeakObjectPtr<Object> GetParent() const { return parent; }
+
+	void DetachFromParent()
+	{
+		if (Object* p = parent.Get())
+		{
+			p->RemoveChild(Pool.GetWeakPtr(poolId));
+		}
+	}
+
 	void AddChild(WeakObjectPtr<Object> newChild)
 	{
 		if (Object* obj = newChild.Get())

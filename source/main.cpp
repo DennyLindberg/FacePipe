@@ -81,14 +81,13 @@ int main(int argc, char* args[])
 	GLMesh::LoadPLY(App::Path("content/meshes/blender_suzanne.ply"), *headmesh);
 	GLMesh::LoadPLY(App::Path("content/meshes/ARFaceGeometry.ply"), *armesh);
 
-	WeakObjectPtr<Object> world = Object::Pool.CreateWeak();
 	WeakObjectPtr<Object> cube = Object::Pool.CreateWeak();
 	WeakObjectPtr<Object> head = Object::Pool.CreateWeak();
 	WeakObjectPtr<Object> arhead = Object::Pool.CreateWeak();
 
-	world->AddChild(cube);
-	world->AddChild(head);
-	world->AddChild(arhead);
+	App::world->AddChild(cube);
+	App::world->AddChild(head);
+	App::world->AddChild(arhead);
 	head->AddChild(cube);
 
 	cube->AddComponent(cubemesh);
@@ -132,6 +131,14 @@ int main(int argc, char* args[])
 			if (ImGui::Button("Run Python test script"))
 			{
 				App::python.Execute(PythonTestScript);
+			}
+
+			if (ImGui::Button("Toggle parent"))
+			{
+				if (head->GetParent())
+					head->DetachFromParent();
+				else
+					App::world->AddChild(head);
 			}
 
 			ImGui::InputTextMultiline( "ScriptInput", &input_field_string, ImVec2(0.0f, 100.0f) );
@@ -299,8 +306,8 @@ int main(int argc, char* args[])
 		head->transform.position.z = abs(sinf((float)App::clock.time));
 		head->transform.rotation.x = (float)App::clock.time*2.0f;
 		head->transform.scale = glm::vec3(0.1f*abs(sinf((float)App::clock.time*0.5f)));
-		world->transform.rotation.y = (float)App::clock.time;
-		world->transform.scale.y = sinf((float)App::clock.time);
+		App::world->transform.rotation.y = (float)App::clock.time;
+		App::world->transform.scale.y = sinf((float)App::clock.time);
 
 		pointCloudShader.Use();
 		pointCloudShader.SetUniformMat4("model", arhead->ComputeWorldMatrix());
