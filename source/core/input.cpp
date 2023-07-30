@@ -1,29 +1,28 @@
 #include "input.h"
-#include "opengl/camera.h"
 
-Camera* TurntableController::GetCamera() const
-{
-	return Camera::Pool.Get(cameraWeakPtr);
-}
-
-TurntableController::TurntableController(WeakPtrGeneric cam)
-	: cameraWeakPtr(cam)
+CameraController::CameraController(WeakPtr<Camera> cam)
+	: camera(cam)
 {
 }
 
-void TurntableController::OnBeginInput()
+void CameraController::SetCameraView(CameraView view)
 {
-	if (Camera* camera = GetCamera())
-		bFlipYaw = camera->flipUpDirection;
+	camera->SetView(view);
+	SetDistance(view == CameraView::Perspective? 1.0f : 1.0f);
 }
 
-void TurntableController::SetDistance(float newDistance)
+void CameraController::OnBeginInput()
+{
+	bFlipYaw = camera->flipUpDirection;
+}
+
+void CameraController::SetDistance(float newDistance)
 {
 	distance = newDistance;
 	UpdateCamera();
 }
 
-void TurntableController::Set(float newYaw, float newPitch, float newDistance)
+void CameraController::Set(float newYaw, float newPitch, float newDistance)
 {
 	yaw = newYaw;
 	pitch = newPitch;
@@ -31,7 +30,7 @@ void TurntableController::Set(float newYaw, float newPitch, float newDistance)
 	UpdateCamera();
 }
 
-void TurntableController::Offset(float yawOffset, float pitchOffset, float distanceOffset)
+void CameraController::Offset(float yawOffset, float pitchOffset, float distanceOffset)
 {
 	yaw += bFlipYaw? -yawOffset : yawOffset;
 	pitch += pitchOffset;
@@ -39,11 +38,8 @@ void TurntableController::Offset(float yawOffset, float pitchOffset, float dista
 	UpdateCamera();
 }
 
-void TurntableController::ApplyMouseInput(int deltaX, int deltaY)
+void CameraController::ApplyMouseInput(int deltaX, int deltaY)
 {
-	Camera* camera = GetCamera();
-	if (!camera) return;
-
 	float relativeSensitivity = 0.1f*log(1.0f + distance);
 
 	switch (inputState)
@@ -61,7 +57,7 @@ void TurntableController::ApplyMouseInput(int deltaX, int deltaY)
 			inputOffset *= 0.1f*sensitivity*relativeSensitivity;
 		else
 			inputOffset *= 0.01f*sensitivity*distance;
-		position += inputOffset;
+		turntablePivot += inputOffset;
 		UpdateCamera();
 		break;
 	}
@@ -73,9 +69,9 @@ void TurntableController::ApplyMouseInput(int deltaX, int deltaY)
 	}
 }
 
-void TurntableController::SnapToOrigin()
+void CameraController::SnapToOrigin()
 {
-	position = glm::vec3{ 0.0f };
+	turntablePivot = glm::vec3{ 0.0f };
 	UpdateCamera();
 }
 
@@ -93,11 +89,8 @@ glm::vec3 PlacementVector(float yaw, float pitch)
 	};
 }
 
-void TurntableController::UpdateCamera()
+void CameraController::UpdateCamera()
 {
-	Camera* camera = GetCamera();
-	if (!camera) return;
-
 	if (camera->GetView() == CameraView::Perspective)
 	{
 		yaw = fmod(yaw, 360.0f);
@@ -118,12 +111,12 @@ void TurntableController::UpdateCamera()
 			camera->flipUpDirection = (abs(pitch) >= 90.0f && abs(pitch) <= 270.0f);
 		}
 
-		camera->SetPosition(position + PlacementVector(yaw, pitch) * distance);
-		camera->SetFocusPoint(position);
+		camera->SetPosition(turntablePivot + PlacementVector(yaw, pitch) * distance);
+		camera->SetFocusPoint(turntablePivot);
 	}
 	else
 	{
-		camera->SetPosition(position);
+		camera->SetPosition(turntablePivot);
 		camera->SetOrthographicZoom(distance);
 	}
 }

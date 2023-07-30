@@ -2,6 +2,7 @@
 
 #include "math.h"
 #include "objectptr.h"
+#include "opengl/camera.h"
 
 enum class TurntableInputState
 {
@@ -11,26 +12,26 @@ enum class TurntableInputState
 	COUNT
 };
 
-class TurntableController
+class CameraController
 {
 protected:
-	WeakPtrGeneric cameraWeakPtr;
 	float yaw = 0.0f;
 	float pitch = 0.0f;
 	float distance = 1.0f;
 	bool bFlipYaw = false; // used to reverse direction when up-side down
 
-	class Camera* GetCamera() const;
-
 public:
-	glm::vec3 position = glm::vec3{ 0.0f };
+	WeakPtr<Camera> camera;
+	glm::vec3 turntablePivot = glm::vec3{ 0.0f };
 	float sensitivity = 1.0f;
 	bool clampPitch = false;
 	
 	TurntableInputState inputState = TurntableInputState::Rotate;
 
-	TurntableController(WeakPtrGeneric cam);
-	~TurntableController() = default;
+	CameraController(WeakPtr<Camera> cam);
+	~CameraController() = default;
+
+	void SetCameraView(CameraView view);
 
 	void OnBeginInput();
 	void SetDistance(float newDistance);

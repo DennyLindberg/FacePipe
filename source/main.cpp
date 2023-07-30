@@ -36,25 +36,17 @@ int main(int argc, char* args[])
 	/*
 		Setup scene and controls
 	*/
-	WeakPtr<Camera> camera = Camera::Pool.CreateWeak();
-	camera->fieldOfView = CAMERA_FOV;
+	CameraController camera(Camera::Pool.CreateWeak());
+	camera.camera->fieldOfView = CAMERA_FOV;
+	camera.turntablePivot = glm::vec3{-0.15f, 0.0f, 0.0f};
+	camera.sensitivity = 0.25f;
+	camera.Set(-65.0f, 15.0f, 0.75f);
 
-	WeakPtr<Camera> cameraCube = Camera::Pool.CreateWeak();
-	cameraCube->fieldOfView = CAMERA_FOV;
-
-	TurntableController turntable(camera);
-	TurntableController turntableCube(cameraCube);
-	turntable.position = glm::vec3{-0.15f, 0.0f, 0.0f};
-	turntable.sensitivity = 0.25f;
-	turntable.Set(-65.0f, 15.0f, 0.75f);
-	turntableCube.position = turntable.position;
-	turntableCube.sensitivity = turntable.sensitivity;
-	turntableCube.Set(-65.0f, 15.0f, 1.0f);
-
-	auto SetCameraView = [](WeakPtr<Camera> camera, TurntableController& controller, CameraView view) -> void {
-		camera->SetView(view);
-		controller.SetDistance(view == CameraView::Perspective? 1.0f : 1.0f);
-	};
+	CameraController cameraCube(Camera::Pool.CreateWeak());
+	cameraCube.camera->fieldOfView = CAMERA_FOV;
+	cameraCube.turntablePivot = camera.turntablePivot;
+	cameraCube.sensitivity = camera.sensitivity;
+	cameraCube.Set(-65.0f, 15.0f, 1.0f);
 
 	GLuint RenderTarget = GLFramebuffers::Create(GLuint(settings.windowWidth*0.25f), GLuint(settings.windowHeight*0.25f), App::settings.clearColor);
 
@@ -239,18 +231,18 @@ int main(int argc, char* args[])
 				auto key = event.key.keysym.sym;
 
 				if      (key == SDLK_s) GLFramebuffers::SaveScreenshot();
-				else if (key == SDLK_f) turntable.SnapToOrigin();
+				else if (key == SDLK_f) camera.SnapToOrigin();
 
-				else if (key == SDLK_KP_7) SetCameraView(camera, turntable, CameraView::OrthographicY);
-				else if (key == SDLK_KP_1) SetCameraView(camera, turntable, bCtrlModifier? CameraView::OrthographicZneg : CameraView::OrthographicZ);
-				else if (key == SDLK_KP_9) SetCameraView(camera, turntable, CameraView::OrthographicYneg);
-				else if (key == SDLK_KP_3) SetCameraView(camera, turntable, bCtrlModifier ? CameraView::OrthographicXneg : CameraView::OrthographicX);
-				else if (key == SDLK_KP_5) SetCameraView(camera, turntable, CameraView::Perspective);
+				else if (key == SDLK_KP_7) camera.SetCameraView(CameraView::OrthographicY);
+				else if (key == SDLK_KP_1) camera.SetCameraView(bCtrlModifier? CameraView::OrthographicZneg : CameraView::OrthographicZ);
+				else if (key == SDLK_KP_9) camera.SetCameraView(CameraView::OrthographicYneg);
+				else if (key == SDLK_KP_3) camera.SetCameraView(bCtrlModifier ? CameraView::OrthographicXneg : CameraView::OrthographicX);
+				else if (key == SDLK_KP_5) camera.SetCameraView(CameraView::Perspective);
 			}
 
 			if (!ImGui::GetIO().WantCaptureMouse || interactingWithPreview)
 			{
-				auto& activeTurntable = interactingWithPreview? turntableCube : turntable;
+				auto& activeTurntable = interactingWithPreview? cameraCube : camera;
 
 				if (event.type == SDL_MOUSEBUTTONDOWN)
 				{
@@ -293,8 +285,8 @@ int main(int argc, char* args[])
 		
 		// Set scene render properties
 		glPolygonMode(GL_FRONT_AND_BACK, (renderWireframe? GL_LINE : GL_FILL));
-		App::shaders.UpdateCameraUBO(camera);
-		App::shaders.UpdateLightUBOPosition(lightFollowsCamera? camera->GetPosition() : glm::fvec3{ 999999.0f });
+		App::shaders.UpdateCameraUBO(camera.camera);
+		App::shaders.UpdateLightUBOPosition(lightFollowsCamera? camera.camera->GetPosition() : glm::fvec3{ 999999.0f });
 
 		// Debug: Test changing the mesh transform over time
 		cube->transform.rotation.y = sinf((float)App::clock.time);
@@ -316,21 +308,21 @@ int main(int argc, char* args[])
 			
 		// Grid
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		if (camera->GetView() == CameraView::Perspective)
-			App::geometry.grid.Draw(App::geometry.quad, camera->ViewProjectionMatrix());
+		if (camera.camera->GetView() == CameraView::Perspective)
+			App::geometry.grid.Draw(App::geometry.quad, camera.camera->ViewProjectionMatrix());
 		else
-			App::geometry.grid.Draw(App::geometry.quad, camera->ViewProjectionMatrix(), camera->ForwardVector(), camera->SideVector());
+			App::geometry.grid.Draw(App::geometry.quad, camera.camera->ViewProjectionMatrix(), camera.camera->ForwardVector(), camera.camera->SideVector());
 		
 		// Test debug lines
 		App::debuglines->AddLine({ 0.0f, 0.0f, 0.0f }, Transform::Position(head->ComputeWorldMatrix()), { 0.0f, 1.0f, 0.0f, 1.0f });
 		GLMesh::AppendCoordinateAxis(*App::debuglines, head->ComputeWorldMatrix());
-		App::Render(camera);
+		App::Render(camera.camera);
 
 		if (auto F = GLFramebuffers::BindScoped(RenderTarget))
 		{
 			GLFramebuffers::ClearActive();
-			App::shaders.UpdateCameraUBO(cameraCube);
-			App::shaders.UpdateLightUBOPosition(lightFollowsCamera? cameraCube->GetPosition() : glm::fvec3{ 999999.0f });
+			App::shaders.UpdateCameraUBO(cameraCube.camera);
+			App::shaders.UpdateLightUBOPosition(lightFollowsCamera? cameraCube.camera->GetPosition() : glm::fvec3{ 999999.0f });
 			meshShader.SetUniformMat4("model", cube->transform.Matrix());
 			meshShader.SetUniformInt("useTexture", 0);
 			cubemesh->Draw();

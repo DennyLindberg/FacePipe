@@ -42,6 +42,16 @@ struct WeakPtr : public WeakPtrGeneric
 public:
 	WeakPtr() : WeakPtrGeneric(T::Pool.Type) {}
 
+	WeakPtr(WeakPtrGeneric ptr)
+		: WeakPtrGeneric(T::Pool.Type)
+	{
+		if (ptr.type == T::Pool.Type)
+		{
+			id = ptr.id;
+			safeguard = ptr.safeguard;
+		}
+	}
+
 public:
 	void Destroy() { T::Pool.Destroy(*this); }
 
