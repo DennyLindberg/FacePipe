@@ -19,15 +19,20 @@ protected:
 	std::vector<WeakPtrGeneric> components;
 
 public:
+	bool visible = true;
+
 	Object() {}
 	~Object() {}
 
 	void Initialize() {}
 	void Destroy() {}
 
+	ObjectId GetObjectId() const { return poolId; }
 	WeakPtr<Object> GetWeakPtr() const { return Object::Pool.GetWeakPtr(poolId); }
 
 	WeakPtr<Object> GetParent() const { return parent; }
+	const std::vector<WeakPtr<Object>>& GetChildren() { return children; }
+	const std::vector<WeakPtrGeneric>& GetComponents() { return components; }
 
 	void DetachFromParent();
 

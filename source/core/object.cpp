@@ -47,7 +47,8 @@ void Object::RemoveChild(WeakPtr<Object> child)
 	{
 		if (children[i] == child)
 		{
-			children[i].Clear();
+			children.erase(children.begin() + i);
+			return;
 		}
 	}
 }

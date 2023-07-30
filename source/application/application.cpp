@@ -25,6 +25,7 @@ void App::Initialize()
 	GLFramebuffers::Initialize(settings.windowWidth, settings.windowHeight, App::settings.clearColor);
 
 	App::world = Object::Pool.CreateWeak();
+	App::world->name = "World";
 	App::debuglines = GLLine::Pool.CreateWeak();
 }
 
