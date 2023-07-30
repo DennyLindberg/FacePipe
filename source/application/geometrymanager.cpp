@@ -18,6 +18,6 @@ void GeometryManager::Initialize()
 
 void GeometryManager::Shutdown()
 {
-	quad.Shutdown();
-	coordinateAxis.Shutdown();
+	quad.Destroy();
+	coordinateAxis.Destroy();
 }

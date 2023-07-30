@@ -8,39 +8,28 @@
 #include <string>
 #include <iostream>
 
-GLMeshInterface::GLMeshInterface(bool bAutoGenVAO)
+void InitializeVAOAndBuffers(GLuint& vao, std::function<void()> f)
 {
-	if (bAutoGenVAO)
-	{
-		GenerateVAO();
-	}
+	if (vao != 0) 
+		return;
+
+	glGenVertexArrays(1, &vao);
+	glBindVertexArray(vao);
+
+	f();
 }
 
-GLMeshInterface::~GLMeshInterface()
+void ShutdownVAOAndBuffers(GLuint& vao, std::function<void()> f)
 {
-	DeleteVAO();
+	if (vao == 0) 
+		return;
+
+	f();
+
+	glBindVertexArray(0);
+	glDeleteVertexArrays(1, &vao);
+	vao = 0;
 }
-
-void GLMeshInterface::GenerateVAO()
-{
-	if (vao == 0)
-	{
-		glGenVertexArrays(1, &vao);
-		glBindVertexArray(vao);
-	}
-}
-
-void GLMeshInterface::DeleteVAO()
-{
-	if (vao != 0)
-	{
-		glBindVertexArray(0);
-		glDeleteVertexArrays(1, &vao);
-		vao = 0;
-	}
-}
-
-
 
 void GLGrid::Draw(GLQuad& mesh, const glm::mat4& mvp, const glm::fvec3& planeUp, const glm::fvec3& planeSide)
 {
@@ -63,54 +52,49 @@ void GLGrid::Draw(GLQuad& mesh, const glm::mat4& mvp, const glm::fvec3& planeUp,
 	mesh.Draw();
 }
 
-
-
-GLTriangleMesh::GLTriangleMesh(bool allocate)
+void GLTriangleMesh::Initialize()
 {
-	allocated = allocate;
-	if (!allocated) return;
+	InitializeVAOAndBuffers(vao, [this]() {
+		glGenBuffers(1, &positionBuffer);
+		glGenBuffers(1, &normalBuffer);
+		glGenBuffers(1, &colorBuffer);
+		glGenBuffers(1, &texCoordBuffer);
+		glGenBuffers(1, &indexBuffer);
 
-	glBindVertexArray(vao);
+		// Position buffer
+		glBindBuffer(GL_ARRAY_BUFFER, positionBuffer);
+		glEnableVertexAttribArray(ShaderManager::positionAttribId);
+		glVertexAttribPointer(ShaderManager::positionAttribId, 3, GL_FLOAT, false, 0, 0);
 
-	glGenBuffers(1, &positionBuffer);
-	glGenBuffers(1, &normalBuffer);
-	glGenBuffers(1, &colorBuffer);
-	glGenBuffers(1, &texCoordBuffer);
-	glGenBuffers(1, &indexBuffer);
+		// Normal buffer
+		glBindBuffer(GL_ARRAY_BUFFER, normalBuffer);
+		glEnableVertexAttribArray(ShaderManager::normalAttribId);
+		glVertexAttribPointer(ShaderManager::normalAttribId, 3, GL_FLOAT, false, 0, 0);
 
-	// Position buffer
-	glBindBuffer(GL_ARRAY_BUFFER, positionBuffer);
-	glEnableVertexAttribArray(ShaderManager::positionAttribId);
-	glVertexAttribPointer(ShaderManager::positionAttribId, 3, GL_FLOAT, false, 0, 0);
+		// Color buffer
+		glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
+		glEnableVertexAttribArray(ShaderManager::colorAttribId);
+		glVertexAttribPointer(ShaderManager::colorAttribId, 4, GL_FLOAT, false, 0, 0);
 
-	// Normal buffer
-	glBindBuffer(GL_ARRAY_BUFFER, normalBuffer);
-	glEnableVertexAttribArray(ShaderManager::normalAttribId);
-	glVertexAttribPointer(ShaderManager::normalAttribId, 3, GL_FLOAT, false, 0, 0);
-	
-	// Color buffer
-	glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
-	glEnableVertexAttribArray(ShaderManager::colorAttribId);
-	glVertexAttribPointer(ShaderManager::colorAttribId, 4, GL_FLOAT, false, 0, 0);
+		// TexCoord buffer
+		glBindBuffer(GL_ARRAY_BUFFER, texCoordBuffer);
+		glEnableVertexAttribArray(ShaderManager::texCoordAttribId);
+		glVertexAttribPointer(ShaderManager::texCoordAttribId, 4, GL_FLOAT, false, 0, 0);
 
-	// TexCoord buffer
-	glBindBuffer(GL_ARRAY_BUFFER, texCoordBuffer);
-	glEnableVertexAttribArray(ShaderManager::texCoordAttribId);
-	glVertexAttribPointer(ShaderManager::texCoordAttribId, 4, GL_FLOAT, false, 0, 0);
-
-	// Index buffer
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
+		// Index buffer
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
+	});
 }
 
-GLTriangleMesh::~GLTriangleMesh()
+void GLTriangleMesh::Destroy()
 {
-	if (!allocated) return;
-
-	glDeleteBuffers(1, &positionBuffer);
-	glDeleteBuffers(1, &normalBuffer);
-	glDeleteBuffers(1, &colorBuffer);
-	glDeleteBuffers(1, &texCoordBuffer);
-	glDeleteBuffers(1, &indexBuffer);
+	ShutdownVAOAndBuffers(vao, [this](){
+		glDeleteBuffers(1, &positionBuffer);
+		glDeleteBuffers(1, &normalBuffer);
+		glDeleteBuffers(1, &colorBuffer);
+		glDeleteBuffers(1, &texCoordBuffer);
+		glDeleteBuffers(1, &indexBuffer);
+	});
 }
 
 void GLTriangleMesh::Clear()
@@ -132,7 +116,7 @@ void GLTriangleMesh::Clear()
 
 void GLTriangleMesh::SendToGPU()
 {
-	if (!allocated) return;
+	if (!vao) return;
 
 	glBindVertexArray(vao);
 	glBindBuffer(GL_ARRAY_BUFFER, positionBuffer);
@@ -153,7 +137,7 @@ void GLTriangleMesh::SendToGPU()
 
 void GLTriangleMesh::Draw(GLenum drawMode)
 {
-	if (allocated && positions.size() > 0 && indices.size() > 0)
+	if (vao && positions.size() > 0 && indices.size() > 0)
 	{
 		glBindVertexArray(vao);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
@@ -236,31 +220,31 @@ void GLTriangleMesh::ApplyMatrix(glm::mat4 transform)
 
 void GLLine::Initialize()
 {
-	GenerateVAO();
+	InitializeVAOAndBuffers(vao, [this]() {
+		// Generate buffers
+		glGenBuffers(1, &positionBuffer);
+		glGenBuffers(1, &colorBuffer);
 
-	// Generate buffers
-	glGenBuffers(1, &positionBuffer);
-	glGenBuffers(1, &colorBuffer);
+		// Load positions
+		int valuesPerPosition = 3; // glm::fvec3 has 3 floats
+		glEnableVertexAttribArray(ShaderManager::positionAttribId);
+		glBindBuffer(GL_ARRAY_BUFFER, positionBuffer);
+		glVertexAttribPointer(ShaderManager::positionAttribId, valuesPerPosition, GL_FLOAT, false, 0, 0);
 
-	// Load positions
-	int valuesPerPosition = 3; // glm::fvec3 has 3 floats
-	glEnableVertexAttribArray(ShaderManager::positionAttribId);
-	glBindBuffer(GL_ARRAY_BUFFER, positionBuffer);
-	glVertexAttribPointer(ShaderManager::positionAttribId, valuesPerPosition, GL_FLOAT, false, 0, 0);
-
-	// Load colors
-	valuesPerPosition = 4; // glm::fvec4 has 4 floats
-	glEnableVertexAttribArray(ShaderManager::colorAttribId);
-	glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
-	glVertexAttribPointer(ShaderManager::colorAttribId, valuesPerPosition, GL_FLOAT, false, 0, 0);
+		// Load colors
+		valuesPerPosition = 4; // glm::fvec4 has 4 floats
+		glEnableVertexAttribArray(ShaderManager::colorAttribId);
+		glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
+		glVertexAttribPointer(ShaderManager::colorAttribId, valuesPerPosition, GL_FLOAT, false, 0, 0);
+	});
 }
 
-void GLLine::Shutdown()
+void GLLine::Destroy()
 {
-	glDeleteBuffers(1, &positionBuffer);
-	glDeleteBuffers(1, &colorBuffer);
-
-	DeleteVAO();
+	ShutdownVAOAndBuffers(vao, [this](){
+		glDeleteBuffers(1, &positionBuffer);
+		glDeleteBuffers(1, &colorBuffer);
+	});
 }
 
 void GLLine::AddLine(glm::fvec3 start, glm::fvec3 end, glm::fvec4 color)
@@ -281,20 +265,22 @@ void GLLine::Clear()
 
 void GLLine::SendToGPU()
 {
+	if (!vao) return;
+
 	glBindVertexArray(vao);
 
 	// Positions
 	glBindBuffer(GL_ARRAY_BUFFER, positionBuffer);
-	GLMeshInterface::glBufferVector(GL_ARRAY_BUFFER, lineSegments, GL_STATIC_DRAW);
+	glBufferVector(GL_ARRAY_BUFFER, lineSegments, GL_STATIC_DRAW);
 
 	// Colors
 	glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
-	GLMeshInterface::glBufferVector(GL_ARRAY_BUFFER, colors, GL_STATIC_DRAW);
+	glBufferVector(GL_ARRAY_BUFFER, colors, GL_STATIC_DRAW);
 }
 
 void GLLine::Draw()
 {
-	if (lineSegments.size() > 0)
+	if (vao && lineSegments.size() > 0)
 	{
 		glBindVertexArray(vao);
 		glDrawArrays(GL_LINES, 0, GLsizei(lineSegments.size()) * 2 * 3);
@@ -302,30 +288,32 @@ void GLLine::Draw()
 }
 
 
-GLLineStrips::GLLineStrips()
+void GLLineStrips::Initialize()
 {
-	glBindVertexArray(vao);
-
-	// Generate buffers
-	glGenBuffers(1, &positionBuffer);
-	glGenBuffers(1, &indexBuffer);
+	InitializeVAOAndBuffers(vao, [this]() {
+		// Generate buffers
+		glGenBuffers(1, &positionBuffer);
+		glGenBuffers(1, &indexBuffer);
 	
-	// Load positions
-	int valuesPerPosition = 3; // glm::fvec3 has 3 floats
-	glEnableVertexAttribArray(ShaderManager::positionAttribId);
-	glBindBuffer(GL_ARRAY_BUFFER, positionBuffer);
-	glVertexAttribPointer(ShaderManager::positionAttribId, valuesPerPosition, GL_FLOAT, false, 0, 0);
+		// Load positions
+		int valuesPerPosition = 3; // glm::fvec3 has 3 floats
+		glEnableVertexAttribArray(ShaderManager::positionAttribId);
+		glBindBuffer(GL_ARRAY_BUFFER, positionBuffer);
+		glVertexAttribPointer(ShaderManager::positionAttribId, valuesPerPosition, GL_FLOAT, false, 0, 0);
 
-	// Index buffer
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
+		// Index buffer
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
 
-	SendToGPU();
+		SendToGPU();
+	});
 }
 
-GLLineStrips::~GLLineStrips()
+void GLLineStrips::Destroy()
 {
-	glDeleteBuffers(1, &positionBuffer);
-	glDeleteBuffers(1, &indexBuffer);
+	ShutdownVAOAndBuffers(vao, [this](){
+		glDeleteBuffers(1, &positionBuffer);
+		glDeleteBuffers(1, &indexBuffer);
+	});
 }
 
 void GLLineStrips::AddLineStrip(const std::vector<glm::fvec3>& points)
@@ -347,7 +335,7 @@ void GLLineStrips::AddLineStrip(const std::vector<glm::fvec3>& points)
 		indices[newIndicesStart + i] = static_cast<unsigned int>(newLineStart + i);
 	}
 
-	indices[indices.size()-1] = RESTART_INDEX;
+	indices[indices.size()-1] = GLMesh::RESTART_INDEX;
 }
 
 void GLLineStrips::Clear()
@@ -363,6 +351,8 @@ void GLLineStrips::Clear()
 
 void GLLineStrips::SendToGPU()
 {
+	if (!vao) return;
+
 	glBindVertexArray(vao);
 
 	// Positions
@@ -376,7 +366,7 @@ void GLLineStrips::SendToGPU()
 
 void GLLineStrips::Draw()
 {
-	if (lineStrips.size() == 0 || indices.size() == 0)
+	if (!vao || lineStrips.size() == 0 || indices.size() == 0)
 	{
 		return; // because there is no data to render
 	}
@@ -387,7 +377,7 @@ void GLLineStrips::Draw()
 			https://gist.github.com/roxlu/51fc685b0303ee55c05b3ad96992f3ec
 	*/
 	glEnable(GL_PRIMITIVE_RESTART);
-	glPrimitiveRestartIndex(RESTART_INDEX);
+	glPrimitiveRestartIndex(GLMesh::RESTART_INDEX);
 
 	{
 		glBindVertexArray(vao);
@@ -398,97 +388,101 @@ void GLLineStrips::Draw()
 	glDisable(GL_PRIMITIVE_RESTART);
 }
 
-GLBezierStrips::GLBezierStrips()
+void GLBezierStrips::Initialize()
 {
-	const GLuint bezierPositionAttribId = 0;
-	const GLuint bezierNormalAttribId = 1;
-	const GLuint bezierTangentAttribId = 2;
-	const GLuint bezierTexcoordAttribId = 3;
-	const GLuint bezierWidthAttribId = 4;
-	const GLuint bezierThicknessAttribId = 5;
-	const GLuint bezierShapeAttribId = 6;
-	const GLuint bezierSubdivAttribId = 7;
+	InitializeVAOAndBuffers(vao, [this]() {
+		const GLuint bezierPositionAttribId = 0;
+		const GLuint bezierNormalAttribId = 1;
+		const GLuint bezierTangentAttribId = 2;
+		const GLuint bezierTexcoordAttribId = 3;
+		const GLuint bezierWidthAttribId = 4;
+		const GLuint bezierThicknessAttribId = 5;
+		const GLuint bezierShapeAttribId = 6;
+		const GLuint bezierSubdivAttribId = 7;
 
-	glBindVertexArray(vao);
+		glBindVertexArray(vao);
 
-	// Generate buffers
-	glGenBuffers(1, &positionBuffer);
-	glGenBuffers(1, &normalBuffer);
-	glGenBuffers(1, &tangentBuffer);
-	glGenBuffers(1, &texcoordBuffer);
-	glGenBuffers(1, &widthBuffer);
-	glGenBuffers(1, &thicknessBuffer);
-	glGenBuffers(1, &shapeBuffer);
-	glGenBuffers(1, &subdivisionsBuffer);
+		// Generate buffers
+		glGenBuffers(1, &positionBuffer);
+		glGenBuffers(1, &normalBuffer);
+		glGenBuffers(1, &tangentBuffer);
+		glGenBuffers(1, &texcoordBuffer);
+		glGenBuffers(1, &widthBuffer);
+		glGenBuffers(1, &thicknessBuffer);
+		glGenBuffers(1, &shapeBuffer);
+		glGenBuffers(1, &subdivisionsBuffer);
 
-	glGenBuffers(1, &indexBuffer);
+		glGenBuffers(1, &indexBuffer);
 
-	// Define positions
-	int valuesPerPosition = 3; // glm::fvec3 has 3 floats
-	glEnableVertexAttribArray(bezierPositionAttribId);
-	glBindBuffer(GL_ARRAY_BUFFER, positionBuffer);
-	glVertexAttribPointer(bezierPositionAttribId, valuesPerPosition, GL_FLOAT, false, 0, 0);
+		// Define positions
+		int valuesPerPosition = 3; // glm::fvec3 has 3 floats
+		glEnableVertexAttribArray(bezierPositionAttribId);
+		glBindBuffer(GL_ARRAY_BUFFER, positionBuffer);
+		glVertexAttribPointer(bezierPositionAttribId, valuesPerPosition, GL_FLOAT, false, 0, 0);
 
-	// Define normals
-	valuesPerPosition = 3;
-	glEnableVertexAttribArray(bezierNormalAttribId);
-	glBindBuffer(GL_ARRAY_BUFFER, normalBuffer);
-	glVertexAttribPointer(bezierNormalAttribId, valuesPerPosition, GL_FLOAT, false, 0, 0);
+		// Define normals
+		valuesPerPosition = 3;
+		glEnableVertexAttribArray(bezierNormalAttribId);
+		glBindBuffer(GL_ARRAY_BUFFER, normalBuffer);
+		glVertexAttribPointer(bezierNormalAttribId, valuesPerPosition, GL_FLOAT, false, 0, 0);
 
-	// Define tangents
-	valuesPerPosition = 3;
-	glEnableVertexAttribArray(bezierTangentAttribId);
-	glBindBuffer(GL_ARRAY_BUFFER, tangentBuffer);
-	glVertexAttribPointer(bezierTangentAttribId, valuesPerPosition, GL_FLOAT, false, 0, 0);
+		// Define tangents
+		valuesPerPosition = 3;
+		glEnableVertexAttribArray(bezierTangentAttribId);
+		glBindBuffer(GL_ARRAY_BUFFER, tangentBuffer);
+		glVertexAttribPointer(bezierTangentAttribId, valuesPerPosition, GL_FLOAT, false, 0, 0);
 
-	// Define texcoords
-	valuesPerPosition = 3; // glm::fvec3
-	glEnableVertexAttribArray(bezierTexcoordAttribId);
-	glBindBuffer(GL_ARRAY_BUFFER, texcoordBuffer);
-	glVertexAttribPointer(bezierTexcoordAttribId, valuesPerPosition, GL_FLOAT, false, 0, 0);
+		// Define texcoords
+		valuesPerPosition = 3; // glm::fvec3
+		glEnableVertexAttribArray(bezierTexcoordAttribId);
+		glBindBuffer(GL_ARRAY_BUFFER, texcoordBuffer);
+		glVertexAttribPointer(bezierTexcoordAttribId, valuesPerPosition, GL_FLOAT, false, 0, 0);
 
-	// Define widths
-	valuesPerPosition = 1; // float
-	glEnableVertexAttribArray(bezierWidthAttribId);
-	glBindBuffer(GL_ARRAY_BUFFER, widthBuffer);
-	glVertexAttribPointer(bezierWidthAttribId, valuesPerPosition, GL_FLOAT, false, 0, 0);
+		// Define widths
+		valuesPerPosition = 1; // float
+		glEnableVertexAttribArray(bezierWidthAttribId);
+		glBindBuffer(GL_ARRAY_BUFFER, widthBuffer);
+		glVertexAttribPointer(bezierWidthAttribId, valuesPerPosition, GL_FLOAT, false, 0, 0);
 
-	// Define thickness
-	valuesPerPosition = 1; // float
-	glEnableVertexAttribArray(bezierThicknessAttribId);
-	glBindBuffer(GL_ARRAY_BUFFER, thicknessBuffer);
-	glVertexAttribPointer(bezierThicknessAttribId, valuesPerPosition, GL_FLOAT, false, 0, 0);
+		// Define thickness
+		valuesPerPosition = 1; // float
+		glEnableVertexAttribArray(bezierThicknessAttribId);
+		glBindBuffer(GL_ARRAY_BUFFER, thicknessBuffer);
+		glVertexAttribPointer(bezierThicknessAttribId, valuesPerPosition, GL_FLOAT, false, 0, 0);
 
-	// Define shapes
-	valuesPerPosition = 1; // int
-	glEnableVertexAttribArray(bezierShapeAttribId);
-	glBindBuffer(GL_ARRAY_BUFFER, shapeBuffer);
-	glVertexAttribIPointer(bezierShapeAttribId, valuesPerPosition, GL_INT, 0, 0);
+		// Define shapes
+		valuesPerPosition = 1; // int
+		glEnableVertexAttribArray(bezierShapeAttribId);
+		glBindBuffer(GL_ARRAY_BUFFER, shapeBuffer);
+		glVertexAttribIPointer(bezierShapeAttribId, valuesPerPosition, GL_INT, 0, 0);
 
-	// Define segment subdivisions
-	valuesPerPosition = 1; // int
-	glEnableVertexAttribArray(bezierSubdivAttribId);
-	glBindBuffer(GL_ARRAY_BUFFER, subdivisionsBuffer);
-	glVertexAttribIPointer(bezierSubdivAttribId, valuesPerPosition, GL_INT, 0, 0);
+		// Define segment subdivisions
+		valuesPerPosition = 1; // int
+		glEnableVertexAttribArray(bezierSubdivAttribId);
+		glBindBuffer(GL_ARRAY_BUFFER, subdivisionsBuffer);
+		glVertexAttribIPointer(bezierSubdivAttribId, valuesPerPosition, GL_INT, 0, 0);
 
-	// Index buffer
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
+		// Index buffer
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
 
-	SendToGPU();
+		SendToGPU();
+	});
 }
 
-GLBezierStrips::~GLBezierStrips()
+void GLBezierStrips::Destroy()
 {
-	glDeleteBuffers(1, &positionBuffer);
-	glDeleteBuffers(1, &normalBuffer);
-	glDeleteBuffers(1, &tangentBuffer);
-	glDeleteBuffers(1, &texcoordBuffer);
-	glDeleteBuffers(1, &widthBuffer);
-	glDeleteBuffers(1, &thicknessBuffer);
-	glDeleteBuffers(1, &shapeBuffer);
-	glDeleteBuffers(1, &subdivisionsBuffer);
+	ShutdownVAOAndBuffers(vao, [this](){
+		glDeleteBuffers(1, &positionBuffer);
+		glDeleteBuffers(1, &normalBuffer);
+		glDeleteBuffers(1, &tangentBuffer);
+		glDeleteBuffers(1, &texcoordBuffer);
+		glDeleteBuffers(1, &widthBuffer);
+		glDeleteBuffers(1, &thicknessBuffer);
+		glDeleteBuffers(1, &shapeBuffer);
+		glDeleteBuffers(1, &subdivisionsBuffer);
 
-	glDeleteBuffers(1, &indexBuffer);
+		glDeleteBuffers(1, &indexBuffer);
+	});
 }
 
 bool GLBezierStrips::AddBezierStrip(
@@ -548,7 +542,7 @@ bool GLBezierStrips::AddBezierStrip(
 		indices[newIndicesStart + i] = static_cast<unsigned int>(newLineStart + i);
 	}
 
-	indices[indices.size() - 1] = RESTART_INDEX;
+	indices[indices.size() - 1] = GLMesh::RESTART_INDEX;
 	return true;
 }
 
@@ -581,6 +575,8 @@ void GLBezierStrips::Clear()
 
 void GLBezierStrips::SendToGPU()
 {
+	if (!vao) return;
+
 	glBindVertexArray(vao);
 
 	// Positions
@@ -622,13 +618,13 @@ void GLBezierStrips::SendToGPU()
 
 void GLBezierStrips::Draw()
 {
-	if (controlPoints.size() == 0 || indices.size() == 0)
+	if (!vao || controlPoints.size() == 0 || indices.size() == 0)
 	{
 		return; // because there is no data to render
 	}
 
 	glEnable(GL_PRIMITIVE_RESTART);
-	glPrimitiveRestartIndex(RESTART_INDEX);
+	glPrimitiveRestartIndex(GLMesh::RESTART_INDEX);
 
 	{
 		glBindVertexArray(vao);
@@ -641,59 +637,57 @@ void GLBezierStrips::Draw()
 
 void GLQuad::Initialize()
 {
-	if (vao != 0)
-		return;
+	InitializeVAOAndBuffers(vao, [this]() {
+		glGenBuffers(1, &positionBuffer);
+		glGenBuffers(1, &texCoordBuffer);
 
-	GenerateVAO();
-	glGenBuffers(1, &positionBuffer);
-	glGenBuffers(1, &texCoordBuffer);
+		float windowWidth = float(App::settings.windowWidth);
+		float windowHeight = float(App::settings.windowHeight);
 
-	float windowWidth = float(App::settings.windowWidth);
-	float windowHeight = float(App::settings.windowHeight);
-
-	// TODO: Repair this
+		// TODO: Repair this
 	
-	// GL coordinate system has the origin in the middle of the screen and
-	// ranges between -1.0 to 1.0. UI coordinates must be remapped.
-	//float relativeWidth = properties.width / windowWidth;
-	//float relativeHeight = properties.height / windowHeight;
-	//float relativeX = properties.positionX / windowWidth;
-	//float relativeY = properties.positionY / windowHeight;
+		// GL coordinate system has the origin in the middle of the screen and
+		// ranges between -1.0 to 1.0. UI coordinates must be remapped.
+		//float relativeWidth = properties.width / windowWidth;
+		//float relativeHeight = properties.height / windowHeight;
+		//float relativeX = properties.positionX / windowWidth;
+		//float relativeY = properties.positionY / windowHeight;
 
-	float left = -1.0f; //-1.0f + 2.0f * relativeX;
-	float right = 1.0f; //-1.0f + 2.0f * (relativeX + relativeWidth);
-	float top = 1.0f; //1.0f - 2.0f * relativeY;
-	float bottom = -1.0f; //1.0f - 2.0f * (relativeY + relativeHeight);
+		float left = -1.0f; //-1.0f + 2.0f * relativeX;
+		float right = 1.0f; //-1.0f + 2.0f * (relativeX + relativeWidth);
+		float top = 1.0f; //1.0f - 2.0f * relativeY;
+		float bottom = -1.0f; //1.0f - 2.0f * (relativeY + relativeHeight);
 
-	GLuint valuesPerPosition, valuesPerCoord;
-	std::vector<float> positions, tcoords;
-	GLQuad::GenerateTriangles(positions, tcoords, valuesPerPosition, valuesPerCoord, left, right, top, bottom);
+		GLuint valuesPerPosition, valuesPerCoord;
+		std::vector<float> positions, tcoords;
+		GLQuad::GenerateTriangles(positions, tcoords, valuesPerPosition, valuesPerCoord, left, right, top, bottom);
 
-	// Load positions
-	glBindBuffer(GL_ARRAY_BUFFER, positionBuffer);
-	glEnableVertexAttribArray(ShaderManager::positionAttribId);
-	glVertexAttribPointer(ShaderManager::positionAttribId, valuesPerPosition, GL_FLOAT, false, 0, 0);
-	glBufferVector(GL_ARRAY_BUFFER, positions, GL_STATIC_DRAW);
+		// Load positions
+		glBindBuffer(GL_ARRAY_BUFFER, positionBuffer);
+		glEnableVertexAttribArray(ShaderManager::positionAttribId);
+		glVertexAttribPointer(ShaderManager::positionAttribId, valuesPerPosition, GL_FLOAT, false, 0, 0);
+		glBufferVector(GL_ARRAY_BUFFER, positions, GL_STATIC_DRAW);
 
-	// Load UVs
-	glBindBuffer(GL_ARRAY_BUFFER, texCoordBuffer);
-	glEnableVertexAttribArray(ShaderManager::texCoordAttribId);
-	glVertexAttribPointer(ShaderManager::texCoordAttribId, valuesPerCoord, GL_FLOAT, false, 0, 0);
-	glBufferVector(GL_ARRAY_BUFFER, tcoords, GL_STATIC_DRAW);
+		// Load UVs
+		glBindBuffer(GL_ARRAY_BUFFER, texCoordBuffer);
+		glEnableVertexAttribArray(ShaderManager::texCoordAttribId);
+		glVertexAttribPointer(ShaderManager::texCoordAttribId, valuesPerCoord, GL_FLOAT, false, 0, 0);
+		glBufferVector(GL_ARRAY_BUFFER, tcoords, GL_STATIC_DRAW);
+	});
 }
 
-void GLQuad::Shutdown()
+void GLQuad::Destroy()
 {
-	if (vao == 0)
-		return;
-
-	glDeleteBuffers(1, &positionBuffer);
-	glDeleteBuffers(1, &texCoordBuffer);
-	DeleteVAO();
+	ShutdownVAOAndBuffers(vao, [this](){
+		glDeleteBuffers(1, &positionBuffer);
+		glDeleteBuffers(1, &texCoordBuffer);
+	});
 }
 
 void GLQuad::Draw()
 {
+	if (!vao) return;
+
 	glBindVertexArray(vao);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 }

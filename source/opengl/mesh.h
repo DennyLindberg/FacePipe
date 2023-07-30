@@ -4,30 +4,21 @@
 #include "core/math.h"
 #include "core/transform.h"
 #include <filesystem>
+#include <functional>
 
-class GLMeshInterface
+namespace GLMesh
 {
-protected:
-	GLuint vao = 0;
+	static const GLuint RESTART_INDEX = 0xFFFF;
+}
 
-public:
-	Transform transform;
-
-	GLMeshInterface(bool bAutoGenVAO = true);
-	virtual ~GLMeshInterface();
-
-	void GenerateVAO();
-	void DeleteVAO();
-
-	// Behaves like glBufferData, but for std::vector<T>.
-	template <class T>
-	static void glBufferVector(GLenum glBufferType, const std::vector<T>& vector, GLenum usage = GL_STATIC_DRAW)
-	{
-		size_t count = vector.size();
-		float* frontPtr = (float*)((count > 0) ? &vector.front() : NULL);
-		glBufferData(glBufferType, count*sizeof(T), frontPtr, usage);
-	}
-};
+// Behaves like glBufferData, but for std::vector<T>.
+template <class T>
+static void glBufferVector(GLenum glBufferType, const std::vector<T>& vector, GLenum usage = GL_STATIC_DRAW)
+{
+	size_t count = vector.size();
+	float* frontPtr = (float*)((count > 0) ? &vector.front() : NULL);
+	glBufferData(glBufferType, count * sizeof(T), frontPtr, usage);
+}
 
 class GLGrid
 {
@@ -42,10 +33,10 @@ public:
 	void Draw(class GLQuad& mesh, const glm::mat4& mvp, const glm::fvec3& planeUp = glm::fvec3(0.0f, 1.0f, 0.0f), const glm::fvec3& planeSide = glm::fvec3(1.0f, 0.0f, 0.0f));
 };
 
-class GLTriangleMesh : public GLMeshInterface
+class GLTriangleMesh
 {
 protected:
-	bool allocated = false;
+	GLuint vao = 0;
 	GLuint positionBuffer = 0;
 	GLuint normalBuffer = 0;
 	GLuint colorBuffer = 0;
@@ -53,14 +44,19 @@ protected:
 	GLuint indexBuffer = 0;
 
 public:
+	Transform transform;
+
 	std::vector<glm::fvec3> positions;
 	std::vector<glm::fvec3> normals;
 	std::vector<glm::fvec4> colors;
 	std::vector<glm::fvec4> texCoords;
 	std::vector<unsigned int> indices;
 
-	GLTriangleMesh(bool allocate = true);
-	~GLTriangleMesh();
+	GLTriangleMesh() {}
+	~GLTriangleMesh() { Destroy(); }
+
+	void Initialize();
+	void Destroy();
 
 	void Clear();
 	void SendToGPU();
@@ -80,9 +76,10 @@ struct GLLineSegment
 	glm::fvec3 end;
 };
 
-class GLLine : public GLMeshInterface
+class GLLine
 {
 protected:
+	GLuint vao = 0;
 	GLuint positionBuffer = 0;
 	GLuint colorBuffer = 0;
 
@@ -90,11 +87,13 @@ protected:
 	std::vector<glm::fvec4> colors;
 
 public:
-	GLLine() : GLMeshInterface(false) {}
-	~GLLine() {}
+	Transform transform;
+
+	GLLine() {}
+	~GLLine() { Destroy(); }
 
 	void Initialize();
-	void Shutdown();
+	void Destroy();
 
 	void AddLine(glm::fvec3 start, glm::fvec3 end, glm::fvec4 color);
 
@@ -105,11 +104,10 @@ public:
 	void Draw();
 };
 
-class GLLineStrips : public GLMeshInterface
+class GLLineStrips
 {
 protected:
-	const GLuint RESTART_INDEX = 0xFFFF;
-
+	GLuint vao = 0;
 	GLuint positionBuffer = 0;
 	GLuint indexBuffer = 0;
 
@@ -118,8 +116,13 @@ protected:
 	std::vector<unsigned int> indices;
 
 public:
-	GLLineStrips();
-	~GLLineStrips();
+	Transform transform;
+
+	GLLineStrips() {}
+	~GLLineStrips() { Destroy(); }
+
+	void Initialize();
+	void Destroy();
 
 	void AddLineStrip(const std::vector<glm::fvec3>& points);
 
@@ -130,11 +133,10 @@ public:
 	void Draw();
 };
 
-class GLBezierStrips : public GLMeshInterface
+class GLBezierStrips
 {
 protected:
-	const GLuint RESTART_INDEX = 0xFFFF;
-
+	GLuint vao = 0;
 	GLuint positionBuffer = 0;
 	GLuint normalBuffer = 0;
 	GLuint tangentBuffer = 0;
@@ -159,8 +161,13 @@ protected:
 	std::vector<unsigned int> indices;
 
 public:
-	GLBezierStrips();
-	~GLBezierStrips();
+	Transform transform;
+
+	GLBezierStrips() {}
+	~GLBezierStrips() { Destroy(); }
+
+	void Initialize();
+	void Destroy();
 
 	bool AddBezierStrip(
 		const std::vector<glm::fvec3>& points,
@@ -180,18 +187,21 @@ public:
 	void Draw();
 };
 
-class GLQuad : public GLMeshInterface
+class GLQuad
 {
 protected:
+	GLuint vao = 0;
 	GLuint positionBuffer = 0;
 	GLuint texCoordBuffer = 0;
 
 public:
-	GLQuad() : GLMeshInterface(false) {}
-	~GLQuad() { Shutdown(); }
+	Transform transform;
+
+	GLQuad() {}
+	~GLQuad() { Destroy(); }
 
 	void Initialize();
-	void Shutdown();
+	void Destroy();
 
 	void Draw();
 

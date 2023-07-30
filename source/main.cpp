@@ -78,6 +78,9 @@ int main(int argc, char* args[])
 		Load head mesh
 	*/
 	GLTriangleMesh cubemesh, headmesh, armesh;
+	cubemesh.Initialize();
+	headmesh.Initialize();
+	armesh.Initialize();
 	GLMesh::LoadPLY(App::Path("content/meshes/cube.ply"), cubemesh);
 	GLMesh::LoadPLY(App::Path("content/meshes/blender_suzanne.ply"), headmesh);
 	GLMesh::LoadPLY(App::Path("content/meshes/ARFaceGeometry.ply"), armesh);
@@ -90,6 +93,7 @@ int main(int argc, char* args[])
 	DefaultTexture.CopyToGPU();
 
 	GLLine cubeMeshNormals;
+	cubeMeshNormals.Initialize();
 	GLMesh::LoadLinesFromMeshNormals(cubemesh, cubeMeshNormals, 0.2f);
 	cubeMeshNormals.transform.scale = cubemesh.transform.scale;
 
