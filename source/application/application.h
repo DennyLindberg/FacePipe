@@ -47,8 +47,8 @@ public:
 
 	static UniformRandomGenerator random;
 
-	static WeakObjectPtr<Object> world;
+	static WeakPtr<Object> world;
 
 	// TODO: move to draw debug manager
-	static WeakObjectPtr<GLLine> debuglines;
+	static WeakPtr<GLLine> debuglines;
 };

@@ -35,7 +35,7 @@ int main(int argc, char* args[])
 	
 	// Testing of object pool with weak ptr support
 	ObjectId cameraId = Camera::Pool.Create();
-	WeakObjectPtr<Camera> cameraTest = Camera::Pool.CreateWeak();
+	WeakPtr<Camera> cameraTest = Camera::Pool.CreateWeak();
 
 	/*
 		Setup scene and controls
@@ -74,16 +74,16 @@ int main(int argc, char* args[])
 	/*
 		Load head mesh
 	*/
-	WeakObjectPtr<GLTriangleMesh> cubemesh = GLTriangleMesh::Pool.CreateWeak();
-	WeakObjectPtr<GLTriangleMesh> headmesh = GLTriangleMesh::Pool.CreateWeak();
-	WeakObjectPtr<GLTriangleMesh> armesh = GLTriangleMesh::Pool.CreateWeak();
+	WeakPtr<GLTriangleMesh> cubemesh = GLTriangleMesh::Pool.CreateWeak();
+	WeakPtr<GLTriangleMesh> headmesh = GLTriangleMesh::Pool.CreateWeak();
+	WeakPtr<GLTriangleMesh> armesh = GLTriangleMesh::Pool.CreateWeak();
 	GLMesh::LoadPLY(App::Path("content/meshes/cube.ply"), *cubemesh);
 	GLMesh::LoadPLY(App::Path("content/meshes/blender_suzanne.ply"), *headmesh);
 	GLMesh::LoadPLY(App::Path("content/meshes/ARFaceGeometry.ply"), *armesh);
 
-	WeakObjectPtr<Object> cube = Object::Pool.CreateWeak();
-	WeakObjectPtr<Object> head = Object::Pool.CreateWeak();
-	WeakObjectPtr<Object> arhead = Object::Pool.CreateWeak();
+	WeakPtr<Object> cube = Object::Pool.CreateWeak();
+	WeakPtr<Object> head = Object::Pool.CreateWeak();
+	WeakPtr<Object> arhead = Object::Pool.CreateWeak();
 
 	App::world->AddChild(cube);
 	App::world->AddChild(head);
@@ -99,7 +99,7 @@ int main(int argc, char* args[])
 	//head->transform.position.x = -0.25f;
 	arhead->transform.scale = glm::vec3(0.001f);
 
-	WeakObjectPtr<GLTexture> DefaultTexture = GLTexture::Pool.CreateWeak();
+	WeakPtr<GLTexture> DefaultTexture = GLTexture::Pool.CreateWeak();
 	DefaultTexture->LoadPNG(App::Path("content/textures/default.png"));
 	DefaultTexture->CopyToGPU();
 

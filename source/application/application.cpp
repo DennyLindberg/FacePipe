@@ -12,8 +12,8 @@ GeometryManager App::geometry = GeometryManager();
 
 UniformRandomGenerator App::random = UniformRandomGenerator();
 
-WeakObjectPtr<Object> App::world = WeakObjectPtr<Object>();
-WeakObjectPtr<GLLine> App::debuglines = WeakObjectPtr<GLLine>();
+WeakPtr<Object> App::world = WeakPtr<Object>();
+WeakPtr<GLLine> App::debuglines = WeakPtr<GLLine>();
 
 void App::Initialize()
 {

@@ -11,7 +11,7 @@ template<typename T, ObjectType OT>
 class ObjectPool
 {
 public:
-	friend struct WeakObjectPtr<T>;
+	friend struct WeakPtr<T>;
 	static const ObjectType Type = OT;
 
 	ObjectPool() {}
@@ -51,14 +51,14 @@ public:
 		return id < objects.size() && safeguards[id] != 0 && safeguards[id] == safeguard;
 	}
 
-	WeakObjectPtr<T> CreateWeak()
+	WeakPtr<T> CreateWeak()
 	{
 		return GetWeakPtr(Create());
 	}
 
-	WeakObjectPtr<T> GetWeakPtr(ObjectId id)
+	WeakPtr<T> GetWeakPtr(ObjectId id)
 	{
-		WeakObjectPtr<T> newPtr;
+		WeakPtr<T> newPtr;
 		newPtr.id = id;
 		newPtr.safeguard = 0; // invalid until object is found
 		
@@ -94,7 +94,7 @@ public:
 		return newId;
 	}
 
-	void Destroy(WeakObjectPtr<T>& weakPtr)
+	void Destroy(WeakPtr<T>& weakPtr)
 	{
 		Destroy(weakPtr.id, weakPtr.safeguard);
 		weakPtr.id = 0;

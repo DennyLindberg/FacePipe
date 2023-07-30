@@ -14,9 +14,9 @@ public:
 
 protected:
 	ObjectId poolId = 0;
-	WeakObjectPtr<Object> parent;
-	std::vector<WeakObjectPtr<Object>> children;
-	std::vector<GenericWeakObjectPtr> components;
+	WeakPtr<Object> parent;
+	std::vector<WeakPtr<Object>> children;
+	std::vector<WeakPtrGeneric> components;
 
 public:
 	Object() {}
@@ -25,15 +25,15 @@ public:
 	void Initialize() {}
 	void Destroy() {}
 
-	WeakObjectPtr<Object> GetParent() const { return parent; }
+	WeakPtr<Object> GetParent() const { return parent; }
 
 	void DetachFromParent();
 
-	void AddChild(WeakObjectPtr<Object> newChild);
+	void AddChild(WeakPtr<Object> newChild);
 
-	void RemoveChild(WeakObjectPtr<Object> child);
+	void RemoveChild(WeakPtr<Object> child);
 
-	void AddComponent(GenericWeakObjectPtr weakPtr);
+	void AddComponent(WeakPtrGeneric weakPtr);
 
 	glm::mat4 ComputeWorldMatrix();
 };

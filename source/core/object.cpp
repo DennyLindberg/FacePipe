@@ -10,13 +10,13 @@ void Object::DetachFromParent()
 	}
 }
 
-void Object::AddChild(WeakObjectPtr<Object> newChild)
+void Object::AddChild(WeakPtr<Object> newChild)
 {
 	if (Object* obj = newChild.Get())
 	{
 		obj->parent = Pool.GetWeakPtr(poolId);
 
-		for (WeakObjectPtr<Object>& child : children)
+		for (WeakPtr<Object>& child : children)
 		{
 			if (child == newChild)
 				return; // already a child
@@ -26,7 +26,7 @@ void Object::AddChild(WeakObjectPtr<Object> newChild)
 	}
 }
 
-void Object::RemoveChild(WeakObjectPtr<Object> child)
+void Object::RemoveChild(WeakPtr<Object> child)
 {
 	if (Object* obj = child.Get())
 	{
@@ -42,9 +42,9 @@ void Object::RemoveChild(WeakObjectPtr<Object> child)
 	}
 }
 
-void Object::AddComponent(GenericWeakObjectPtr weakPtr)
+void Object::AddComponent(WeakPtrGeneric weakPtr)
 {
-	for (const GenericWeakObjectPtr& child : components)
+	for (const WeakPtrGeneric& child : components)
 	{
 		if (child == weakPtr)
 			return; // already added

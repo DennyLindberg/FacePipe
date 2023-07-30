@@ -17,10 +17,10 @@ typedef uint32_t ObjectId;
 
 // Contains a vector index and generator safeguard to ensure that the id references the same object
 // safeguard 0 means uninitialized ptr
-struct GenericWeakObjectPtr
+struct WeakPtrGeneric
 {
 public:
-	GenericWeakObjectPtr(ObjectType t) : type(t) {}
+	WeakPtrGeneric(ObjectType t) : type(t) {}
 
 	ObjectType type = OBJECTTYPE_UNKNOWN;	// what type of object this refers to
 	ObjectId id = 0;						// index to vector
@@ -33,14 +33,14 @@ public:
 		safeguard = 0;
 	}
 
-	bool operator==(const GenericWeakObjectPtr& b) const { return type == b.type && id == b.id && safeguard == b.safeguard; }
+	bool operator==(const WeakPtrGeneric& b) const { return type == b.type && id == b.id && safeguard == b.safeguard; }
 };
 
 template<typename T>
-struct WeakObjectPtr : public GenericWeakObjectPtr
+struct WeakPtr : public WeakPtrGeneric
 {
 public:
-	WeakObjectPtr() : GenericWeakObjectPtr(T::Pool.Type) {}
+	WeakPtr() : WeakPtrGeneric(T::Pool.Type) {}
 
 public:
 	void Destroy() { T::Pool.Destroy(*this); }
