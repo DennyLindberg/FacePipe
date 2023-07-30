@@ -10,8 +10,46 @@
 #define PIXEL_FORMAT GL_RGBA
 #define PIXEL_TYPE GL_UNSIGNED_INT_8_8_8_8_REV
 
+ObjectPool<GLTexture, OBJECTTYPE_TEXTURE> GLTexture::Pool;
+
+void GLTexture::Initialize()
+{
+	if (!textureId)
+	{
+		glGenTextures(1, &textureId);
+	}
+}
+
+void GLTexture::Destroy()
+{
+	if (textureId)
+	{
+		glDeleteTextures(1, &textureId);
+		textureId = 0;
+	}
+}
+
+void GLTexture::SetSize(int textureWidth, int textureHeight)
+{
+	width = textureWidth;
+	height = textureHeight;
+
+	numPixels = width * height;
+	size = numPixels * 4;
+	glData.resize(size);
+
+	for (int i = 0; i < size; ++i)
+	{
+		glData[i] = 0;
+	}
+
+	UpdateParameters();
+}
+
 void GLTexture::UpdateParameters()
 {
+	if (!textureId) return;
+
 	glBindTexture(GL_TEXTURE_2D, textureId);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -84,12 +122,14 @@ unsigned int GLTexture::PixelArrayIndex(unsigned int x, unsigned int y)
 
 void GLTexture::UseForDrawing(unsigned int TextureUnit)
 {
+	if (!textureId) return;
 	glActiveTexture(GL_TEXTURE0 + TextureUnit);
 	glBindTexture(GL_TEXTURE_2D, textureId);
 }
 
 void GLTexture::CopyToGPU()
 {
+	if (!textureId) return;
 	glBindTexture(GL_TEXTURE_2D, textureId);
 	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, PIXEL_FORMAT, PIXEL_TYPE, (GLvoid*)glData.data());
 }

@@ -1,8 +1,9 @@
 #pragma once
 #include <vector>
-#include "glad/glad.h"
-#include "../core/math.h"
 #include <filesystem>
+#include "glad/glad.h"
+#include "core/math.h"
+#include "core/objectpool.h"
 
 class GLTexture
 {
@@ -16,32 +17,15 @@ public:
 	int height = 0;
 
 public:
-	GLTexture(std::filesystem::path imagePath)
-	{
-		glGenTextures(1, &textureId);
-		LoadPNG(imagePath);
-	}
+	static ObjectPool<GLTexture, OBJECTTYPE_TEXTURE> Pool;
 
-	GLTexture(int textureWidth, int textureHeight)
-		: width{ textureWidth }, height{ textureHeight }
-	{
-		numPixels = width * height;
-		size = numPixels * 4;
-		glData.resize(size);
+	GLTexture() {}
+	~GLTexture() {}
 
-		for (int i = 0; i < size; ++i)
-		{
-			glData[i] = 0;
-		}
+	void Initialize();
+	void Destroy();
 
-		glGenTextures(1, &textureId);
-		UpdateParameters();
-	}
-
-	~GLTexture()
-	{
-		glDeleteTextures(1, &textureId);
-	}
+	void SetSize(int textureWidth, int textureHeight);
 
 	void UpdateParameters();
 

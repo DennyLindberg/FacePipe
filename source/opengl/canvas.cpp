@@ -66,13 +66,16 @@ void Canvas2D::RenderToScreen()
 
 void Canvas2D::Initialize(int width, int height)
 {
-	texture = new GLTexture(width, height);
+	texture = new GLTexture();
+	texture->Initialize();
+	texture->SetSize(width, height);
 }
 
 void Canvas2D::Shutdown()
 {
 	if (texture)
 	{
+		texture->Destroy();
 		delete texture;
 		texture = nullptr;
 	}

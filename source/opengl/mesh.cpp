@@ -8,6 +8,8 @@
 #include <string>
 #include <iostream>
 
+ObjectPool<GLTriangleMesh, OBJECTTYPE_MESH> GLTriangleMesh::Pool;
+
 void InitializeVAOAndBuffers(GLuint& vao, std::function<void()> f)
 {
 	if (vao != 0) 

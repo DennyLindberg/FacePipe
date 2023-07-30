@@ -2,7 +2,7 @@
 #include <vector>
 #include "glad/glad.h"
 #include "core/math.h"
-#include "core/transform.h"
+#include "core/objectpool.h"
 #include <filesystem>
 #include <functional>
 
@@ -44,7 +44,7 @@ protected:
 	GLuint indexBuffer = 0;
 
 public:
-	Transform transform;
+	static ObjectPool<GLTriangleMesh, OBJECTTYPE_MESH> Pool;
 
 	std::vector<glm::fvec3> positions;
 	std::vector<glm::fvec3> normals;
@@ -53,7 +53,7 @@ public:
 	std::vector<unsigned int> indices;
 
 	GLTriangleMesh() {}
-	~GLTriangleMesh() { Destroy(); }
+	~GLTriangleMesh() {}
 
 	void Initialize();
 	void Destroy();
@@ -88,10 +88,8 @@ protected:
 	std::vector<glm::fvec4> colors;
 
 public:
-	Transform transform;
-
 	GLLine() {}
-	~GLLine() { Destroy(); }
+	~GLLine() {}
 
 	void Initialize();
 	void Destroy();
@@ -118,10 +116,8 @@ protected:
 	std::vector<unsigned int> indices;
 
 public:
-	Transform transform;
-
 	GLLineStrips() {}
-	~GLLineStrips() { Destroy(); }
+	~GLLineStrips() {}
 
 	void Initialize();
 	void Destroy();
@@ -163,10 +159,8 @@ protected:
 	std::vector<unsigned int> indices;
 
 public:
-	Transform transform;
-
 	GLBezierStrips() {}
-	~GLBezierStrips() { Destroy(); }
+	~GLBezierStrips() {}
 
 	void Initialize();
 	void Destroy();
@@ -197,10 +191,8 @@ protected:
 	GLuint texCoordBuffer = 0;
 
 public:
-	Transform transform;
-
 	GLQuad() {}
-	~GLQuad() { Destroy(); }
+	~GLQuad() {}
 
 	void Initialize();
 	void Destroy();

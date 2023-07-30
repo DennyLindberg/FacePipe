@@ -13,7 +13,7 @@ protected:
 
 public:
 	Canvas2D() {}
-	~Canvas2D() { Shutdown(); }
+	~Canvas2D() {}
 
 	void Initialize(int width, int height);
 	void Shutdown();

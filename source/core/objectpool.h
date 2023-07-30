@@ -5,45 +5,7 @@
 #include <vector>
 #include <cassert>
 
-typedef uint8_t ObjectType;
-typedef uint32_t ObjectId;
-
-#define OBJECTTYPE_UNKNOWN 0
-#define OBJECTTYPE_CAMERA 1
-#define OBJECTTYPE_LIGHT 2
-#define OBJECTTYPE_MESH 3
-
-// Contains a vector index and generator safeguard to ensure that the id references the same object
-// safeguard 0 means uninitialized ptr
-struct GenericWeakObjectPtr
-{
-public:
-	GenericWeakObjectPtr(ObjectType t) : type(t) {}
-
-	ObjectType type = OBJECTTYPE_UNKNOWN;	// what type of object this refers to
-	ObjectId id = 0;						// index to vector
-	uint32_t safeguard = 0;					// based on generator
-};
-
-template<typename T>
-struct WeakObjectPtr : public GenericWeakObjectPtr
-{
-public:
-	WeakObjectPtr() : GenericWeakObjectPtr(T::Pool.Type) {}
-
-public:
-	void Destroy() { T::Pool.Destroy(*this); }
-
-	inline ObjectId GetId() const { return id; }
-	inline uint32_t GetSafeguard() const { return safeguard; }
-	inline T* Get() const { return T::Pool.GetSafe(id, safeguard); }
-
-	operator bool() const { return Get() != nullptr; }
-	T* operator->() const { return Get(); }
-	T& operator*(void) const { return *Get(); }
-
-	operator T*() const { return Get(); }
-};
+#include "object.h"
 
 template<typename T, ObjectType OT>
 class ObjectPool
@@ -53,7 +15,16 @@ public:
 	static const ObjectType Type = OT;
 
 	ObjectPool() {}
-	~ObjectPool() {}
+	~ObjectPool() { EmptyPool(); }
+
+	void EmptyPool()
+	{
+		for (T& object : objects)
+		{
+			object.Destroy();
+		}
+		objects.clear();
+	}
 
 	T& operator[](ObjectId id) 
 	{ 
@@ -117,6 +88,7 @@ public:
 
 		UpdateNextFreeSlot();
 
+		objects[newId].Initialize();
 		return newId;
 	}
 
@@ -137,7 +109,8 @@ public:
 			return; // this is not the same object
 
 		safeguards[id] = 0;
-		//objects[id].data = T{}; // leave data stale
+		objects[id].Destroy();
+		//objects[id].data = T{}; // leave stale
 
 		if (id < nextFreeSlot)
 			nextFreeSlot = id;

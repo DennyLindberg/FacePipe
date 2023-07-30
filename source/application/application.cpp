@@ -27,6 +27,11 @@ void App::Shutdown()
 	GLFramebuffers::Shutdown();
 	App::geometry.Shutdown();
 	App::shaders.Shutdown();
+
+	// Empty pools here
+	GLTriangleMesh::Pool.EmptyPool();
+	GLTexture::Pool.EmptyPool();
+
 	App::python.Shutdown();
 	App::window.Destroy();
 	exit(0);
