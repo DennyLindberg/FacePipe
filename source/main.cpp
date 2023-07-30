@@ -34,13 +34,13 @@ int main(int argc, char* args[])
 )";
 	
 	// Testing of object pool with weak ptr support
-	ObjectPool<Camera> Cameras;
-	ObjectId cameraId = Cameras.Create();
+	ObjectId cameraId = Camera::Pool.Create();
+	WeakObjectPtr<Camera> cameraTest = Camera::Pool.CreateWeak();
 
 	/*
 		Setup scene and controls
 	*/
-	Camera& camera = Cameras[cameraId];
+	Camera& camera = Camera::Pool[cameraId];
 	camera.fieldOfView = CAMERA_FOV;
 
 	Camera cameraCube;

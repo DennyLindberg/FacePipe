@@ -1,5 +1,6 @@
 #pragma once
 #include "core/math.h"
+#include "core/objectpool.h"
 
 enum class CameraView
 {
@@ -16,6 +17,9 @@ enum class CameraView
 // The getters and setters are used to ensure that the internals update.
 class Camera
 {
+public:
+	static ObjectPool<Camera, OBJECTTYPE_CAMERA> Pool;
+
 protected:
 	bool bDirty = true;
 	glm::vec3 forwardVector = { 0.0f, 0.0f, 1.0f };

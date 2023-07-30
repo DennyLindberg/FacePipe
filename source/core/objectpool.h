@@ -5,28 +5,38 @@
 #include <vector>
 #include <cassert>
 
-template<typename T>
-class ObjectPool;
-
+typedef uint8_t ObjectType;
 typedef uint32_t ObjectId;
 
+#define OBJECTTYPE_UNKNOWN 0
+#define OBJECTTYPE_CAMERA 1
+#define OBJECTTYPE_LIGHT 2
+#define OBJECTTYPE_MESH 3
+
 // Contains a vector index and generator safeguard to ensure that the id references the same object
-// refSafeguard 0 means uninitialized ptr
-template<typename T>
-struct WeakObjectPtr
+// safeguard 0 means uninitialized ptr
+struct GenericWeakObjectPtr
 {
-protected:
-	friend class ObjectPool<T>;
-	ObjectId id = 0;		// index to vector
-	uint32_t safeguard = 0;	// based on generator
-	ObjectPool<T>* owner = nullptr;
+public:
+	GenericWeakObjectPtr(ObjectType t) : type(t) {}
+
+	ObjectType type = OBJECTTYPE_UNKNOWN;	// what type of object this refers to
+	ObjectId id = 0;						// index to vector
+	uint32_t safeguard = 0;					// based on generator
+};
+
+template<typename T>
+struct WeakObjectPtr : public GenericWeakObjectPtr
+{
+public:
+	WeakObjectPtr() : GenericWeakObjectPtr(T::Pool.Type) {}
 
 public:
-	void Destroy() { owner->Destroy(*this); }
+	void Destroy() { T::Pool.Destroy(*this); }
 
 	inline ObjectId GetId() const { return id; }
 	inline uint32_t GetSafeguard() const { return safeguard; }
-	inline T* Get() const { return owner->GetSafe(id, safeguard); }
+	inline T* Get() const { return T::Pool.GetSafe(id, safeguard); }
 
 	operator bool() const { return Get() != nullptr; }
 	T* operator->() const { return Get(); }
@@ -35,11 +45,12 @@ public:
 	operator T*() const { return Get(); }
 };
 
-template<typename T>
+template<typename T, ObjectType OT>
 class ObjectPool
 {
 public:
 	friend struct WeakObjectPtr<T>;
+	static const ObjectType Type = OT;
 
 	ObjectPool() {}
 	~ObjectPool() {}
@@ -77,7 +88,6 @@ public:
 	WeakObjectPtr<T> GetWeakPtr(ObjectId id)
 	{
 		WeakObjectPtr<T> newPtr;
-		newPtr.owner = this;
 		newPtr.id = id;
 		newPtr.safeguard = 0; // invalid until object is found
 		
