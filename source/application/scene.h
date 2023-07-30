@@ -8,6 +8,4 @@ class Scene
 public:
 	Scene() {}
 	~Scene() {}
-
-	Camera camera;
 };

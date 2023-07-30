@@ -1,5 +1,7 @@
 #include "application/application.h"
 
+#include "core/objectpool.h"
+
 namespace fs = std::filesystem;
 
 const float CAMERA_FOV = 45.0f;
@@ -30,11 +32,15 @@ int main(int argc, char* args[])
 - S: Screenshot
 - F: Re-center camera
 )";
+	
+	// Testing of object pool with weak ptr support
+	ObjectPool<Camera> Cameras;
+	ObjectId cameraId = Cameras.Create();
 
 	/*
 		Setup scene and controls
 	*/
-	Camera camera;
+	Camera& camera = Cameras[cameraId];
 	camera.fieldOfView = CAMERA_FOV;
 
 	Camera cameraCube;
