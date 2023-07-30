@@ -5,24 +5,8 @@
 #include "tiny_obj_loader.h"
 #pragma warning(pop)
 
-#define GLM_ENABLE_EXPERIMENTAL
-#include "glm/gtx/euler_angles.hpp"
-
 #include <string>
 #include <iostream>
-
-glm::mat4 MeshTransform::ModelMatrix() const
-{
-	glm::mat4 s = glm::scale(glm::mat4{ 1.0f }, scale);
-	glm::mat4 r = glm::eulerAngleYXZ(
-		glm::radians(rotation.y),
-		glm::radians(rotation.x),
-		glm::radians(rotation.z)
-	);
-	glm::mat4 t = glm::translate(glm::mat4{ 1.0f }, position);
-	return t * r * s;
-}
-
 
 GLMeshInterface::GLMeshInterface(bool bAutoGenVAO)
 {

@@ -2,16 +2,8 @@
 #include <vector>
 #include "glad/glad.h"
 #include "core/math.h"
+#include "core/transform.h"
 #include <filesystem>
-
-struct MeshTransform
-{
-	glm::fvec3 position{ 0.0f };
-	glm::fvec3 rotation{ 0.0f };
-	glm::fvec3 scale{ 1.0f };
-
-	glm::mat4 ModelMatrix() const;
-};
 
 class GLMeshInterface
 {
@@ -19,7 +11,7 @@ protected:
 	GLuint vao = 0;
 
 public:
-	MeshTransform transform;
+	Transform transform;
 
 	GLMeshInterface(bool bAutoGenVAO = true);
 	virtual ~GLMeshInterface();

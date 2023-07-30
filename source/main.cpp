@@ -284,15 +284,15 @@ int main(int argc, char* args[])
 		App::shaders.UpdateLightUBOPosition(lightFollowsCamera? camera.GetPosition() : glm::fvec3{ 999999.0f });
 
 		// Debug: Test changing the mesh transform over time
-		//headmesh.transform.rotation = glm::vec3(0.0f, 360.0f*sinf((float) App::clock.time), 0.0f);
+		headmesh.transform.rotation = glm::fvec3(0.0f, Math::Pi*sinf((float) App::clock.time), 0.0f);
 
 		pointCloudShader.Use();
-		pointCloudShader.SetUniformMat4("model", armesh.transform.ModelMatrix());
+		pointCloudShader.SetUniformMat4("model", armesh.transform.Matrix());
 		pointCloudShader.SetUniformFloat("size", App::settings.pointCloudSize);
 		armesh.Draw(GL_POINTS);
 
 		meshShader.Use();
-		meshShader.SetUniformMat4("model", headmesh.transform.ModelMatrix());
+		meshShader.SetUniformMat4("model", headmesh.transform.Matrix());
 		meshShader.SetUniformInt("useTexture", 0);
 		meshShader.SetUniformInt("useFlatShading", 0);
 		DefaultTexture.UseForDrawing();
@@ -310,7 +310,7 @@ int main(int argc, char* args[])
 		lineShader.Use();
 		App::geometry.coordinateAxis.Draw();
 
-		lineShader.SetUniformMat4("model", cubeMeshNormals.transform.ModelMatrix());
+		lineShader.SetUniformMat4("model", cubeMeshNormals.transform.Matrix());
 		//cubeMeshNormals.Draw();
 
 		if (auto F = GLFramebuffers::BindScoped(RenderTarget))
@@ -318,7 +318,7 @@ int main(int argc, char* args[])
 			GLFramebuffers::ClearActive();
 			App::shaders.UpdateCameraUBO(cameraCube);
 			App::shaders.UpdateLightUBOPosition(lightFollowsCamera? cameraCube.GetPosition() : glm::fvec3{ 999999.0f });
-			meshShader.SetUniformMat4("model", cubemesh.transform.ModelMatrix());
+			meshShader.SetUniformMat4("model", cubemesh.transform.Matrix());
 			meshShader.SetUniformInt("useTexture", 0);
 			cubemesh.Draw();
 		}

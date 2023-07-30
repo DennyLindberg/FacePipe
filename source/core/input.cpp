@@ -73,8 +73,8 @@ void TurntableController::SnapToOrigin()
 glm::vec3 PlacementVector(float yaw, float pitch)
 {
 	// Angle is inverted to create a right handed system
-	float yawRad = -yaw * PI_f / 180.0f;
-	float pitchRad = pitch * PI_f / 180.0f;
+	float yawRad = -yaw * Math::Pi / 180.0f;
+	float pitchRad = pitch * Math::Pi / 180.0f;
 
 	float b = cosf(pitchRad);
 	return glm::vec3{
