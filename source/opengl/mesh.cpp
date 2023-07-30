@@ -249,7 +249,7 @@ void GLLine::Destroy()
 
 void GLLine::AddLine(glm::fvec3 start, glm::fvec3 end, glm::fvec4 color)
 {
-	lineSegments.push_back(GLLineSegment{ std::move(start), std::move(end) });
+	lineSegments.push_back(LineSegment{ std::move(start), std::move(end) });
 	colors.push_back(color);
 	colors.push_back(std::move(color));
 }
@@ -658,9 +658,30 @@ void GLQuad::Initialize()
 		float top = 1.0f; //1.0f - 2.0f * relativeY;
 		float bottom = -1.0f; //1.0f - 2.0f * (relativeY + relativeHeight);
 
-		GLuint valuesPerPosition, valuesPerCoord;
-		std::vector<float> positions, tcoords;
-		GLQuad::GenerateTriangles(positions, tcoords, valuesPerPosition, valuesPerCoord, left, right, top, bottom);
+		GLuint valuesPerPosition = 3;
+		std::vector<float> positions = {
+			// Triangle 1
+			left, top, 0.0f,
+			left, bottom, 0.0f,
+			right, bottom, 0.0f,
+
+			// Triangle 2
+			right, bottom, 0.0f,
+			right, top, 0.0f,
+			left, top, 0.0f,
+		};
+
+		// UVs work top to bottom, V is reversed to get image in correct orientation
+		GLuint valuesPerCoord = 4;
+		std::vector<float> tcoords = {
+			0.0f, 0.0f, 1.0f, 1.0f,
+			0.0f, 1.0f, 1.0f, 1.0f,
+			1.0f, 1.0f, 1.0f, 1.0f,
+
+			1.0f, 1.0f, 1.0f, 1.0f,
+			1.0f, 0.0f, 1.0f, 1.0f,
+			0.0f, 0.0f, 1.0f, 1.0f
+		};
 
 		// Load positions
 		glBindBuffer(GL_ARRAY_BUFFER, positionBuffer);
@@ -690,34 +711,6 @@ void GLQuad::Draw()
 
 	glBindVertexArray(vao);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
-}
-
-void GLQuad::GenerateTriangles(std::vector<float>& Positions, std::vector<float>& TexCoords, GLuint& NumValuesPerPos, GLuint& NumValuesPerCoord, float left, float right, float top, float bottom)
-{
-	NumValuesPerPos = 3;
-	Positions = {
-		// Triangle 1
-		left, top, 0.0f,
-		left, bottom, 0.0f,
-		right, bottom, 0.0f,
-
-		// Triangle 2
-		right, bottom, 0.0f,
-		right, top, 0.0f,
-		left, top, 0.0f,
-	};
-
-	// UVs work top to bottom, V is reversed to get image in correct orientation
-	NumValuesPerCoord = 4;
-	TexCoords = {
-		0.0f, 0.0f, 1.0f, 1.0f,
-		0.0f, 1.0f, 1.0f, 1.0f,
-		1.0f, 1.0f, 1.0f, 1.0f,
-
-		1.0f, 1.0f, 1.0f, 1.0f,
-		1.0f, 0.0f, 1.0f, 1.0f,
-		0.0f, 0.0f, 1.0f, 1.0f
-	};
 }
 
 namespace GLMesh

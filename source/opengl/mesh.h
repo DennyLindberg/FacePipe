@@ -70,12 +70,7 @@ public:
 	void ApplyMatrix(glm::mat4 transform);
 };
 
-struct GLLineSegment
-{
-	glm::fvec3 start;
-	glm::fvec3 end;
-};
-
+// Draws a separate line per start/end pair of points - each segment has its own color
 class GLLine
 {
 protected:
@@ -83,7 +78,13 @@ protected:
 	GLuint positionBuffer = 0;
 	GLuint colorBuffer = 0;
 
-	std::vector<GLLineSegment> lineSegments;
+	struct LineSegment
+	{
+		glm::fvec3 start;
+		glm::fvec3 end;
+	};
+
+	std::vector<LineSegment> lineSegments;
 	std::vector<glm::fvec4> colors;
 
 public:
@@ -104,6 +105,7 @@ public:
 	void Draw();
 };
 
+// Draws multiple continous lines, each separated by GLMesh::RESTART_INDEX. Use AddLineStrip to do so automatically.
 class GLLineStrips
 {
 protected:
@@ -204,9 +206,6 @@ public:
 	void Destroy();
 
 	void Draw();
-
-public:
-	static void GenerateTriangles(std::vector<float>& Positions, std::vector<float>& TexCoords, GLuint& NumValuesPerPos, GLuint& NumValuesPerCoord, float left = -1.0f, float right = 1.0f, float top = 1.0f, float bottom = -1.0f);
 };
 
 namespace GLMesh
