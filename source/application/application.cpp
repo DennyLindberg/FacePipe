@@ -34,20 +34,16 @@ void App::Initialize()
 
 void App::Shutdown()
 {
+	ObjectPoolInternals::ShutdownPools();
+
 	GLFramebuffers::Shutdown();
 	App::geometry.Shutdown();
 	App::shaders.Shutdown();
 	App::ui.Shutdown();
 
-	Object::Pool.EmptyPool();
-	Camera::Pool.EmptyPool();
-	//GLLight::Pool.EmptyPool();
-	GLTriangleMesh::Pool.EmptyPool();
-	GLTexture::Pool.EmptyPool();
-	GLLine::Pool.EmptyPool();
-
 	App::python.Shutdown();
 	App::window.Destroy();
+
 	exit(0);
 }
 

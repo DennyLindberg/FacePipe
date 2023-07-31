@@ -7,6 +7,8 @@ typedef uint32_t ObjectId;
 
 // Core types are in the 0-19 range
 
+inline constexpr uint8_t ObjectTypeMax = ~uint8_t(0);
+
 #define ObjectType_Unknown 0
 #define ObjectType_Object 1
 #define ObjectType_Camera 2

@@ -7,17 +7,25 @@
 
 #include "objectptr.h"
 
+namespace ObjectPoolInternals
+{
+	void RegisterPool(ObjectType type, std::function<void()> emptyPoolFunc);
+	void ShutdownPools();
+}
+
 template<typename T, size_t OT>
 class ObjectPool
 {
 protected:
 	static const ObjectType Type = ObjectType(OT);
+	static bool bIsRegistered;
 
 public:
 	friend struct WeakPtr<T>;
 
-	ObjectPool() {}
-	~ObjectPool() { EmptyPool(); }
+	ObjectPool() { }
+
+	~ObjectPool() { }
 
 	void EmptyPool()
 	{
@@ -79,6 +87,12 @@ public:
 
 	ObjectId Create()
 	{
+		if (!bIsRegistered)
+		{
+			bIsRegistered = true;
+			ObjectPoolInternals::RegisterPool(Type, [this]() -> void { EmptyPool(); });
+		}
+
 		ObjectId newId = (ObjectId) nextFreeSlot;
 		++safeguardCounter;
 
@@ -143,6 +157,9 @@ protected:
 	uint32_t safeguardCounter = 0;		// used to generate safeguard values
 	size_t nextFreeSlot = 0;			// used for reduced iteration times (the vector can have holes in it)
 };
+
+template<typename T, size_t OT>
+bool ObjectPool<T, OT>::bIsRegistered = false;
 
 // use as base class to add pool to any class
 template<typename T, size_t OT>
