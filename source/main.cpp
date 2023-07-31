@@ -12,7 +12,7 @@ WeakPtr<Object> selected_object;
 int main(int argc, char* args[])
 {
 	App::settings = {
-		.vsync = false,
+		.vsync = true,
 		.fullscreen = 0,
 		.windowWidth = 1280,
 		.windowHeight = 720,

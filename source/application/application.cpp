@@ -87,7 +87,7 @@ bool App::ReadyToTick()
 void App::Tick()
 {
 	App::clock.Tick();
-	App::webcam.CaptureFrame();
+	App::webcam.UpdateTextureWhenDirty();
 	App::scripting.Tick();
 	App::shaders.Tick();
 }

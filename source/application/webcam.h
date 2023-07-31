@@ -2,11 +2,18 @@
 
 #include "core/core.h"
 #include "opengl/opengl.h"
+#include <thread>
+#include <mutex>
 
 class WebCam
 {
 protected:
-	bool bStarted = false;
+	std::thread thread;
+	std::atomic<bool> bRunThread = false;
+	std::atomic<bool> bStarted = false;
+	std::atomic<bool> bTextureDirty = true;
+	std::mutex mutex;
+
 	void* cameraPtr = nullptr;
 	GLTexture texture;
 	std::vector<GLubyte> buffer;
@@ -32,7 +39,11 @@ public:
 
 	void Stop();
 
-	void CaptureFrame();
+	void Thread_Loop();
+
+	void Thread_CaptureFrame();
+	
+	void UpdateTextureWhenDirty();
 
 	std::string DebugString();
 };
