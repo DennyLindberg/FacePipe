@@ -45,6 +45,7 @@ public:
 	Camera() = default;
 	~Camera() = default;
 
+	ObjectId id() { return poolId; }
 	void Initialize() {}
 	void Destroy() {}
 

@@ -6,9 +6,7 @@
 #include "shadermanager.h"
 #include "geometrymanager.h"
 
-#include "imgui.h"
-#include "imgui_stdlib.h"
-#include "imnodes.h"
+#include "ui.h"
 
 // see objectptr.h
 #define ObjectType_Object 1
@@ -17,10 +15,6 @@
 #define ObjectType_Mesh 4
 #define ObjectType_Texture 5
 #define ObjectType_Line 6
-
-namespace Type
-{
-}
 
 struct ApplicationSettings
 {
@@ -54,6 +48,7 @@ public:
 	static OpenGLWindow window;
 	static PythonInterpreter python;
 
+	static UIManager ui;
 	static ShaderManager shaders;
 	static GeometryManager geometry;
 

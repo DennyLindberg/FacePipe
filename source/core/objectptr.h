@@ -14,7 +14,7 @@ typedef uint32_t ObjectId;
 struct WeakPtrGeneric
 {
 public:
-	WeakPtrGeneric(ObjectType t) : type(t) {}
+	WeakPtrGeneric(ObjectType objectType) : type(objectType) {}
 
 	ObjectType type = ObjectType_Unknown;	// what type of object this refers to
 	ObjectId id = 0;					// index to vector
@@ -26,6 +26,17 @@ public:
 		id = 0;
 		safeguard = 0;
 	}
+
+	template<typename T>
+	inline T* As() { return TryGet<T>(); }
+
+	template<typename T>
+	T* TryGet()
+	{
+		return T::Pool.Get(*this);
+	}
+
+	bool Is(ObjectType objectType) const { return type == objectType; }
 
 	bool operator==(const WeakPtrGeneric& b) const { return type == b.type && id == b.id && safeguard == b.safeguard; }
 };
@@ -51,7 +62,7 @@ public:
 
 	inline ObjectId GetId() const { return id; }
 	inline uint32_t GetSafeguard() const { return safeguard; }
-	inline T* Get() const { return T::Pool.GetSafe(id, safeguard); }
+	inline T* Get() const { return T::Pool.Get(id, safeguard); }
 
 	operator bool() const { return Get() != nullptr; }
 	T* operator->() const { return Get(); }

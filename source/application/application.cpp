@@ -7,6 +7,7 @@ ApplicationClock App::clock = ApplicationClock();
 OpenGLWindow App::window = OpenGLWindow();
 PythonInterpreter App::python = PythonInterpreter();
 
+UIManager App::ui = UIManager();
 ShaderManager App::shaders = ShaderManager();
 GeometryManager App::geometry = GeometryManager();
 
@@ -20,8 +21,10 @@ void App::Initialize()
 	App::settings.windowRatio = App::settings.windowWidth / (float)App::settings.windowHeight;
 	App::window.Initialize(App::settings.windowWidth, App::settings.windowHeight, App::settings.fullscreen, App::settings.vsync);
 	App::python.Initialize();
-	App::geometry.Initialize();
+
+	App::ui.Initialize();
 	App::shaders.Initialize(App::Path("content/shaders"));
+	App::geometry.Initialize();
 	GLFramebuffers::Initialize(settings.windowWidth, settings.windowHeight, App::settings.clearColor);
 
 	Object::Pool.Initialize(ObjectType_Object);
@@ -41,6 +44,7 @@ void App::Shutdown()
 	GLFramebuffers::Shutdown();
 	App::geometry.Shutdown();
 	App::shaders.Shutdown();
+	App::ui.Shutdown();
 
 	Object::Pool.Shutdown();
 	Camera::Pool.Shutdown();

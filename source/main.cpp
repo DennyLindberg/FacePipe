@@ -6,72 +6,7 @@ namespace fs = std::filesystem;
 
 const float CAMERA_FOV = 45.0f;
 
-// TODO: Move to ImGui/UI header (application folder?)
-namespace ImGui
-{
-	void ImageCheckbox(const char* str_id, bool* property, ImTextureID enabled_image, ImTextureID disabled_image, ImVec2 padding = ImVec2{0,0})
-	{
-		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, padding);
-
-		bool bEnabled = *property;
-		if (ImGui::ImageButton(str_id, bEnabled? enabled_image : disabled_image, ImVec2(20.0f, 20.0f)))
-		{
-			*property = !bEnabled;
-		}
-
-		ImGui::PopStyleVar();
-	}
-}
-
-
-void DisplayImguiTree(const WeakPtr<Object> weakObject)
-{
-	static const ImTextureID checkbox_enabled = (ImTextureID)(intptr_t)2;
-	static const ImTextureID checkbox_disabled = (ImTextureID)(intptr_t)1;
-	static const ImTextureID paperbin = (ImTextureID)(intptr_t)5;
-
-	Object* object = weakObject.Get();
-	if (!object) return;
-
-	ImGui::PushID(object->GetObjectId());
-
-	auto& children = object->GetChildren();
-
-	// Display title (left column)
-	bool bShowChildren = false;
-	if (children.size() > 0)
-		bShowChildren = ImGui::TreeNode(object->name.c_str());
-	else
-		ImGui::Text(object->name.c_str());
-
-	// Display buttons (right column)
-	ImGui::NextColumn();
-	ImGui::ImageCheckbox("##test", &(object->visible), checkbox_enabled, checkbox_disabled);
-	if (weakObject != App::world)
-	{
-		ImGui::SameLine(0,2);
-		if (ImGui::ImageButton("##delete", paperbin, ImVec2(20.0f, 20.0f)))
-		{
-			Object::Pool.Destroy(weakObject);
-			bShowChildren = false;
-		}
-	}
-	ImGui::NextColumn();
-
-	// Recurse
-	if (bShowChildren)
-	{
-		//ImGui::Indent(1.0f);
-		for (const WeakPtr<Object>& child : children)
-		{
-			DisplayImguiTree(child);
-		}
-		//ImGui::Unindent();
-		ImGui::TreePop();
-	}
-
-	ImGui::PopID();
-}
+WeakPtr<Object> selected_object;
 
 /*
 	Application
@@ -148,6 +83,8 @@ int main(int argc, char* args[])
 	App::world->AddChild(arhead);
 
 	cube->AddComponent(cubemesh);
+	cube->AddComponent(headmesh);
+	cube->AddComponent(Camera::Pool.CreateWeak());
 	head->AddComponent(headmesh);
 	arhead->AddComponent(armesh);
 
@@ -159,6 +96,8 @@ int main(int argc, char* args[])
 	WeakPtr<GLTexture> DefaultTexture = GLTexture::Pool.CreateWeak();
 	DefaultTexture->LoadPNG(App::Path("content/textures/default.png"));
 	DefaultTexture->CopyToGPU();
+
+	selected_object = cube;
 
 	/*
 		User interaction parameters in the UI
@@ -264,11 +203,11 @@ int main(int argc, char* args[])
 		ImGui::End();
 
 		ImGui::Begin("Outliner");
-		{
-			ImGui::Columns(2, "outlinercolumns");
-			DisplayImguiTree(App::world);
-			ImGui::Columns(1);
-		}
+		UI::DisplayOutliner(App::world);
+		ImGui::End();
+
+		ImGui::Begin("Details");
+		UI::DisplaySelectionDetails(selected_object);
 		ImGui::End();
 	};
 

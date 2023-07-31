@@ -49,7 +49,7 @@ public:
 		return generic.type == Type && IsValid(generic.id, generic.safeguard)? &objects[generic.id] : nullptr;
 	}
 
-	T* GetSafe(ObjectId id, uint32_t safeguard)
+	T* Get(ObjectId id, uint32_t safeguard)
 	{
 		return IsValid(id, safeguard)? &objects[id] : nullptr;
 	}
