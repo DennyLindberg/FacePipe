@@ -3,6 +3,7 @@
 typedef uint8_t ObjectType;
 typedef uint32_t ObjectId;
 
+// Remember to update App::InitializePools() if a new type is added
 // User defined ObjectTypes should be defined in the 100+ range (can't be larger than the max value of ObjectType)
 
 // Core types are in the 0-19 range

@@ -16,11 +16,28 @@ UniformRandomGenerator App::random = UniformRandomGenerator();
 WeakPtr<Object> App::world = WeakPtr<Object>();
 WeakPtr<GLLine> App::debuglines = WeakPtr<GLLine>();
 
+namespace ObjectPoolInternals
+{
+	void InitializeDefaultPools()
+	{
+		Register<Camera, ObjectType_Camera>();
+		//Register<Light, ObjectType_Light>();
+		Register<GLTexture, ObjectType_GLTexture>();
+		Register<GLQuad, ObjectType_GLQuad>();
+		Register<GLLine, ObjectType_GLLine>();
+		Register<GLLineStrips, ObjectType_GLLineStrips>();
+		Register<GLTriangleMesh, ObjectType_GLTriangleMesh>();
+		Register<GLBezierStrips, ObjectType_GLBezierStrips>();
+	}
+}
+
 void App::Initialize()
 {
 	App::settings.windowRatio = App::settings.windowWidth / (float)App::settings.windowHeight;
 	App::window.Initialize(App::settings.windowWidth, App::settings.windowHeight, App::settings.fullscreen, App::settings.vsync);
 	App::python.Initialize();
+
+	ObjectPoolInternals::InitializeDefaultPools();
 
 	App::ui.Initialize();
 	App::shaders.Initialize(App::Path("content/shaders"));
