@@ -48,7 +48,8 @@ void WebCam::Start()
 	if (deviceList.size() > 0)
 	{
 		bStarted = true;
-		camera.open(camera.getCameras()[0]);
+		
+		camera.open(camera.getCameras()[0], 640, 480);
 		camera.startCapture();
 
 		int width = camera.getWidth();
@@ -111,7 +112,7 @@ void WebCam::Thread_CaptureFrame()
 
 	// we load 3 or 4 channels regardless - the colors come in BGR and we need to swizzle anyway
 	int numBytes;
-	if (camera.getFrame(buffer.data(), &numBytes))
+	if (camera.getFrame(buffer.data(), &numBytes, true))
 	{
 		std::lock_guard<std::mutex> guard(mutex);
 
