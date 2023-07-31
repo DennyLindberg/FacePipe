@@ -39,7 +39,7 @@ public:
 	void LoadLiveShader(GLProgram& targetProgram, std::wstring vertexFilename, std::wstring fragmentFilename, std::wstring geometryFilename = L"");
 	void LoadShader(GLProgram& targetProgram, std::wstring vertexFilename, std::wstring fragmentFilename, std::wstring geometryFilename = L"");
 	void UpdateShader(GLProgram& targetProgram, std::filesystem::path filePath, ShaderType type);
-	void CheckLiveShaders();
+	void Tick();
 
 	void UpdateCameraUBO(WeakPtrGeneric camera);
 	void UpdateLightUBOPosition(const glm::fvec3& position);

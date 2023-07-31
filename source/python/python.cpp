@@ -1,6 +1,7 @@
 #include "python.h"
 
 #include "core/utilities.h"
+#include "core/threads.h"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
@@ -9,47 +10,18 @@
 #include <iostream>
 #include <filesystem>
 #include <fstream>
-#include <queue>
-#include <mutex>
 
 namespace py = pybind11;
 namespace fs = std::filesystem;
 
+std::atomic<ScriptId> PythonInterpreter::activeScriptId = -1;
+
 struct PythonScript
 {
-	int ID = -1;
+	ScriptId id = INVALID_SCRIPT_ID;
 	bool bFile = false;
-	std::string Code = "";
-	std::filesystem::path File;
-};
-
-template<typename T>
-class ThreadSafeQueue
-{
-public:
-	bool Pop(T& Element)
-	{
-		std::lock_guard<std::mutex> guard(Mutex);
-
-		if (!Queue.empty())
-		{
-			Element = Queue.front();
-			Queue.pop();
-			return true;
-		}
-
-		return false;
-	}
-
-	void Push(const T& Element)
-	{
-		std::lock_guard<std::mutex> guard(Mutex);
-		Queue.push(Element);
-	}
-
-protected:
-	std::mutex Mutex;
-	std::queue<T> Queue;
+	std::string code = "";
+	std::filesystem::path file;
 };
 
 class PythonThread
@@ -73,7 +45,9 @@ public:
 			PythonScript Script;
 			if (ScriptExecutionQueue.Pop(Script))
 			{
+				PythonInterpreter::activeScriptId = Script.id;
 				Execute(Script);
+				PythonInterpreter::activeScriptId = INVALID_SCRIPT_ID;
 			}
 		}
 
@@ -117,26 +91,26 @@ protected:
 	{
 		if (Script.bFile)
 		{
-			Script.Code = "";
+			Script.code = "";
 
 			try
 			{
-				if (!std::filesystem::exists(Script.File))
-					return Respond(Script.ID, PythonScriptError::FilePathInvalid);
+				if (!std::filesystem::exists(Script.file))
+					return Respond(Script.id, PythonScriptError::FilePathInvalid);
 
-				std::ifstream InputFileStream(Script.File.c_str());
+				std::ifstream InputFileStream(Script.file.c_str());
 				if (InputFileStream && InputFileStream.is_open())
-					Script.Code.assign((std::istreambuf_iterator<char>(InputFileStream)), std::istreambuf_iterator< char >());
+					Script.code.assign((std::istreambuf_iterator<char>(InputFileStream)), std::istreambuf_iterator< char >());
 				else
-					return Respond(Script.ID, PythonScriptError::InputFileStreamFailed);
+					return Respond(Script.id, PythonScriptError::InputFileStreamFailed);
 			}
 			catch (const std::exception& e)
 			{
-				return Respond(Script.ID, PythonScriptError::FileLoadException, e);
+				return Respond(Script.id, PythonScriptError::FileLoadException, e);
 			}
 			catch (...)
 			{
-				return Respond(Script.ID, PythonScriptError::FileLoadException, std::exception("Unknown exception catch (...)"));
+				return Respond(Script.id, PythonScriptError::FileLoadException, std::exception("Unknown exception catch (...)"));
 			}
 		}
 
@@ -147,8 +121,8 @@ protected:
 	{
 		try
 		{
-			py::exec(Script.Code);
-			return Respond(Script.ID, PythonScriptError::None);
+			py::exec(Script.code);
+			return Respond(Script.id, PythonScriptError::None);
 		}
 		catch (const py::error_already_set& e)
 		{
@@ -158,16 +132,16 @@ protected:
 			std::string py_error("Exception thrown in python interpreter:\n");
 			py_error += e.what();
 
-			return Respond(Script.ID, PythonScriptError::PybindException, std::exception(py_error.c_str()));
+			return Respond(Script.id, PythonScriptError::PybindException, std::exception(py_error.c_str()));
 		}
 		catch (const std::exception& e)
 		{
-			return Respond(Script.ID, PythonScriptError::ExecuteException, e);
+			return Respond(Script.id, PythonScriptError::ExecuteException, e);
 		}
 		catch (...)
 		{
 			// TODO: Handle all python exceptions listed here https://pybind11.readthedocs.io/en/stable/advanced/exceptions.html
-			return Respond(Script.ID, PythonScriptError::ExecuteException, std::exception("Unknown exception catch (...)"));
+			return Respond(Script.id, PythonScriptError::ExecuteException, std::exception("Unknown exception catch (...)"));
 		}
 	}
 };
@@ -184,25 +158,25 @@ void PythonInterpreter::Shutdown()
 	Thread.Stop();
 }
 
-void PythonInterpreter::Execute(const std::string& Code, int ScriptID)
+void PythonInterpreter::Execute(const std::string& code, ScriptId id)
 {
-	PythonScript Script;
-	Script.ID = ScriptID;
-	Script.bFile = false;
-	Script.Code = Code;
-	Thread.ScriptExecutionQueue.Push(Script);
+	PythonScript script;
+	script.id = id;
+	script.bFile = false;
+	script.code = code;
+	Thread.ScriptExecutionQueue.Push(script);
 }
 
-void PythonInterpreter::Execute(const std::filesystem::path& FilePath, int ScriptID)
+void PythonInterpreter::Execute(const std::filesystem::path& filePath, ScriptId id)
 {
-	PythonScript Script;
-	Script.ID = ScriptID;
-	Script.bFile = true;
-	Script.File = FilePath;
-	Thread.ScriptExecutionQueue.Push(Script);
+	PythonScript script;
+	script.id = id;
+	script.bFile = true;
+	script.file = filePath;
+	Thread.ScriptExecutionQueue.Push(script);
 }
 
-bool PythonInterpreter::PopScriptResponse(ScriptExecutionResponse& Response)
+bool PythonInterpreter::PopScriptResponse(ScriptExecutionResponse& response)
 {
-	return Thread.ScriptExecutionResponses.Pop(Response);
+	return Thread.ScriptExecutionResponses.Pop(response);
 }

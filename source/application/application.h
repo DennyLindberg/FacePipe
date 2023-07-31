@@ -5,6 +5,7 @@
 
 #include "shadermanager.h"
 #include "geometrymanager.h"
+#include "scripting.h"
 
 #include "ui.h"
 
@@ -38,7 +39,7 @@ public:
 	static ApplicationSettings settings;
 	static ApplicationClock clock;
 	static OpenGLWindow window;
-	static PythonInterpreter python;
+	static Scripting scripting;
 
 	static UIManager ui;
 	static ShaderManager shaders;

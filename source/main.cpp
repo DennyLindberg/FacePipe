@@ -126,7 +126,7 @@ int main(int argc, char* args[])
 			ImGui::SliderFloat("PointSize", &App::settings.pointCloudSize, 0.0005f, 0.01f, "%.5f");
 			if (ImGui::Button("Run Python test script"))
 			{
-				App::python.Execute(PythonTestScript);
+				App::scripting.python.Execute(PythonTestScript, 1);
 			}
 
 			if (ImGui::Button("Toggle parent"))
@@ -140,7 +140,7 @@ int main(int argc, char* args[])
 			ImGui::InputTextMultiline( "ScriptInput", &input_field_string, ImVec2(0.0f, 100.0f) );
 			if (ImGui::Button("Execute"))
 			{
-				App::python.Execute(input_field_string);
+				App::scripting.python.Execute(input_field_string, 2);
 			}
 
 			ImGui::InputTextMultiline( "Help", &helpString, ImVec2(0.0f, 100.0f), ImGuiInputTextFlags_ReadOnly );

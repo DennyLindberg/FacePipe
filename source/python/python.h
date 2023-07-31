@@ -1,6 +1,7 @@
 #pragma once
 
 #include <filesystem>
+#include <atomic>
 
 enum class PythonScriptError
 {
@@ -12,24 +13,29 @@ enum class PythonScriptError
 	PybindException
 };
 
+typedef int ScriptId;
+#define INVALID_SCRIPT_ID -1
+
 struct ScriptExecutionResponse
 {
-	int ScriptID = 0;
-	PythonScriptError Error = PythonScriptError::None;
-	std::exception Exception;
+	ScriptId id = INVALID_SCRIPT_ID;
+	PythonScriptError error = PythonScriptError::None;
+	std::exception exception;
 };
 
 class PythonInterpreter
 {
 public:
+	static std::atomic<ScriptId> activeScriptId;
+
 	PythonInterpreter() {}
 	~PythonInterpreter() {}
 
 	void Initialize();
 	void Shutdown();
 
-	void Execute(const std::string& Code, int ScriptID = -1);
-	void Execute(const std::filesystem::path& FilePath, int ScriptID = -1);
+	void Execute(const std::string& code, ScriptId id = INVALID_SCRIPT_ID);
+	void Execute(const std::filesystem::path& filePath, ScriptId id = INVALID_SCRIPT_ID);
 
-	bool PopScriptResponse(ScriptExecutionResponse& Response);
+	bool PopScriptResponse(ScriptExecutionResponse& response);
 };

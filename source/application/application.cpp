@@ -5,7 +5,7 @@
 ApplicationSettings App::settings = ApplicationSettings();
 ApplicationClock App::clock = ApplicationClock();
 OpenGLWindow App::window = OpenGLWindow();
-PythonInterpreter App::python = PythonInterpreter();
+Scripting App::scripting = Scripting();
 
 UIManager App::ui = UIManager();
 ShaderManager App::shaders = ShaderManager();
@@ -35,7 +35,7 @@ void App::Initialize()
 {
 	App::settings.windowRatio = App::settings.windowWidth / (float)App::settings.windowHeight;
 	App::window.Initialize(App::settings.windowWidth, App::settings.windowHeight, App::settings.fullscreen, App::settings.vsync);
-	App::python.Initialize();
+	App::scripting.Initialize();
 
 	ObjectPoolInternals::InitializeDefaultPools();
 
@@ -58,7 +58,7 @@ void App::Shutdown()
 	App::shaders.Shutdown();
 	App::ui.Shutdown();
 
-	App::python.Shutdown();
+	App::scripting.Shutdown();
 	App::window.Destroy();
 
 	exit(0);
@@ -82,17 +82,8 @@ bool App::ReadyToTick()
 void App::Tick()
 {
 	App::clock.Tick();
-
-	ScriptExecutionResponse ScriptResponse;
-	if (App::python.PopScriptResponse(ScriptResponse))
-	{
-		if (ScriptResponse.Error == PythonScriptError::None)
-			std::cout << "Script executed fully" << std::endl;
-		else
-			std::cout << ScriptResponse.Exception.what();
-	}
-
-	App::shaders.CheckLiveShaders();
+	App::scripting.Tick();
+	App::shaders.Tick();
 }
 
 void App::Render(WeakPtr<Camera> camera)

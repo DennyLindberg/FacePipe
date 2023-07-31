@@ -170,7 +170,7 @@ void ShaderManager::UpdateShader(GLProgram& targetProgram, fs::path filePath, Sh
 	);
 }
 
-void ShaderManager::CheckLiveShaders()
+void ShaderManager::Tick()
 {
 	fileListener.ProcessCallbacksOnMainThread();
 }
