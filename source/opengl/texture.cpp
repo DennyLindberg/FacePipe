@@ -25,10 +25,18 @@ void GLTexture::Destroy()
 		glDeleteTextures(1, &textureId);
 		textureId = 0;
 	}
+
+	size = 0;
+	numPixels = 0;
+	width = 0;
+	height = 0;
 }
 
 void GLTexture::SetSize(int textureWidth, int textureHeight)
 {
+	if (!textureId || width == textureWidth && height == textureHeight)
+		return;
+
 	width = textureWidth;
 	height = textureHeight;
 

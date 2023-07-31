@@ -15,6 +15,7 @@ UniformRandomGenerator App::random = UniformRandomGenerator();
 
 WeakPtr<Object> App::world = WeakPtr<Object>();
 WeakPtr<GLLine> App::debuglines = WeakPtr<GLLine>();
+WebCam App::webcam = WebCam();
 
 namespace ObjectPoolInternals
 {
@@ -47,10 +48,14 @@ void App::Initialize()
 	App::world = Object::Pool.CreateWeak();
 	App::world->name = "World";
 	App::debuglines = GLLine::Pool.CreateWeak();
+
+	App::webcam.Initialize();
 }
 
 void App::Shutdown()
 {
+	App::webcam.Shutdown();
+
 	ObjectPoolInternals::ShutdownPools();
 
 	GLFramebuffers::Shutdown();
@@ -82,6 +87,7 @@ bool App::ReadyToTick()
 void App::Tick()
 {
 	App::clock.Tick();
+	App::webcam.CaptureFrame();
 	App::scripting.Tick();
 	App::shaders.Tick();
 }

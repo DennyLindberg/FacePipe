@@ -1,7 +1,5 @@
 #include "application/application.h"
 
-#include "core/objectpool.h"
-
 namespace fs = std::filesystem;
 
 const float CAMERA_FOV = 45.0f;
@@ -14,7 +12,7 @@ WeakPtr<Object> selected_object;
 int main(int argc, char* args[])
 {
 	App::settings = {
-		.vsync = true,
+		.vsync = false,
 		.fullscreen = 0,
 		.windowWidth = 1280,
 		.windowHeight = 720,
@@ -120,6 +118,19 @@ int main(int argc, char* args[])
 			ImGui::Text("Scene");
 			ImGui::Text(("App - FPS: " + FpsString(App::clock.deltaTime)).c_str());
 			ImGui::Text(("App - Time: " + std::to_string(App::clock.time)).c_str());
+			if (App::webcam.IsActive())
+			{
+				if (ImGui::Button("Stop"))
+					App::webcam.Stop();
+				ImGui::SameLine();
+				ImGui::Text(App::webcam.DebugString().c_str());
+			}
+			else
+			{
+				if (ImGui::Button("Start Camera"))
+					App::webcam.Start();
+			}
+				
 			ImGui::InputInt("MaxFPS", &App::settings.maxFPS, 0);
 			ImGui::Checkbox("Wireframe", &renderWireframe);
 			ImGui::Checkbox("Light follows camera", &lightFollowsCamera);
@@ -144,6 +155,11 @@ int main(int argc, char* args[])
 			}
 
 			ImGui::InputTextMultiline( "Help", &helpString, ImVec2(0.0f, 100.0f), ImGuiInputTextFlags_ReadOnly );
+
+			if (App::webcam.Texture())
+			{
+				ImGui::Image((ImTextureID)(intptr_t)App::webcam.Texture(), ImVec2(App::webcam.TextureWidth() * 0.25f, App::webcam.TextureHeight() * 0.25f), { 0, 1 }, { 1, 0 });
+			}
 
 			GLuint Texture, TextureWidth, TextureHeight;
 			if (GLFramebuffers::GetTexture(RenderTarget, Texture, TextureWidth, TextureHeight))

@@ -7,6 +7,8 @@
 #include "geometrymanager.h"
 #include "scripting.h"
 
+#include "webcam.h"
+
 #include "ui.h"
 
 struct ApplicationSettings
@@ -51,4 +53,5 @@ public:
 
 	// TODO: move to draw debug manager
 	static WeakPtr<GLLine> debuglines;
+	static WebCam webcam;
 };

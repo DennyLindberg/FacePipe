@@ -9,6 +9,7 @@
 #include <filesystem>
 #include <functional>
 #include <stdint.h> // uint32_t ...
+#include <format>
 
 #include "transform.h"
 #include "object.h"
