@@ -55,7 +55,7 @@ namespace UI
 		Object* object = weakObject.Get();
 		if (!object) return;
 
-		ImGui::PushID(object->GetObjectId());
+		ImGui::PushID(object->Id());
 
 		auto& children = object->GetChildren();
 
@@ -121,17 +121,17 @@ namespace UI
 			{
 				ImGui::Text( ICON_FA_CAMERA "  Camera" );
 				ImGui::SameLine(0, 2);
-				ImGui::Text(std::to_string(component.As<Camera>()->id()).c_str());
+				ImGui::Text(std::to_string(component.As<Camera>()->Id()).c_str());
 				break;
 			}
-			case ObjectType_Mesh:
+			case ObjectType_GLTriangleMesh:
 			{
 				ImGui::Text( ICON_FA_OBJECT_GROUP "  Mesh" );
 				ImGui::SameLine(0, 2);
 				ImGui::Text("");
 				break;
 			}
-			case ObjectType_Line:
+			case ObjectType_GLLine:
 			{
 				ImGui::Image((ImTextureID)(intptr_t)1, ImVec2(20.0f, 20.0f));
 				ImGui::SameLine(0, 2);

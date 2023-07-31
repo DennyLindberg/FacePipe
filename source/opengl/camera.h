@@ -15,15 +15,9 @@ enum class CameraView
 
 // This camera uses a position and a focus point to determine orientation.
 // The getters and setters are used to ensure that the internals update.
-class Camera
+class Camera : public ObjectPoolInterface<Camera, ObjectType_Camera>
 {
-public:
-	friend class ObjectPool<Camera>;
-	static ObjectPool<Camera> Pool;
-
 protected:
-	ObjectId poolId = 0;
-
 	glm::vec3 forwardVector = { 0.0f, 0.0f, 1.0f };
 	glm::vec3 upVector = { 0.0f, 1.0f, 0.0f };
 	glm::vec3 sideVector = { 1.0f, 0.0f, 0.0f };
@@ -45,7 +39,6 @@ public:
 	Camera() = default;
 	~Camera() = default;
 
-	ObjectId id() { return poolId; }
 	void Initialize() {}
 	void Destroy() {}
 

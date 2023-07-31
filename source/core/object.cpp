@@ -1,7 +1,5 @@
 #include "object.h"
 
-ObjectPool<Object> Object::Pool;
-
 void Object::DetachFromParent()
 {
 	if (Object* p = parent.Get())

@@ -2,12 +2,8 @@
 
 #include <functional>
 #include <vector>
-#include "core/transform.h"
-
-typedef uint8_t ObjectType;
-typedef uint32_t ObjectId;
-
-#define ObjectType_Unknown 0
+#include "transform.h"
+#include "objecttypes.h"
 
 // Contains a vector index and generator safeguard to ensure that the id references the same object
 // safeguard 0 means uninitialized ptr

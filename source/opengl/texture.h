@@ -5,10 +5,9 @@
 #include "core/math.h"
 #include "core/objectpool.h"
 
-class GLTexture
+class GLTexture : public ObjectPoolInterface<GLTexture, ObjectType_GLTexture>
 {
 public:
-	ObjectId poolId = 0;
 	std::vector<GLubyte> glData; // vector is used to simplify load/save with lodepng
 	GLuint textureId = 0;
 	
@@ -18,9 +17,6 @@ public:
 	int height = 0;
 
 public:
-	friend class ObjectPool<GLTexture>;
-	static ObjectPool<GLTexture> Pool;
-
 	GLTexture() {}
 	~GLTexture() {}
 

@@ -27,13 +27,6 @@ void App::Initialize()
 	App::geometry.Initialize();
 	GLFramebuffers::Initialize(settings.windowWidth, settings.windowHeight, App::settings.clearColor);
 
-	Object::Pool.Initialize(ObjectType_Object);
-	Camera::Pool.Initialize(ObjectType_Camera);
-	//GLLight::Pool.Initialize(ObjectType_Light);
-	GLTriangleMesh::Pool.Initialize(ObjectType_Mesh);
-	GLTexture::Pool.Initialize(ObjectType_Texture);
-	GLLine::Pool.Initialize(ObjectType_Line);
-
 	App::world = Object::Pool.CreateWeak();
 	App::world->name = "World";
 	App::debuglines = GLLine::Pool.CreateWeak();
@@ -46,12 +39,12 @@ void App::Shutdown()
 	App::shaders.Shutdown();
 	App::ui.Shutdown();
 
-	Object::Pool.Shutdown();
-	Camera::Pool.Shutdown();
-	//GLLight::Pool.Shutdown();
-	GLTriangleMesh::Pool.Shutdown();
-	GLTexture::Pool.Shutdown();
-	GLLine::Pool.Shutdown();
+	Object::Pool.EmptyPool();
+	Camera::Pool.EmptyPool();
+	//GLLight::Pool.EmptyPool();
+	GLTriangleMesh::Pool.EmptyPool();
+	GLTexture::Pool.EmptyPool();
+	GLLine::Pool.EmptyPool();
 
 	App::python.Shutdown();
 	App::window.Destroy();

@@ -1,8 +1,6 @@
 #include "camera.h"
 #include "application/application.h"
 
-ObjectPool<Camera> Camera::Pool;
-
 void Camera::SetView(CameraView newView)
 {
 	if (view == newView)

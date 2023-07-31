@@ -7,28 +7,17 @@
 
 #include "objectptr.h"
 
-template<typename T>
+template<typename T, size_t OT>
 class ObjectPool
 {
 protected:
-	static ObjectType Type;
+	static const ObjectType Type = ObjectType(OT);
 
 public:
 	friend struct WeakPtr<T>;
 
 	ObjectPool() {}
-	~ObjectPool() { Shutdown(); }
-
-	void Initialize(ObjectType newType) 
-	{ 
-		Type = newType; 
-	}
-
-	void Shutdown() 
-	{
-		EmptyPool();
-		Type = ObjectType_Unknown; 
-	}
+	~ObjectPool() { EmptyPool(); }
 
 	void EmptyPool()
 	{
@@ -155,5 +144,28 @@ protected:
 	size_t nextFreeSlot = 0;			// used for reduced iteration times (the vector can have holes in it)
 };
 
-template<typename T>
-ObjectType ObjectPool<T>::Type = ObjectType_Unknown;
+// use as base class to add pool to any class
+template<typename T, size_t OT>
+class ObjectPoolInterface
+{
+protected:
+	ObjectId poolId = 0;
+
+public:
+	friend class ObjectPool<T, OT>;
+	static ObjectPool<T, OT> Pool;
+	static const ObjectType Type = ObjectType(OT);
+
+	ObjectPoolInterface() 
+	{
+		static_assert(OT < std::numeric_limits<ObjectType>::max(), "Template argument 'size_t OT' must have a value supported by ObjectType (see objecttypes.h)");
+	}
+
+	~ObjectPoolInterface() {}
+
+	ObjectId Id() const { return poolId; }
+	WeakPtr<T> GetWeakPtr() const { return Pool.GetWeakPtr(poolId); }
+};
+
+template<typename T, size_t OT>
+ObjectPool<T, OT> ObjectPoolInterface<T, OT>::Pool;

@@ -33,10 +33,9 @@ public:
 	void Draw(class GLQuad& mesh, const glm::mat4& mvp, const glm::fvec3& planeUp = glm::fvec3(0.0f, 1.0f, 0.0f), const glm::fvec3& planeSide = glm::fvec3(1.0f, 0.0f, 0.0f));
 };
 
-class GLTriangleMesh
+class GLTriangleMesh : public ObjectPoolInterface<GLTriangleMesh, ObjectType_GLTriangleMesh>
 {
 protected:
-	ObjectId poolId = 0;
 	GLuint vao = 0;
 	GLuint positionBuffer = 0;
 	GLuint normalBuffer = 0;
@@ -45,9 +44,6 @@ protected:
 	GLuint indexBuffer = 0;
 
 public:
-	friend class ObjectPool<GLTriangleMesh>;
-	static ObjectPool<GLTriangleMesh> Pool;
-
 	std::vector<glm::fvec3> positions;
 	std::vector<glm::fvec3> normals;
 	std::vector<glm::fvec4> colors;
@@ -73,10 +69,9 @@ public:
 };
 
 // Draws a separate line per start/end pair of points - each segment has its own color
-class GLLine
+class GLLine : public ObjectPoolInterface<GLLine, ObjectType_GLLine>
 {
 protected:
-	ObjectId poolId = 0;
 	GLuint vao = 0;
 	GLuint positionBuffer = 0;
 	GLuint colorBuffer = 0;
@@ -91,9 +86,6 @@ protected:
 	std::vector<glm::fvec4> colors;
 
 public:
-	friend class ObjectPool<GLLine>;
-	static ObjectPool<GLLine> Pool;
-
 	GLLine() {}
 	~GLLine() {}
 
@@ -110,7 +102,7 @@ public:
 };
 
 // Draws multiple continous lines, each separated by GLMesh::RESTART_INDEX. Use AddLineStrip to do so automatically.
-class GLLineStrips
+class GLLineStrips : public ObjectPoolInterface<GLLineStrips, ObjectType_GLLineStrips>
 {
 protected:
 	GLuint vao = 0;
@@ -137,7 +129,7 @@ public:
 	void Draw();
 };
 
-class GLBezierStrips
+class GLBezierStrips : public ObjectPoolInterface<GLBezierStrips, ObjectType_GLBezierStrips>
 {
 protected:
 	GLuint vao = 0;
@@ -189,7 +181,7 @@ public:
 	void Draw();
 };
 
-class GLQuad
+class GLQuad : public ObjectPoolInterface<GLQuad, ObjectType_GLQuad>
 {
 protected:
 	GLuint vao = 0;
