@@ -45,8 +45,8 @@ protected:
 	GLuint indexBuffer = 0;
 
 public:
-	friend class ObjectPool<GLTriangleMesh, OBJECTTYPE_MESH>;
-	static ObjectPool<GLTriangleMesh, OBJECTTYPE_MESH> Pool;
+	friend class ObjectPool<GLTriangleMesh>;
+	static ObjectPool<GLTriangleMesh> Pool;
 
 	std::vector<glm::fvec3> positions;
 	std::vector<glm::fvec3> normals;
@@ -91,8 +91,8 @@ protected:
 	std::vector<glm::fvec4> colors;
 
 public:
-	friend class ObjectPool<GLLine, OBJECTTYPE_GLLine>;
-	static ObjectPool<GLLine, OBJECTTYPE_GLLine> Pool;
+	friend class ObjectPool<GLLine>;
+	static ObjectPool<GLLine> Pool;
 
 	GLLine() {}
 	~GLLine() {}

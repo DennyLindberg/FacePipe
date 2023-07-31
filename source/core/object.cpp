@@ -1,6 +1,6 @@
 #include "object.h"
 
-ObjectPool<Object, OBJECTTYPE_OBJECT> Object::Pool;
+ObjectPool<Object> Object::Pool;
 
 void Object::DetachFromParent()
 {

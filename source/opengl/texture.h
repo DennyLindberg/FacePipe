@@ -18,8 +18,8 @@ public:
 	int height = 0;
 
 public:
-	friend class ObjectPool<GLTexture, OBJECTTYPE_TEXTURE>;
-	static ObjectPool<GLTexture, OBJECTTYPE_TEXTURE> Pool;
+	friend class ObjectPool<GLTexture>;
+	static ObjectPool<GLTexture> Pool;
 
 	GLTexture() {}
 	~GLTexture() {}

@@ -18,8 +18,8 @@ enum class CameraView
 class Camera
 {
 public:
-	friend class ObjectPool<Camera, OBJECTTYPE_CAMERA>;
-	static ObjectPool<Camera, OBJECTTYPE_CAMERA> Pool;
+	friend class ObjectPool<Camera>;
+	static ObjectPool<Camera> Pool;
 
 protected:
 	ObjectId poolId = 0;

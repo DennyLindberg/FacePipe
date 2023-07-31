@@ -7,13 +7,7 @@
 typedef uint8_t ObjectType;
 typedef uint32_t ObjectId;
 
-#define OBJECTTYPE_UNKNOWN 0
-#define OBJECTTYPE_OBJECT 1
-#define OBJECTTYPE_CAMERA 2
-#define OBJECTTYPE_LIGHT 3
-#define OBJECTTYPE_MESH 4
-#define OBJECTTYPE_TEXTURE 5
-#define OBJECTTYPE_GLLine 6
+#define ObjectType_Unknown 0
 
 // Contains a vector index and generator safeguard to ensure that the id references the same object
 // safeguard 0 means uninitialized ptr
@@ -22,13 +16,13 @@ struct WeakPtrGeneric
 public:
 	WeakPtrGeneric(ObjectType t) : type(t) {}
 
-	ObjectType type = OBJECTTYPE_UNKNOWN;	// what type of object this refers to
-	ObjectId id = 0;						// index to vector
-	uint32_t safeguard = 0;					// based on generator
+	ObjectType type = ObjectType_Unknown;	// what type of object this refers to
+	ObjectId id = 0;					// index to vector
+	uint32_t safeguard = 0;				// based on generator
 
 	void Clear()
 	{
-		type = OBJECTTYPE_UNKNOWN;
+		type = ObjectType_Unknown;
 		id = 0;
 		safeguard = 0;
 	}

@@ -6,8 +6,8 @@
 class Object
 {
 public:
-	friend class ObjectPool<Object, OBJECTTYPE_OBJECT>;
-	static ObjectPool<Object, OBJECTTYPE_OBJECT> Pool;
+	friend class ObjectPool<Object>;
+	static ObjectPool<Object> Pool;
 
 	std::string name = "Object";
 	Transform transform;

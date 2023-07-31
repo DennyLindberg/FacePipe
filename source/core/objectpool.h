@@ -7,15 +7,28 @@
 
 #include "objectptr.h"
 
-template<typename T, ObjectType OT>
+template<typename T>
 class ObjectPool
 {
+protected:
+	static ObjectType Type;
+
 public:
 	friend struct WeakPtr<T>;
-	static const ObjectType Type = OT;
 
 	ObjectPool() {}
-	~ObjectPool() { EmptyPool(); }
+	~ObjectPool() { Shutdown(); }
+
+	void Initialize(ObjectType newType) 
+	{ 
+		Type = newType; 
+	}
+
+	void Shutdown() 
+	{
+		EmptyPool();
+		Type = ObjectType_Unknown; 
+	}
 
 	void EmptyPool()
 	{
@@ -141,3 +154,6 @@ protected:
 	uint32_t safeguardCounter = 0;		// used to generate safeguard values
 	size_t nextFreeSlot = 0;			// used for reduced iteration times (the vector can have holes in it)
 };
+
+template<typename T>
+ObjectType ObjectPool<T>::Type = ObjectType_Unknown;

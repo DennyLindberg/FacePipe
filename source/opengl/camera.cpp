@@ -1,7 +1,7 @@
 #include "camera.h"
 #include "application/application.h"
 
-ObjectPool<Camera, OBJECTTYPE_CAMERA> Camera::Pool;
+ObjectPool<Camera> Camera::Pool;
 
 void Camera::SetView(CameraView newView)
 {

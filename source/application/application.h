@@ -10,6 +10,18 @@
 #include "imgui_stdlib.h"
 #include "imnodes.h"
 
+// see objectptr.h
+#define ObjectType_Object 1
+#define ObjectType_Camera 2
+#define ObjectType_Light 3
+#define ObjectType_Mesh 4
+#define ObjectType_Texture 5
+#define ObjectType_Line 6
+
+namespace Type
+{
+}
+
 struct ApplicationSettings
 {
 	bool vsync = false;

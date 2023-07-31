@@ -10,7 +10,7 @@
 #define PIXEL_FORMAT GL_RGBA
 #define PIXEL_TYPE GL_UNSIGNED_INT_8_8_8_8_REV
 
-ObjectPool<GLTexture, OBJECTTYPE_TEXTURE> GLTexture::Pool;
+ObjectPool<GLTexture> GLTexture::Pool;
 
 void GLTexture::Initialize()
 {

@@ -24,6 +24,13 @@ void App::Initialize()
 	App::shaders.Initialize(App::Path("content/shaders"));
 	GLFramebuffers::Initialize(settings.windowWidth, settings.windowHeight, App::settings.clearColor);
 
+	Object::Pool.Initialize(ObjectType_Object);
+	Camera::Pool.Initialize(ObjectType_Camera);
+	//GLLight::Pool.Initialize(ObjectType_Light);
+	GLTriangleMesh::Pool.Initialize(ObjectType_Mesh);
+	GLTexture::Pool.Initialize(ObjectType_Texture);
+	GLLine::Pool.Initialize(ObjectType_Line);
+
 	App::world = Object::Pool.CreateWeak();
 	App::world->name = "World";
 	App::debuglines = GLLine::Pool.CreateWeak();
@@ -35,11 +42,12 @@ void App::Shutdown()
 	App::geometry.Shutdown();
 	App::shaders.Shutdown();
 
-	// Empty pools here
-	GLTriangleMesh::Pool.EmptyPool();
-	GLTexture::Pool.EmptyPool();
-	GLLine::Pool.EmptyPool();
-	Object::Pool.EmptyPool();
+	Object::Pool.Shutdown();
+	Camera::Pool.Shutdown();
+	//GLLight::Pool.Shutdown();
+	GLTriangleMesh::Pool.Shutdown();
+	GLTexture::Pool.Shutdown();
+	GLLine::Pool.Shutdown();
 
 	App::python.Shutdown();
 	App::window.Destroy();
