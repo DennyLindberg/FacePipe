@@ -32,4 +32,6 @@ public:
 	void Render(std::function<void(Viewport&)> func);
 
 	void Resize(GLuint newWidth, GLuint newHeight);
+
+	void HandleInputEvent(const void* eventPtr);
 };

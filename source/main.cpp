@@ -108,48 +108,7 @@ int main(int argc, char* args[])
 
 			if (Viewport* activeViewport = App::ui.GetActiveViewport())
 			{
-				CameraController& controller = activeViewport->input;
-
-				if (event.type == SDL_KEYDOWN)
-				{
-					auto key = event.key.keysym.sym;
-
-					if      (key == SDLK_s) GLFramebuffers::SaveScreenshot(activeViewport->framebuffer);
-					else if (key == SDLK_f) controller.SnapToOrigin();
-
-					else if (key == SDLK_KP_7) controller.SetCameraView(CameraView::OrthographicY);
-					else if (key == SDLK_KP_1) controller.SetCameraView(bCtrlModifier ? CameraView::OrthographicZneg : CameraView::OrthographicZ);
-					else if (key == SDLK_KP_9) controller.SetCameraView(CameraView::OrthographicYneg);
-					else if (key == SDLK_KP_3) controller.SetCameraView(bCtrlModifier ? CameraView::OrthographicXneg : CameraView::OrthographicX);
-					else if (key == SDLK_KP_5) controller.SetCameraView(CameraView::Perspective);
-				}
-
-				if (event.type == SDL_MOUSEBUTTONDOWN)
-				{
-					App::ui.viewportCaptureMouse = true;
-					App::ui.viewportCaptureMouseBeginX = event.motion.x;
-					App::ui.viewportCaptureMouseBeginY = event.motion.y;
-					SDL_ShowCursor(0);
-					SDL_SetRelativeMouseMode(SDL_TRUE);
-
-					auto button = event.button.button;
-					if (button == SDL_BUTTON_LEFT)			controller.inputState = TurntableInputState::Rotate;
-					else if (button == SDL_BUTTON_MIDDLE)	controller.inputState = TurntableInputState::Translate;
-					else if (button == SDL_BUTTON_RIGHT)	controller.inputState = TurntableInputState::Zoom;
-
-					controller.OnBeginInput();
-				}
-				else if (event.type == SDL_MOUSEBUTTONUP)
-				{
-					App::ui.viewportCaptureMouse = false;
-					SDL_ShowCursor(1);
-					SDL_SetRelativeMouseMode(SDL_FALSE);
-				}
-				else if (event.type == SDL_MOUSEMOTION && App::ui.viewportCaptureMouse)
-				{
-					controller.ApplyMouseInput(-event.motion.xrel, event.motion.yrel, App::settings.viewportMouseSensitivity);
-					SDL_WarpMouseInWindow(App::window.GetSDLWindow(), App::ui.viewportCaptureMouseBeginX, App::ui.viewportCaptureMouseBeginY);
-				}
+				activeViewport->HandleInputEvent((const void*)&event);
 			}
 		}
 
