@@ -52,10 +52,10 @@ void UI::DrawMainLayout(UIManager& ui)
 		}
 
 		GLuint Texture, TextureWidth, TextureHeight;
-		if (GLFramebuffers::GetTexture(ui.previewFramebuffer, Texture, TextureWidth, TextureHeight))
+		if (GLFramebuffers::GetTexture(ui.previewViewport->framebuffer, Texture, TextureWidth, TextureHeight))
 		{
 			ImGui::Image((ImTextureID)(intptr_t)Texture, ImVec2((float)TextureWidth, (float)TextureHeight), {0, 1}, {1, 0});
-			ui.interactingWithPreview = ImGui::IsItemHovered();
+			ui.UpdateActiveViewport(ui.previewViewport, ImGui::IsItemHovered());
 		}
 	}
 	ImGui::End();

@@ -24,7 +24,9 @@ void UIManager::Initialize()
 		io.Fonts->AddFontFromFileTTF(fontPath.string().c_str(), iconFontSize, &icons_config, icons_ranges);
 	}
 
-	previewFramebuffer = GLFramebuffers::Create(GLuint(App::settings.windowWidth*0.25f), GLuint(App::settings.windowHeight*0.25f), App::settings.clearColor);
+	applicationViewport = Viewport::Pool.CreateWeak();
+	previewViewport = Viewport::Pool.CreateWeak();
+	previewViewport->Resize(GLuint(App::settings.windowWidth*0.25f), GLuint(App::settings.windowHeight*0.25f));
 
 	App::window.drawImguiCallback = [this]() -> void {
 		DrawUI();
@@ -33,23 +35,62 @@ void UIManager::Initialize()
 
 void UIManager::Shutdown()
 {
+	applicationViewport.Destroy();
 
+	for (WeakPtr<Viewport> viewport : viewports)
+	{
+		viewport.Destroy();
+	}
+
+	viewports.clear();
 }
 
 bool UIManager::HandleInputEvent(const void* event)
 {
 	App::window.HandleImguiEvent((const SDL_Event*) event);
-	if (HasKeyboardFocus() && !App::ui.interactingWithPreview)
+
+	if (Viewport* activeViewport = GetActiveViewport())
 	{
-		return true;
+		return false;
 	}
 
-	return false;
+	return true;
 }
 
 void UIManager::DrawUI()
 {
 	UI::DrawMainLayout(*this);
+}
+
+WeakPtr<Viewport> UIManager::CreateViewport()
+{
+	WeakPtr<Viewport> newViewport = Viewport::Pool.CreateWeak();
+	viewports.push_back(newViewport);
+	return newViewport;
+}
+
+void UIManager::UpdateActiveViewport(WeakPtr<Viewport> viewport, bool bActiveByMouse)
+{
+	if (bActiveByMouse)
+		activeViewport = viewport;
+	else
+		activeViewport.Clear();
+}
+
+Viewport* UIManager::GetActiveViewport()
+{
+	if (Viewport* active = activeViewport)
+	{
+		return active;
+	}
+	else if (HasMouseFocus() || HasKeyboardFocus())
+	{
+		return nullptr;
+	}
+	else
+	{
+		return applicationViewport;
+	}
 }
 
 bool UIManager::HasKeyboardFocus() const

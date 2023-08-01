@@ -8,6 +8,7 @@
 #include "scripting.h"
 
 #include "webcam.h"
+#include "viewport.h"
 
 #include "ui.h"
 
@@ -23,6 +24,7 @@ struct ApplicationSettings
 	glm::vec4 clearColor = glm::vec4(0.0f);
 	float pointCloudSize = 0.001f;
 	float defaultCameraFOV = 45.0f;
+	float viewportMouseSensitivity = 0.25f;
 };
 
 class App

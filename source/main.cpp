@@ -16,24 +16,12 @@ int main(int argc, char* args[])
 		.sleepWhenFpsLimited = true,
 		.clearColor = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f),
 		.defaultCameraFOV = 45.0f,
+		.viewportMouseSensitivity = 0.25f,
 	};
 	auto& settings = App::settings;
 
 	App::Initialize();
 	App::window.SetTitle("FacePipe");
-	
-	/*
-		Setup scene and controls
-	*/
-	CameraController camera(Camera::Pool.CreateWeak());
-	camera.turntablePivot = glm::vec3{-0.15f, 0.0f, 0.0f};
-	camera.sensitivity = 0.25f;
-	camera.Set(-65.0f, 15.0f, 0.75f);
-
-	CameraController cameraCube(Camera::Pool.CreateWeak());
-	cameraCube.turntablePivot = camera.turntablePivot;
-	cameraCube.sensitivity = camera.sensitivity;
-	cameraCube.Set(-65.0f, 15.0f, 1.0f);
 
 	/*
 		Load and initialize shaders
@@ -113,19 +101,26 @@ int main(int argc, char* args[])
 			{
 				auto key = event.key.keysym.sym;
 
-				if      (key == SDLK_s) GLFramebuffers::SaveScreenshot();
-				else if (key == SDLK_f) camera.SnapToOrigin();
-
-				else if (key == SDLK_KP_7) camera.SetCameraView(CameraView::OrthographicY);
-				else if (key == SDLK_KP_1) camera.SetCameraView(bCtrlModifier? CameraView::OrthographicZneg : CameraView::OrthographicZ);
-				else if (key == SDLK_KP_9) camera.SetCameraView(CameraView::OrthographicYneg);
-				else if (key == SDLK_KP_3) camera.SetCameraView(bCtrlModifier ? CameraView::OrthographicXneg : CameraView::OrthographicX);
-				else if (key == SDLK_KP_5) camera.SetCameraView(CameraView::Perspective);
+				// global keys here
 			}
 
-			if (!App::ui.HasMouseFocus() || App::ui.interactingWithPreview)
+			if (Viewport* activeViewport = App::ui.GetActiveViewport())
 			{
-				auto& activeTurntable = App::ui.interactingWithPreview? cameraCube : camera;
+				CameraController& controller = activeViewport->input;
+
+				if (event.type == SDL_KEYDOWN)
+				{
+					auto key = event.key.keysym.sym;
+
+					if      (key == SDLK_s) GLFramebuffers::SaveScreenshot(activeViewport->framebuffer);
+					else if (key == SDLK_f) controller.SnapToOrigin();
+
+					else if (key == SDLK_KP_7) controller.SetCameraView(CameraView::OrthographicY);
+					else if (key == SDLK_KP_1) controller.SetCameraView(bCtrlModifier ? CameraView::OrthographicZneg : CameraView::OrthographicZ);
+					else if (key == SDLK_KP_9) controller.SetCameraView(CameraView::OrthographicYneg);
+					else if (key == SDLK_KP_3) controller.SetCameraView(bCtrlModifier ? CameraView::OrthographicXneg : CameraView::OrthographicX);
+					else if (key == SDLK_KP_5) controller.SetCameraView(CameraView::Perspective);
+				}
 
 				if (event.type == SDL_MOUSEBUTTONDOWN)
 				{
@@ -136,11 +131,11 @@ int main(int argc, char* args[])
 					SDL_SetRelativeMouseMode(SDL_TRUE);
 
 					auto button = event.button.button;
-					if (button == SDL_BUTTON_LEFT)			activeTurntable.inputState = TurntableInputState::Rotate;
-					else if (button == SDL_BUTTON_MIDDLE)	activeTurntable.inputState = TurntableInputState::Translate;
-					else if (button == SDL_BUTTON_RIGHT)	activeTurntable.inputState = TurntableInputState::Zoom;
+					if (button == SDL_BUTTON_LEFT)			controller.inputState = TurntableInputState::Rotate;
+					else if (button == SDL_BUTTON_MIDDLE)	controller.inputState = TurntableInputState::Translate;
+					else if (button == SDL_BUTTON_RIGHT)	controller.inputState = TurntableInputState::Zoom;
 
-					activeTurntable.OnBeginInput();
+					controller.OnBeginInput();
 				}
 				else if (event.type == SDL_MOUSEBUTTONUP)
 				{
@@ -150,7 +145,7 @@ int main(int argc, char* args[])
 				}
 				else if (event.type == SDL_MOUSEMOTION && App::ui.viewportCaptureMouse)
 				{
-					activeTurntable.ApplyMouseInput(-event.motion.xrel, event.motion.yrel);
+					controller.ApplyMouseInput(-event.motion.xrel, event.motion.yrel, App::settings.viewportMouseSensitivity);
 					SDL_WarpMouseInWindow(App::window.GetSDLWindow(), App::ui.viewportCaptureMouseBeginX, App::ui.viewportCaptureMouseBeginY);
 				}
 			}
@@ -165,11 +160,14 @@ int main(int argc, char* args[])
 		backgroundShader.Use();
 		App::geometry.quad.Draw();
 		GLFramebuffers::ClearActiveDepth();
+
+		WeakPtr<Camera> camera = App::ui.applicationViewport->input.camera;
+		WeakPtr<Camera> cameraPreview = App::ui.previewViewport->input.camera;
 		
 		// Set scene render properties
 		glPolygonMode(GL_FRONT_AND_BACK, (App::ui.renderWireframe? GL_LINE : GL_FILL));
-		App::shaders.UpdateCameraUBO(camera.camera);
-		App::shaders.UpdateLightUBOPosition(App::ui.lightFollowsCamera? camera.camera->GetPosition() : glm::fvec3{ 999999.0f });
+		App::shaders.UpdateCameraUBO(camera);
+		App::shaders.UpdateLightUBOPosition(App::ui.lightFollowsCamera? camera->GetPosition() : glm::fvec3{ 999999.0f });
 
 		// Debug: Test changing the mesh transform over time
 		if (cube) cube->transform.rotation.y = sinf((float)App::clock.time);
@@ -191,21 +189,21 @@ int main(int argc, char* args[])
 			
 		// Grid
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		if (camera.camera->GetView() == CameraView::Perspective)
-			App::geometry.grid.Draw(App::geometry.quad, camera.camera->ViewProjectionMatrix());
+		if (camera->GetView() == CameraView::Perspective)
+			App::geometry.grid.Draw(App::geometry.quad, camera->ViewProjectionMatrix());
 		else
-			App::geometry.grid.Draw(App::geometry.quad, camera.camera->ViewProjectionMatrix(), camera.camera->ForwardVector(), camera.camera->SideVector());
+			App::geometry.grid.Draw(App::geometry.quad, camera->ViewProjectionMatrix(), camera->ForwardVector(), camera->SideVector());
 		
 		// Test debug lines
 		App::debuglines->AddLine({ 0.0f, 0.0f, 0.0f }, Transform::Position(head->ComputeWorldMatrix()), { 0.0f, 1.0f, 0.0f, 1.0f });
 		GLMesh::AppendCoordinateAxis(*App::debuglines, head->ComputeWorldMatrix());
-		App::Render(camera.camera);
+		App::Render(App::ui.applicationViewport->input.camera);
 
-		if (auto F = GLFramebuffers::BindScoped(App::ui.previewFramebuffer))
+		if (auto F = GLFramebuffers::BindScoped(App::ui.previewViewport->framebuffer))
 		{
 			GLFramebuffers::ClearActive();
-			App::shaders.UpdateCameraUBO(cameraCube.camera);
-			App::shaders.UpdateLightUBOPosition(App::ui.lightFollowsCamera ? cameraCube.camera->GetPosition() : glm::fvec3{ 999999.0f });
+			App::shaders.UpdateCameraUBO(cameraPreview);
+			App::shaders.UpdateLightUBOPosition(App::ui.lightFollowsCamera? cameraPreview->GetPosition() : glm::fvec3{ 999999.0f });
 
 			if (cube)
 			{

@@ -16,6 +16,7 @@ typedef int ScriptId;
 #define ObjectType_Object 1
 #define ObjectType_Camera 2
 #define ObjectType_Light 3
+#define ObjectType_Viewport 4
 
 // GL primitives are in the 20-39 range
 

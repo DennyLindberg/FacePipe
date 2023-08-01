@@ -36,6 +36,7 @@ public:
 	static void Initialize(GLuint Width, GLuint Height, glm::vec4 DefaultClearColor);
 	static void Shutdown();
 
+	static void Resize(GLuint FBO, GLuint Width, GLuint Height);
 	static GLuint Create(GLuint Width, GLuint Height, glm::vec4 ClearColor);
 	static void Destroy(GLuint& FBO);
 

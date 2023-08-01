@@ -23,13 +23,15 @@ protected:
 public:
 	WeakPtr<Camera> camera;
 	glm::vec3 turntablePivot = glm::vec3{ 0.0f };
-	float sensitivity = 1.0f;
 	bool clampPitch = false;
 	
 	TurntableInputState inputState = TurntableInputState::Rotate;
 
-	CameraController(WeakPtr<Camera> cam);
-	~CameraController() = default;
+	CameraController() {}
+	~CameraController() {};
+
+	void Initialize();
+	void Shutdown();
 
 	void SetCameraView(CameraView view);
 
@@ -37,7 +39,7 @@ public:
 	void SetDistance(float newDistance);
 	void Set(float newYaw, float newPitch, float newDistance);
 	void Offset(float yawOffset, float pitchOffset, float distanceOffset);
-	void ApplyMouseInput(int deltaX, int deltaY);
+	void ApplyMouseInput(int deltaX, int deltaY, float sensitivity);
 	void SnapToOrigin();
 
 protected:

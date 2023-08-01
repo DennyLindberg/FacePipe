@@ -1,8 +1,13 @@
 #include "input.h"
 
-CameraController::CameraController(WeakPtr<Camera> cam)
-	: camera(cam)
+void CameraController::Initialize()
 {
+	camera = Camera::Pool.CreateWeak();
+}
+
+void CameraController::Shutdown()
+{
+	camera.Destroy();
 }
 
 void CameraController::SetCameraView(CameraView view)
@@ -38,7 +43,7 @@ void CameraController::Offset(float yawOffset, float pitchOffset, float distance
 	UpdateCamera();
 }
 
-void CameraController::ApplyMouseInput(int deltaX, int deltaY)
+void CameraController::ApplyMouseInput(int deltaX, int deltaY, float sensitivity)
 {
 	float relativeSensitivity = 0.1f*log(1.0f + distance);
 

@@ -2,13 +2,11 @@
 
 #include "core/math.h"
 #include "core/object.h"
+#include "viewport.h"
 
 class UIManager
 {
 public:
-	GLuint previewFramebuffer = 0;
-
-	bool interactingWithPreview = false;
 	bool renderWireframe = false;
 	bool lightFollowsCamera = false;
 	bool drawDebugNormals = false;
@@ -19,12 +17,23 @@ public:
 
 	WeakPtr<Object> selected_object;
 
+	WeakPtr<Viewport> applicationViewport;
+	WeakPtr<Viewport> activeViewport;
+	WeakPtr<Viewport> previewViewport;
+	std::vector<WeakPtr<Viewport>> viewports;
+
 public:
 	void Initialize();
 	void Shutdown();
 
 	bool HandleInputEvent(const void* event);
 	void DrawUI();
+
+	WeakPtr<Viewport> CreateViewport();
+
+	void UpdateActiveViewport(WeakPtr<Viewport> viewport, bool bActiveByMouse);
+
+	Viewport* GetActiveViewport();
 
 public:
 	bool HasKeyboardFocus() const;

@@ -91,6 +91,20 @@ void GLFramebuffers::Shutdown()
 	RenderTargets.clear();
 }
 
+void GLFramebuffers::Resize(GLuint FBO, GLuint Width, GLuint Height)
+{
+	if (RenderTarget* Target = FindRenderTarget(FBO))
+	{
+		Target->width = Width;
+		Target->height = Height;
+
+		Bind(FBO);
+		glBindTexture(GL_TEXTURE_2D, Target->texture);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, Width, Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+		glBindTexture(GL_TEXTURE_2D, 0);
+	}
+}
+
 GLuint GLFramebuffers::Create(GLuint Width, GLuint Height, glm::vec4 ClearColor)
 {
 	RenderTarget NewTarget;
