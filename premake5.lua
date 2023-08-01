@@ -1,34 +1,26 @@
----
--- Python path and libs
----
-function queryTerminal(command)
-    local success, handle = pcall(io.popen, command)
-    if not success then 
-        return ""
+function getPythonPathAndVersion(desired_version)
+    base = 'C:/Program Files/'
+    python_dir = ""
+    python_version = ""
+    for dir in io.popen([[dir "C:\Program Files\" /b /ad]]):lines() do 
+        -- folders are iterated in name order (keep picking the latest to get the greatest version of python)
+        if string.find(dir, "python") or string.find(dir, "Python") then
+            python_dir = base .. dir
+            python_version = "" .. dir
+
+            if python_version == desired_version then
+                break -- found the exact version we are looking for
+            end
+        end
     end
 
-    result = handle:read("*a")
-    handle:close()
-    result = string.gsub(result, "\n$", "") -- remove trailing whitespace
-    return result
+    return python_dir, python_version
 end
 
-function getPythonPath()
-    local p = queryTerminal('python -c "import sys; import os; print(os.path.dirname(sys.executable))"')
-    
-    -- sanitize path before returning it
-    p = string.gsub(p, "\\\\", "\\") -- replace double backslash
-    p = string.gsub(p, "\\", "/") -- flip slashes
-    return p
-end
-
-function getPythonLib()
-    return queryTerminal("python -c \"import sys; import os; import glob; path = os.path.dirname(sys.executable); libs = glob.glob(path + '/libs/python*'); print(os.path.splitext(os.path.basename(libs[-1]))[0]);\"")
-end
-
-python_includes_folder  = getPythonPath() .. "/include/"
-python_libs_folder      = getPythonPath() .. "/libs/"
-python_lib              = getPythonLib()
+python_path, version = getPythonPathAndVersion("python311")
+python_includes_folder  = python_path .. "/include/"
+python_libs_folder      = python_path .. "/libs/"
+python_lib              = python_libs_folder .. version .. ".lib"
 
 if python_lib == "" then
     error("Failed to find python path!")
