@@ -82,15 +82,10 @@ namespace ImGui
 		ImGui::End();
 	}
 
-	void DrawPopup(const char* label, const char* header, const char* message, const std::vector<const char*>& buttons, std::function<void(const char*)> callback_fun)
+	void OnPopupModalSave(const char* label, const char* header, const char* message, const std::vector<const char*>& buttons, std::function<void(const char*)> callback_fun)
 	{
-		ImVec2 popup_size = ImVec2(240.0f, 120.0f);
-
-		const ImGuiViewport* viewport = ImGui::GetMainViewport();
-		ImGui::SetNextWindowPos((viewport->Size - popup_size) * 0.5f);
-		ImGui::SetNextWindowSize(popup_size);
-
-		ImGui::BeginChild("#ModalDialog", popup_size, true, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings);
+		if (ImGui::BeginPopupModal("SaveChanges?", NULL, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings))
+		{
 			ImGui::Text(ICON_FA_FLOPPY_DISK" (?)");
 			ImGui::Separator();
 
@@ -109,10 +104,8 @@ namespace ImGui
 			ImGui::Text("");
 
 			float spacing = 10.0f;
-			int count = (int) buttons.size();
-			int spacing_count = (count == 0)? count : count-1;
-
-			size = style.FramePadding.x*count + spacing*spacing_count;
+			int count = (int)buttons.size();
+			size = style.FramePadding.x*count + spacing*count;
 			for (const char* message : buttons)
 			{
 				size += ImGui::CalcTextSize(message).x;
@@ -125,9 +118,13 @@ namespace ImGui
 			for (const char* message : buttons)
 			{
 				if (ImGui::Button(message))
+				{
 					callback_fun(message);
+				}
 				ImGui::SameLine(0.0f, spacing);
 			}
-		ImGui::EndChild();
+
+			ImGui::EndPopup();
+		}
 	}
 }

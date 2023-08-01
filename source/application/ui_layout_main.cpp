@@ -39,46 +39,36 @@ void UI::GenerateMainLayout(UIManager& ui)
 	}
 
 	const ImGuiViewport* viewport = ImGui::GetMainViewport();
-	{
-		ImGui::SetNextWindowPos(viewport->WorkPos);
-		ImGui::SetNextWindowSize(viewport->WorkSize);
+	ImGui::SetNextWindowPos(viewport->WorkPos);
+	ImGui::SetNextWindowSize(viewport->WorkSize);
+	ImGui::Begin("Example: Fullscreen window", NULL, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings);
 
-		if (ImGui::Begin("Example: Fullscreen window", NULL, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings))
+	static const char* save_popup = "SaveChanges?";
+	if (ui.displayQuitDialog && !ImGui::IsPopupOpen(save_popup))
+	{
+		ImGui::OpenPopup(save_popup);
+	}
+
+	static std::vector<const char*> save_choices = { "Save", "Don't Save", "Cancel" };
+	ImGui::OnPopupModalSave(save_popup, ICON_FA_FLOPPY_DISK" (?)", "Save changes before closing?", save_choices, [](const char* button) {
+		if (button == save_choices[0])
 		{
-			ImGui::HelpMarker("Main Area = entire viewport,\nWork Area = entire viewport minus sections used by the main menu bars, task bars etc.\n\nEnable the main-menu bar in Examples menu to see the difference.");
-			ImGui::Text("HEY LISTEN!");
-			ImGui::Text("HEY LISTEN!");
-			ImGui::Text("HEY LISTEN!");
-			ImGui::Text("HEY LISTEN!");
-			ImGui::Text("HEY LISTEN!");
+			App::SaveChanges();
+			std::cout << "SAVED!";
 		}
 
-		//ImGui::Begin(ui.applicationViewport);
-		ImGui::End();
-	}
+		if (button == save_choices[2])
+		{
+			App::ui.displayQuitDialog = false;
+			ImGui::CloseCurrentPopup();
+		}
+		else
+		{
+			App::Quit();
+		}
+	});
 
-	if (ui.displayQuitDialog)
-	{
-		ImGui::DrawModal("SaveDialog", ImVec2(240.0f, 120.0f), []() {
-			static std::vector<const char*> choices = { "Save", "Don't Save", "Cancel" };
-			ImGui::DrawPopup("##prompt", ICON_FA_FLOPPY_DISK" (?)", "Save changes before closing?", choices, [](const char* button) {
-				if (button == choices[0])
-				{
-					App::SaveChanges();
-					std::cout << "SAVED!";
-				}
-				
-				if (button == choices[2])
-				{
-					App::ui.displayQuitDialog = false;
-				}
-				else
-				{
-					App::Quit();
-				}
-			});
-		});
-	}
+	ImGui::End();
 }
 
 

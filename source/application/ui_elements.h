@@ -17,5 +17,5 @@ namespace ImGui
 	void DrawViewport(UIManager* ui, Viewport* viewport);
 
 	void DrawModal(const char* label, ImVec2 modalSize, std::function<void()> modalContents);
-	void DrawPopup(const char* label, const char* header, const char* message, const std::vector<const char*>& buttons, std::function<void(const char*)> callback_fun);
+	void OnPopupModalSave(const char* label, const char* header, const char* message, const std::vector<const char*>& buttons, std::function<void(const char*)> callback_fun);
 }
