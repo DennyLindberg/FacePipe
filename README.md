@@ -9,6 +9,10 @@ Created by Denny Lindberg and Lisa Gren.
 - For Windows
 - OpenGL 4.6
 
+# Requirements
+
+- Python 3.11 installed in `Program Files` or `Appdata/Local/Programs/Python`
+
 # Building the code
 
 Get **premake5** for generating makefiles or solutions for your IDE - https://premake.github.io
