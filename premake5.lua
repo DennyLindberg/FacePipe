@@ -24,7 +24,7 @@ function getPythonPathAndVersion(desired_version)
     python_dir = ""
     python_version = ""
     
-    localappdata = os.getenv('LOCALAPPDATA') .. "\\Programs\\" -- C:\Users\name\AppData\Local\Programs\
+    localappdata = os.getenv('LOCALAPPDATA') .. "\\Programs\\Python\\" -- C:\Users\name\AppData\Local\Programs\
     python_dir, python_version = findLatestPython(localappdata, desired_version)
     
     if python_version == "" then
