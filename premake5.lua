@@ -1,15 +1,18 @@
-function getPythonPathAndVersion(desired_version)
-    base = 'C:/Program Files/'
+function findLatestPython(path, desired_version)
+    path = path:gsub("\\","/") -- \ to /
+
     python_dir = ""
     python_version = ""
-    for dir in io.popen([[dir "C:\Program Files\" /b /ad]]):lines() do 
+
+    command = "dir \"" .. path .. "\" /b /ad"
+    for dir in io.popen(command):lines() do 
         -- folders are iterated in name order (keep picking the latest to get the greatest version of python)
         if string.find(dir, "python") or string.find(dir, "Python") then
-            python_dir = base .. dir
+            python_dir = path .. dir
             python_version = "" .. dir
 
             if python_version == desired_version then
-                break -- found the exact version we are looking for
+                return python_dir, python_version
             end
         end
     end
@@ -17,18 +20,33 @@ function getPythonPathAndVersion(desired_version)
     return python_dir, python_version
 end
 
+function getPythonPathAndVersion(desired_version)
+    python_dir = ""
+    python_version = ""
+    
+    localappdata = os.getenv('LOCALAPPDATA') .. "\\Programs\\" -- C:\Users\name\AppData\Local\Programs\
+    python_dir, python_version = findLatestPython(localappdata, desired_version)
+    
+    if python_version == "" then
+        program_files = 'C:/Program Files/'
+        python_dir, python_version = findLatestPython(program_files, desired_version)
+    end
+
+    return python_dir, python_version
+end
+
 python_path, version = getPythonPathAndVersion("python311")
+
+if version == "" then
+    error("Failed to find python!")
+end
+
 python_includes_folder  = python_path .. "/include/"
 python_libs_folder      = python_path .. "/libs/"
 python_lib              = python_libs_folder .. version .. ".lib"
-
-if python_lib == "" then
-    error("Failed to find python path!")
-else
-    print("Python includes: " .. python_includes_folder)
-    print("Python libs: " .. python_libs_folder)
-    print("lib: " .. python_lib)
-end
+print("Python includes: " .. python_includes_folder)
+print("Python libs: " .. python_libs_folder)
+print("lib: " .. python_lib)
 
 ---
 -- Solution
