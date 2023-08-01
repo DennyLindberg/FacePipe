@@ -13,6 +13,10 @@ public:
 	bool lightFollowsCamera = false;
 	bool drawDebugNormals = false;
 
+	bool viewportCaptureMouse = false;
+	int viewportCaptureMouseBeginX = 0;
+	int viewportCaptureMouseBeginY = 0;
+
 	WeakPtr<Object> selected_object;
 
 public:

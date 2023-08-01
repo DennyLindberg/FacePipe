@@ -89,8 +89,6 @@ int main(int argc, char* args[])
 		Main application loop
 	*/
 	bool quit = false;
-	bool captureMouse = false;
-	int captureMouseX, captureMouseY;
 	while (!quit)
 	{
 		if (!App::ReadyToTick())
@@ -134,9 +132,9 @@ int main(int argc, char* args[])
 
 				if (event.type == SDL_MOUSEBUTTONDOWN)
 				{
-					captureMouseX = event.motion.x;
-					captureMouseY = event.motion.y;
-					captureMouse = true;
+					App::ui.viewportCaptureMouse = true;
+					App::ui.viewportCaptureMouseBeginX = event.motion.x;
+					App::ui.viewportCaptureMouseBeginY = event.motion.y;
 					SDL_ShowCursor(0);
 					SDL_SetRelativeMouseMode(SDL_TRUE);
 
@@ -149,14 +147,14 @@ int main(int argc, char* args[])
 				}
 				else if (event.type == SDL_MOUSEBUTTONUP)
 				{
-					captureMouse = false;
+					App::ui.viewportCaptureMouse = false;
 					SDL_ShowCursor(1);
 					SDL_SetRelativeMouseMode(SDL_FALSE);
 				}
-				else if (event.type == SDL_MOUSEMOTION && captureMouse)
+				else if (event.type == SDL_MOUSEMOTION && App::ui.viewportCaptureMouse)
 				{
 					activeTurntable.ApplyMouseInput(-event.motion.xrel, event.motion.yrel);
-					SDL_WarpMouseInWindow(App::window.GetSDLWindow(), captureMouseX, captureMouseY);
+					SDL_WarpMouseInWindow(App::window.GetSDLWindow(), App::ui.viewportCaptureMouseBeginX, App::ui.viewportCaptureMouseBeginY);
 				}
 			}
 		}
