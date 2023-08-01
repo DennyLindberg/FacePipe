@@ -23,7 +23,7 @@ public:
 
 	void RenderImgui();
 
-	std::function<void()> imguiLayout = [](auto&&...) {};
+	std::function<void()> drawImguiCallback = [](auto&&...) {};
 
 	void Initialize(int width, int height, bool fullscreenEnabled, bool vsync);
 	void Destroy();

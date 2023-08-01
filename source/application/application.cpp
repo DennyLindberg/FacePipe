@@ -40,10 +40,10 @@ void App::Initialize()
 
 	ObjectPoolInternals::InitializeDefaultPools();
 
-	App::ui.Initialize();
+	GLFramebuffers::Initialize(settings.windowWidth, settings.windowHeight, App::settings.clearColor);
 	App::shaders.Initialize(App::Path("content/shaders"));
 	App::geometry.Initialize();
-	GLFramebuffers::Initialize(settings.windowWidth, settings.windowHeight, App::settings.clearColor);
+	App::ui.Initialize();
 
 	App::world = Object::Pool.CreateWeak();
 	App::world->name = "World";
@@ -58,10 +58,10 @@ void App::Shutdown()
 
 	ObjectPoolInternals::ShutdownPools();
 
-	GLFramebuffers::Shutdown();
-	App::geometry.Shutdown();
-	App::shaders.Shutdown();
 	App::ui.Shutdown();
+	App::shaders.Shutdown();
+	App::geometry.Shutdown();
+	GLFramebuffers::Shutdown();
 
 	App::scripting.Shutdown();
 	App::window.Destroy();

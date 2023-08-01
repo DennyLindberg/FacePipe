@@ -4,8 +4,6 @@ namespace fs = std::filesystem;
 
 const float CAMERA_FOV = 45.0f;
 
-WeakPtr<Object> selected_object;
-
 /*
 	Application
 */
@@ -24,14 +22,6 @@ int main(int argc, char* args[])
 
 	App::Initialize();
 	App::window.SetTitle("FacePipe");
-
-	fs::path PythonTestScript = App::Path("content/scripts/test_cv2_webcam.py");
-
-	std::string helpString = R"(Controls:
-- Mouse buttons: Camera
-- S: Screenshot
-- F: Re-center camera
-)";
 	
 	/*
 		Setup scene and controls
@@ -47,8 +37,6 @@ int main(int argc, char* args[])
 	cameraCube.turntablePivot = camera.turntablePivot;
 	cameraCube.sensitivity = camera.sensitivity;
 	cameraCube.Set(-65.0f, 15.0f, 1.0f);
-
-	GLuint RenderTarget = GLFramebuffers::Create(GLuint(settings.windowWidth*0.25f), GLuint(settings.windowHeight*0.25f), App::settings.clearColor);
 
 	/*
 		Load and initialize shaders
@@ -95,137 +83,7 @@ int main(int argc, char* args[])
 	DefaultTexture->LoadPNG(App::Path("content/textures/default.png"));
 	DefaultTexture->CopyToGPU();
 
-	selected_object = cube;
-
-	/*
-		User interaction parameters in the UI
-	*/
-	bool renderWireframe = false;
-	bool lightFollowsCamera = false;
-	bool drawDebugNormals = false;
-
-	/*
-		IMGUI callback
-	*/
-	bool interactingWithPreview = false;
-	std::string input_field_string{"default text"};
-	App::window.imguiLayout = [&]() -> void {
-		ImGui::SetNextWindowSize(ImVec2(settings.windowWidth * 0.25f, settings.windowHeight * 1.0f));
-		ImGui::SetNextWindowPos(ImVec2(0, 0));
-
-		ImGui::Begin("App");
-		{
-			ImGui::Text("Scene");
-			ImGui::Text(("App - FPS: " + FpsString(App::clock.deltaTime)).c_str());
-			ImGui::Text(("App - Time: " + std::to_string(App::clock.time)).c_str());
-			if (App::webcam.IsActive())
-			{
-				if (ImGui::Button("Stop"))
-					App::webcam.Stop();
-				ImGui::SameLine();
-				ImGui::Text(App::webcam.DebugString().c_str());
-			}
-			else
-			{
-				if (ImGui::Button("Start Camera"))
-					App::webcam.Start();
-			}
-				
-			ImGui::InputInt("MaxFPS", &App::settings.maxFPS, 0);
-			ImGui::Checkbox("Wireframe", &renderWireframe);
-			ImGui::Checkbox("Light follows camera", &lightFollowsCamera);
-			ImGui::SliderFloat("PointSize", &App::settings.pointCloudSize, 0.0005f, 0.01f, "%.5f");
-			if (ImGui::Button("Run Python test script"))
-			{
-				App::scripting.Execute(PythonTestScript);
-			}
-
-			if (ImGui::Button("Toggle parent"))
-			{
-				if (head->GetParent())
-					head->DetachFromParent();
-				else
-					head->AttachTo(cube);
-			}
-
-			ImGui::InputTextMultiline( "ScriptInput", &input_field_string, ImVec2(0.0f, 100.0f) );
-			if (ImGui::Button("Execute"))
-			{
-				App::scripting.Execute(input_field_string);
-			}
-
-			ImGui::InputTextMultiline( "Help", &helpString, ImVec2(0.0f, 100.0f), ImGuiInputTextFlags_ReadOnly );
-
-			if (App::webcam.Texture())
-			{
-				ImGui::Image((ImTextureID)(intptr_t)App::webcam.Texture(), ImVec2(App::webcam.TextureWidth() * 0.25f, App::webcam.TextureHeight() * 0.25f), { 0, 1 }, { 1, 0 });
-			}
-
-			GLuint Texture, TextureWidth, TextureHeight;
-			if (GLFramebuffers::GetTexture(RenderTarget, Texture, TextureWidth, TextureHeight))
-			{
-				ImGui::Image((ImTextureID)(intptr_t)Texture, ImVec2((float)TextureWidth, (float)TextureHeight), {0, 1}, {1, 0});
-				interactingWithPreview = ImGui::IsItemHovered();
-			}
-		}
-		ImGui::End();
-
-		ImGui::SetNextWindowSize(ImVec2(settings.windowWidth * 1.0f, settings.windowHeight * 0.25f));
-		ImGui::SetNextWindowPos(ImVec2(0, settings.windowHeight * 0.75f));
-		ImGui::Begin("Nodes");
-		{
-			ImNodes::BeginNodeEditor();
-			
-			{
-				ImNodes::BeginNode(1);
-
-				ImNodes::BeginNodeTitleBar();
-				ImGui::TextUnformatted("simple node :)");
-				ImNodes::EndNodeTitleBar();
-
-				ImNodes::BeginInputAttribute(2);
-				ImGui::Text("input");
-				ImNodes::EndInputAttribute();
-
-				ImNodes::BeginOutputAttribute(3);
-				ImGui::Indent(40);
-				ImGui::Text("output");
-				ImNodes::EndOutputAttribute();
-
-				ImNodes::EndNode();
-			}
-
-			{
-				ImNodes::BeginNode(4);
-
-				ImNodes::BeginNodeTitleBar();
-				ImGui::TextUnformatted("simple node 2");
-				ImNodes::EndNodeTitleBar();
-
-				ImNodes::BeginInputAttribute(5);
-				ImGui::Text("input");
-				ImNodes::EndInputAttribute();
-
-				ImNodes::BeginOutputAttribute(6);
-				ImGui::Indent(40);
-				ImGui::Text("output");
-				ImNodes::EndOutputAttribute();
-
-				ImNodes::EndNode();
-			}
-
-			ImNodes::EndNodeEditor();
-		}
-		ImGui::End();
-
-		ImGui::Begin("Outliner");
-		UI::DisplayOutliner(App::world);
-		ImGui::End();
-
-		ImGui::Begin("Details");
-		UI::DisplaySelectionDetails(selected_object);
-		ImGui::End();
-	};
+	App::ui.selected_object = cube;
 
 	/*
 		Main application loop
@@ -248,11 +106,8 @@ int main(int argc, char* args[])
 			if (event.type == SDL_QUIT)
 				quit = true;
 
-			App::window.HandleImguiEvent(&event);
-			if (ImGui::GetIO().WantCaptureKeyboard && !interactingWithPreview)
-			{
+			if (App::ui.HandleInputEvent(&event))
 				continue;
-			}
 
 			SDL_Keymod mod = SDL_GetModState();
 			bool bCtrlModifier = mod & KMOD_CTRL;
@@ -273,9 +128,9 @@ int main(int argc, char* args[])
 				else if (key == SDLK_KP_5) camera.SetCameraView(CameraView::Perspective);
 			}
 
-			if (!ImGui::GetIO().WantCaptureMouse || interactingWithPreview)
+			if (!App::ui.HasMouseFocus() || App::ui.interactingWithPreview)
 			{
-				auto& activeTurntable = interactingWithPreview? cameraCube : camera;
+				auto& activeTurntable = App::ui.interactingWithPreview? cameraCube : camera;
 
 				if (event.type == SDL_MOUSEBUTTONDOWN)
 				{
@@ -317,9 +172,9 @@ int main(int argc, char* args[])
 		GLFramebuffers::ClearActiveDepth();
 		
 		// Set scene render properties
-		glPolygonMode(GL_FRONT_AND_BACK, (renderWireframe? GL_LINE : GL_FILL));
+		glPolygonMode(GL_FRONT_AND_BACK, (App::ui.renderWireframe? GL_LINE : GL_FILL));
 		App::shaders.UpdateCameraUBO(camera.camera);
-		App::shaders.UpdateLightUBOPosition(lightFollowsCamera? camera.camera->GetPosition() : glm::fvec3{ 999999.0f });
+		App::shaders.UpdateLightUBOPosition(App::ui.lightFollowsCamera? camera.camera->GetPosition() : glm::fvec3{ 999999.0f });
 
 		// Debug: Test changing the mesh transform over time
 		if (cube) cube->transform.rotation.y = sinf((float)App::clock.time);
@@ -351,11 +206,11 @@ int main(int argc, char* args[])
 		GLMesh::AppendCoordinateAxis(*App::debuglines, head->ComputeWorldMatrix());
 		App::Render(camera.camera);
 
-		if (auto F = GLFramebuffers::BindScoped(RenderTarget))
+		if (auto F = GLFramebuffers::BindScoped(App::ui.previewFramebuffer))
 		{
 			GLFramebuffers::ClearActive();
 			App::shaders.UpdateCameraUBO(cameraCube.camera);
-			App::shaders.UpdateLightUBOPosition(lightFollowsCamera? cameraCube.camera->GetPosition() : glm::fvec3{ 999999.0f });
+			App::shaders.UpdateLightUBOPosition(App::ui.lightFollowsCamera ? cameraCube.camera->GetPosition() : glm::fvec3{ 999999.0f });
 
 			if (cube)
 			{

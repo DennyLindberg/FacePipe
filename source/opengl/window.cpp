@@ -79,7 +79,7 @@ void OpenGLWindow::RenderImgui()
 		ImGui::NewFrame();
 	}
 
-	imguiLayout();
+	drawImguiCallback();
 
 	{
 		ImGui::Render();

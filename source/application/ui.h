@@ -1,32 +1,28 @@
 #pragma once
 
+#include "core/math.h"
 #include "core/object.h"
-
-#include "imgui.h"
-#include "imgui_stdlib.h"
-#include "imnodes.h"
-
-#include "IconsFontAwesome6.h"
 
 class UIManager
 {
 public:
+	GLuint previewFramebuffer = 0;
+
+	bool interactingWithPreview = false;
+	bool renderWireframe = false;
+	bool lightFollowsCamera = false;
+	bool drawDebugNormals = false;
+
+	WeakPtr<Object> selected_object;
+
+public:
 	void Initialize();
 	void Shutdown();
+
+	bool HandleInputEvent(const void* event);
+	void DrawUI();
+
+public:
+	bool HasKeyboardFocus() const;
+	bool HasMouseFocus() const;
 };
-
-namespace ImGui
-{
-	void ImageCheckbox(const char* str_id, bool* property, ImTextureID enabled_image, ImTextureID disabled_image, ImVec2 padding = ImVec2{0,0});
-}
-
-namespace UI
-{
-	enum class Icon
-	{
-		test = 0xF083
-	};
-
-	void DisplayOutliner(const WeakPtr<Object> weakObject);
-	void DisplaySelectionDetails(const WeakPtr<Object> selectedObject);
-}
