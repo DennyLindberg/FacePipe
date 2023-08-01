@@ -39,8 +39,8 @@ public:
 	Camera() = default;
 	~Camera() = default;
 
-	void Initialize() {}
-	void Destroy() {}
+	void Initialize();
+	void Destroy();
 
 	CameraView GetView() const { return view; }
 	void SetView(CameraView newView);

@@ -1,6 +1,16 @@
 #include "camera.h"
 #include "application/application.h"
 
+void Camera::Initialize()
+{
+	fieldOfView = App::settings.defaultCameraFOV;
+}
+
+void Camera::Destroy()
+{
+
+}
+
 void Camera::SetView(CameraView newView)
 {
 	if (view == newView)

@@ -2,8 +2,6 @@
 
 namespace fs = std::filesystem;
 
-const float CAMERA_FOV = 45.0f;
-
 /*
 	Application
 */
@@ -16,7 +14,8 @@ int main(int argc, char* args[])
 		.windowHeight = 720,
 		.maxFPS = 0,
 		.sleepWhenFpsLimited = true,
-		.clearColor = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f)
+		.clearColor = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f),
+		.defaultCameraFOV = 45.0f,
 	};
 	auto& settings = App::settings;
 
@@ -27,13 +26,11 @@ int main(int argc, char* args[])
 		Setup scene and controls
 	*/
 	CameraController camera(Camera::Pool.CreateWeak());
-	camera.camera->fieldOfView = CAMERA_FOV;
 	camera.turntablePivot = glm::vec3{-0.15f, 0.0f, 0.0f};
 	camera.sensitivity = 0.25f;
 	camera.Set(-65.0f, 15.0f, 0.75f);
 
 	CameraController cameraCube(Camera::Pool.CreateWeak());
-	cameraCube.camera->fieldOfView = CAMERA_FOV;
 	cameraCube.turntablePivot = camera.turntablePivot;
 	cameraCube.sensitivity = camera.sensitivity;
 	cameraCube.Set(-65.0f, 15.0f, 1.0f);
