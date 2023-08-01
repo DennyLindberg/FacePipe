@@ -8,7 +8,7 @@
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
 
-
+#if USE_PYTHON_THREADED
 struct ScriptReturnData
 {
 	ScriptId id = INVALID_SCRIPT_ID;
@@ -16,20 +16,23 @@ struct ScriptReturnData
 };
 
 ThreadSafeQueue<ScriptReturnData> returnDataQueue;
+#endif
 
-enum class Sentiment
+enum class ExampleEnum
 {
-	Angry = 0,
-	Happy,
-	Confused
+	A = 5,
+	B = 42,
+	C = 100
 };
 
-void ScriptReturnValue(Sentiment s)
+void ScriptReturnValue(ExampleEnum s)
 {
+#if USE_PYTHON_THREADED
 	ScriptReturnData r;
 	r.id = PythonInterpreter::activeScriptId;
 	r.data = std::to_string((int) s);
 	returnDataQueue.Push(r);
+#endif
 }
 
 namespace py = pybind11;
@@ -37,10 +40,10 @@ namespace py = pybind11;
 PYBIND11_EMBEDDED_MODULE(facepipe, m) {
 	m.doc() = "facepipe";
 
-	py::enum_<Sentiment>(m, "Sentiment")
-		.value("Angry", Sentiment::Angry)
-		.value("Happy", Sentiment::Happy)
-		.value("Confused", Sentiment::Confused)
+	py::enum_<ExampleEnum>(m, "ExampleEnum")
+		.value("A", ExampleEnum::A)
+		.value("B", ExampleEnum::B)
+		.value("C", ExampleEnum::C)
 		.export_values();
 
 	m.def("return", &ScriptReturnValue, "");
@@ -58,6 +61,7 @@ void Scripting::Shutdown()
 
 void Scripting::Tick()
 {
+#if USE_PYTHON_THREADED
 	ScriptExecutionResponse response;
 	if (python.PopScriptResponse(response))
 	{
@@ -77,4 +81,7 @@ void Scripting::Tick()
 
 		std::cout << "Script " << returnData.id << " returned: " << returnData.data << std::endl;
 	}
+#else
+	python.Tick();
+#endif
 }

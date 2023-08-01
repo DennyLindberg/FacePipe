@@ -16,17 +16,25 @@ enum class PythonScriptError
 typedef int ScriptId;
 #define INVALID_SCRIPT_ID -1
 
-struct ScriptExecutionResponse
+struct PythonScript
 {
 	ScriptId id = INVALID_SCRIPT_ID;
-	PythonScriptError error = PythonScriptError::None;
+	bool bFile = false;
+	std::string code = "";
+	std::filesystem::path file;
+
+	PythonScriptError response = PythonScriptError::None;
 	std::exception exception;
+	std::string returnValue = "";
 };
 
 class PythonInterpreter
 {
+protected:
+	std::vector<PythonScript> activeScripts;
+
 public:
-	static std::atomic<ScriptId> activeScriptId;
+	static ScriptId activeScriptId;
 
 	PythonInterpreter() {}
 	~PythonInterpreter() {}
@@ -34,8 +42,10 @@ public:
 	void Initialize();
 	void Shutdown();
 
-	void Execute(const std::string& code, ScriptId id = INVALID_SCRIPT_ID);
-	void Execute(const std::filesystem::path& filePath, ScriptId id = INVALID_SCRIPT_ID);
+	void Tick();
 
-	bool PopScriptResponse(ScriptExecutionResponse& response);
+	void PushScript(const PythonScript& script);
+	bool Execute(const std::string& code, ScriptId id = INVALID_SCRIPT_ID);
+	bool Execute(const std::filesystem::path& filePath, ScriptId id = INVALID_SCRIPT_ID);
+	bool Execute(PythonScript& script);
 };

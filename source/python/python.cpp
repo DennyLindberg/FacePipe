@@ -14,169 +14,135 @@
 namespace py = pybind11;
 namespace fs = std::filesystem;
 
-std::atomic<ScriptId> PythonInterpreter::activeScriptId = -1;
-
-struct PythonScript
-{
-	ScriptId id = INVALID_SCRIPT_ID;
-	bool bFile = false;
-	std::string code = "";
-	std::filesystem::path file;
-};
-
-class PythonThread
-{
-public:
-	std::atomic<bool> bRunning = false;
-	std::thread Thread;
-
-	ThreadSafeQueue<PythonScript> ScriptExecutionQueue;
-	ThreadSafeQueue<ScriptExecutionResponse> ScriptExecutionResponses;
-
-	void Loop()
-	{
-		// see py::scoped_interpreter
-		py::initialize_interpreter(true, 0, nullptr, true);
-
-		while (bRunning)
-		{
-			std::this_thread::sleep_for(std::chrono::milliseconds(1));
-
-			PythonScript Script;
-			if (ScriptExecutionQueue.Pop(Script))
-			{
-				PythonInterpreter::activeScriptId = Script.id;
-				Execute(Script);
-				PythonInterpreter::activeScriptId = INVALID_SCRIPT_ID;
-			}
-		}
-
-		py::finalize_interpreter();
-	}
-
-	void Start()
-	{
-		assert("Only one interpreter instance is allowed" && !bRunning);
-
-		bRunning = true;
-		Thread = std::thread(&PythonThread::Loop, this);
-	}
-
-	void Stop()
-	{
-		if (bRunning)
-		{
-			bRunning = false;
-			if (Thread.joinable())
-			{
-				Thread.join();
-			}
-			Thread = std::thread();
-		}
-	}
-
-protected:
-	PythonScriptError Respond(int ID, PythonScriptError Response)
-	{
-		return Respond(ID, Response, std::exception(""));
-	}
-
-	PythonScriptError Respond(int ID, PythonScriptError Response, const std::exception& e)
-	{
-		ScriptExecutionResponses.Push({ ID, Response, e });
-		return Response;
-	}
-
-	PythonScriptError Execute(PythonScript& Script)
-	{
-		if (Script.bFile)
-		{
-			Script.code = "";
-
-			try
-			{
-				if (!std::filesystem::exists(Script.file))
-					return Respond(Script.id, PythonScriptError::FilePathInvalid);
-
-				std::ifstream InputFileStream(Script.file.c_str());
-				if (InputFileStream && InputFileStream.is_open())
-					Script.code.assign((std::istreambuf_iterator<char>(InputFileStream)), std::istreambuf_iterator< char >());
-				else
-					return Respond(Script.id, PythonScriptError::InputFileStreamFailed);
-			}
-			catch (const std::exception& e)
-			{
-				return Respond(Script.id, PythonScriptError::FileLoadException, e);
-			}
-			catch (...)
-			{
-				return Respond(Script.id, PythonScriptError::FileLoadException, std::exception("Unknown exception catch (...)"));
-			}
-		}
-
-		return ExecuteInternal(Script);
-	}
-
-	PythonScriptError ExecuteInternal(PythonScript& Script)
-	{
-		try
-		{
-			py::exec(Script.code);
-			return Respond(Script.id, PythonScriptError::None);
-		}
-		catch (const py::error_already_set& e)
-		{
-			// TODO: pyerrors.h
-			//if (e.matches(PyExc_FileNotFoundError))
-
-			std::string py_error("Exception thrown in python interpreter:\n");
-			py_error += e.what();
-
-			return Respond(Script.id, PythonScriptError::PybindException, std::exception(py_error.c_str()));
-		}
-		catch (const std::exception& e)
-		{
-			return Respond(Script.id, PythonScriptError::ExecuteException, e);
-		}
-		catch (...)
-		{
-			// TODO: Handle all python exceptions listed here https://pybind11.readthedocs.io/en/stable/advanced/exceptions.html
-			return Respond(Script.id, PythonScriptError::ExecuteException, std::exception("Unknown exception catch (...)"));
-		}
-	}
-};
-
-PythonThread Thread;
+ScriptId PythonInterpreter::activeScriptId = INVALID_SCRIPT_ID;
 
 void PythonInterpreter::Initialize()
 {
-	Thread.Start();
+	activeScripts.clear();
+
+	py::initialize_interpreter(true, 0, nullptr, true);
 }
 
 void PythonInterpreter::Shutdown()
 {
-	Thread.Stop();
+	activeScripts.clear();
+
+	py::finalize_interpreter();
 }
 
-void PythonInterpreter::Execute(const std::string& code, ScriptId id)
+bool ScriptError(PythonScript& script, PythonScriptError error, std::exception e = std::exception(""))
+{
+	script.response = error;
+	script.exception = e;
+	return false;
+}
+
+bool LoadScript(PythonScript& script)
+{
+	if (!script.bFile)
+		return script.code != "";
+
+	script.code = "";
+
+	try
+	{
+		if (!std::filesystem::exists(script.file))
+			return ScriptError(script, PythonScriptError::FilePathInvalid);
+
+		std::ifstream InputFileStream(script.file.c_str());
+		if (InputFileStream && InputFileStream.is_open())
+			script.code.assign((std::istreambuf_iterator<char>(InputFileStream)), std::istreambuf_iterator< char >());
+		else
+			return ScriptError(script, PythonScriptError::InputFileStreamFailed);
+	}
+	catch (const std::exception& e)
+	{
+		return ScriptError(script, PythonScriptError::FileLoadException, e);
+	}
+	catch (...)
+	{
+		return ScriptError(script, PythonScriptError::FileLoadException, std::exception("Unknown exception catch (...)"));
+	}
+
+	return script.code != "";
+}
+
+void PythonInterpreter::Tick()
+{
+	for (PythonInterpreter::activeScriptId = 0; activeScriptId<activeScripts.size(); ++activeScriptId)
+	{
+		Execute(activeScripts[activeScriptId]);
+	}
+	activeScriptId = INVALID_SCRIPT_ID;
+}
+
+void PythonInterpreter::PushScript(const PythonScript& script)
+{
+	activeScripts.push_back(script);
+}
+
+bool ExecuteInternal(PythonScript& script)
+{
+	try
+	{
+		py::exec(script.code);
+		return true;
+	}
+	catch (const py::error_already_set& e)
+	{
+		// TODO: pyerrors.h
+		//if (e.matches(PyExc_FileNotFoundError))
+
+		std::string py_error("Exception thrown in python interpreter:\n");
+		py_error += e.what();
+
+		return ScriptError(script, PythonScriptError::PybindException, std::exception(py_error.c_str()));
+	}
+	catch (const std::exception& e)
+	{
+		return ScriptError(script, PythonScriptError::ExecuteException, e);
+	}
+	catch (...)
+	{
+		// TODO: Handle all python exceptions listed here https://pybind11.readthedocs.io/en/stable/advanced/exceptions.html
+		return ScriptError(script, PythonScriptError::ExecuteException, std::exception("Unknown exception catch (...)"));
+	}
+}
+
+bool PythonInterpreter::Execute(const std::string& code, ScriptId id)
 {
 	PythonScript script;
 	script.id = id;
 	script.bFile = false;
 	script.code = code;
-	Thread.ScriptExecutionQueue.Push(script);
+	return Execute(script);
 }
 
-void PythonInterpreter::Execute(const std::filesystem::path& filePath, ScriptId id)
+bool PythonInterpreter::Execute(const std::filesystem::path& filePath, ScriptId id)
 {
 	PythonScript script;
 	script.id = id;
 	script.bFile = true;
 	script.file = filePath;
-	Thread.ScriptExecutionQueue.Push(script);
+	return Execute(script);
 }
 
-bool PythonInterpreter::PopScriptResponse(ScriptExecutionResponse& response)
+bool PythonInterpreter::Execute(PythonScript& script)
 {
-	return Thread.ScriptExecutionResponses.Pop(response);
+	if (!LoadScript(script))
+	{
+		if (script.bFile)
+			std::cout << "Load script failed [" << script.id << "] [" << script.file << "] reason:\n" << script.exception.what() << std::endl;
+		else
+			std::cout << "Load script failed [" << script.id << "] [string]" << " reason:\n" << script.exception.what() << std::endl;
+		return false;
+	}
+
+	if (!ExecuteInternal(script))
+	{
+		std::cout << "Execute script failed [" << script.id << "]:\n" << script.exception.what() << std::endl;
+		return false;
+	}
+
+	return true;
 }
