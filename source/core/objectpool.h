@@ -7,18 +7,6 @@
 
 #include "objectptr.h"
 
-namespace ObjectPoolInternals
-{
-	void RegisterPool(ObjectType type, std::function<void()> emptyPoolFunc);
-	void ShutdownPools();
-
-	template<typename T, size_t OT>
-	void Register()
-	{
-		ObjectPoolInternals::RegisterPool(ObjectPoolInterface<T, OT>::Type, []() -> void { ObjectPoolInterface<T, OT>::Pool.EmptyPool(); });
-	}
-}
-
 template<typename T, size_t OT>
 class ObjectPool
 {
@@ -179,3 +167,15 @@ public:
 
 template<typename T, size_t OT>
 ObjectPool<T, OT> ObjectPoolInterface<T, OT>::Pool;
+
+namespace ObjectPoolInternals
+{
+	void RegisterPool(ObjectType type, std::function<void()> emptyPoolFunc);
+	void ShutdownPools();
+
+	template<typename T, size_t OT>
+	void Register()
+	{
+		ObjectPoolInternals::RegisterPool(ObjectPoolInterface<T, OT>::Type, []() -> void { ObjectPoolInterface<T, OT>::Pool.EmptyPool(); });
+	}
+}
