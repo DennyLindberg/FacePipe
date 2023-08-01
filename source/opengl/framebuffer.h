@@ -4,6 +4,13 @@
 #include "glad/glad.h"
 #include "core/math.h"
 
+enum class EGLFramebufferClear
+{
+	None,
+	All,
+	Depth
+};
+
 class GLFramebuffers;
 
 struct GLFramebufferScopedBind
@@ -44,8 +51,7 @@ public:
 	static void Bind(GLuint FBO);
 	static void BindDefault();
 
-	static void ClearActive();
-	static void ClearActiveDepth();
+	static void ClearActive(EGLFramebufferClear clear = EGLFramebufferClear::All);
 	static void DrawOnQuad(class GLQuad& QuadMesh, GLuint FBO, float Opacity = 1.0f, glm::vec2 ScreenPos = { 0.5f, 0.5f }, glm::vec2 ScreenSize = { 1.0f, 1.0f });
 	static bool GetTexture(GLuint FBO, GLuint& Texture, GLuint& Width, GLuint& Height);
 

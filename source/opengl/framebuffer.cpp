@@ -171,6 +171,9 @@ GLFramebufferScopedBind GLFramebuffers::BindScoped(GLuint FBO)
 
 void GLFramebuffers::Bind(GLuint FBO)
 {
+	if (ActiveFBO == FBO)
+		return;
+
 	if (RenderTarget* Target = FindRenderTarget(FBO))
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER, FBO); // Same as GL_READ_FRAMEBUFFER + GL_DRAW_FRAMEBUFFER at the same time
@@ -184,21 +187,23 @@ void GLFramebuffers::BindDefault()
 	Bind(0);
 }
 
-void GLFramebuffers::ClearActive()
+void GLFramebuffers::ClearActive(EGLFramebufferClear clear)
 {
-	if (RenderTarget* Target = FindRenderTarget(ActiveFBO))
-	{
-		const auto& c = Target->clearColor;
-		glClearColor(c.r, c.g, c.b, c.a);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-	}
-}
+	if (clear == EGLFramebufferClear::None)
+		return;
 
-void GLFramebuffers::ClearActiveDepth()
-{
 	if (RenderTarget* Target = FindRenderTarget(ActiveFBO))
 	{
-		glClear(GL_DEPTH_BUFFER_BIT);
+		if (clear == EGLFramebufferClear::All)
+		{
+			const auto& c = Target->clearColor;
+			glClearColor(c.r, c.g, c.b, c.a);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+		}
+		else if (clear == EGLFramebufferClear::Depth)
+		{
+			glClear(GL_DEPTH_BUFFER_BIT);
+		}
 	}
 }
 

@@ -25,6 +25,8 @@ struct ApplicationSettings
 	float pointCloudSize = 0.001f;
 	float defaultCameraFOV = 45.0f;
 	float viewportMouseSensitivity = 0.25f;
+	glm::fvec3 skyLightDirection = glm::normalize(glm::fvec3(1.0f));
+	glm::fvec4 skyLightColor = glm::fvec4(1.0f);
 };
 
 class App
@@ -37,7 +39,7 @@ public:
 	static void Shutdown();
 	static bool ReadyToTick();
 	static void Tick();
-	static void Render(WeakPtr<Camera> camera);
+	static void Render();
 
 	static inline std::filesystem::path Path(const std::string& RelativePath) { return std::filesystem::current_path().parent_path() / std::filesystem::path(RelativePath); }
 

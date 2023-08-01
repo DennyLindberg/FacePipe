@@ -42,7 +42,7 @@ public:
 	void Tick();
 
 	void UpdateCameraUBO(WeakPtrGeneric camera);
-	void UpdateLightUBOPosition(const glm::fvec3& position);
+	void UpdateLightUBODirection(const glm::fvec3& direction);
 	void UpdateLightUBOColor(const glm::fvec4& color);
 
 public:

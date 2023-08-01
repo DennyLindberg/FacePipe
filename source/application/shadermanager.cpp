@@ -19,8 +19,8 @@ void ShaderManager::Initialize(std::filesystem::path shaderFolder)
 	lightUBO.Allocate(16 * 2);
 
 	// defaults until user changes it
-	UpdateLightUBOPosition(glm::fvec3{ 999999.0f });
-	UpdateLightUBOColor(glm::fvec4{ 1.0f });
+	UpdateLightUBODirection(App::settings.skyLightDirection);
+	UpdateLightUBOColor(App::settings.skyLightColor);
 
 	InitializeDefaultShaders();
 }
@@ -185,9 +185,10 @@ void ShaderManager::UpdateCameraUBO(WeakPtrGeneric camera)
 	}
 }
 
-void ShaderManager::UpdateLightUBOPosition(const glm::fvec3& position)
+void ShaderManager::UpdateLightUBODirection(const glm::fvec3& direction)
 {
-	lightUBO.SetData(glm::value_ptr(position), 0, 12);
+	glm::fvec3 dirNormalized = glm::normalize(direction);
+	lightUBO.SetData(glm::value_ptr(dirNormalized), 0, 12);	
 }
 
 void ShaderManager::UpdateLightUBOColor(const glm::fvec4& color)

@@ -38,6 +38,39 @@ void Viewport::Destroy()
 	}
 }
 
+void Viewport::Clear(EGLFramebufferClear clear)
+{
+	GLFramebuffers::Bind(framebuffer);
+	GLFramebuffers::ClearActive(clear);
+}
+
+void Viewport::UseForRendering(EGLFramebufferClear clear)
+{
+	GLFramebuffers::Bind(framebuffer);
+	GLFramebuffers::ClearActive(clear);
+
+	glPolygonMode(GL_FRONT_AND_BACK, (App::ui.renderWireframe? GL_LINE : GL_FILL));
+	App::shaders.UpdateCameraUBO(input.camera);
+	App::shaders.UpdateLightUBODirection(App::ui.lightFollowsCamera ? -input.camera->ForwardVector() : App::settings.skyLightDirection);
+	App::shaders.UpdateLightUBOColor(App::settings.skyLightColor);
+
+}
+
+void Viewport::RenderScoped(EGLFramebufferClear clear, std::function<void()> func)
+{
+	if (auto F = GLFramebuffers::BindScoped(framebuffer))
+	{
+		App::ui.previewViewport->UseForRendering();
+
+		GLFramebuffers::ClearActive(clear);
+
+		if (func)
+		{
+			func();
+		}
+	}
+}
+
 void Viewport::Resize(GLuint newWidth, GLuint newHeight)
 {
 	width = newWidth;

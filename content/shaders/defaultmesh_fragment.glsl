@@ -12,7 +12,7 @@ uniform mat4 model;
 
 layout (std140, binding = 2) uniform Light
 {
-    vec3 light_position;  // 0+16 (occupies 4N when alone)
+    vec3 light_direction;  // 0+16 (occupies 4N when alone)
     vec4 light_color;     // 16+16
 };
 
@@ -30,7 +30,6 @@ in VertexAttrib
 
 void main() 
 {
-    vec3 lightDir = normalize(light_position-fragment.position);
     vec3 camDir = normalize(camera_position-fragment.position);
     vec3 normal = normalize(fragment.normal);
 
@@ -39,7 +38,7 @@ void main()
     vec3 ambientLight = cameraContrib * vec3(0.2);
 
     // Ordinary phong diffuse model with fake SSS
-    float directLightDot = clamp(dot(normal, lightDir), 0.0, 1.0);
+    float directLightDot = clamp(dot(normal, light_direction), 0.0, 1.0);
     float lightStrength = light_color.a;
     vec3 diffuseLight = lightStrength * directLightDot * light_color.rgb;
 

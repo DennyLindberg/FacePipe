@@ -92,12 +92,11 @@ void App::Tick()
 	App::shaders.Tick();
 }
 
-void App::Render(WeakPtr<Camera> camera)
+void App::Render()
 {
-	GLFramebuffers::ClearActiveDepth();
+	App::ui.applicationViewport->UseForRendering(EGLFramebufferClear::Depth);
 	
 	App::shaders.lineShader.Use();
-	App::shaders.UpdateCameraUBO(camera);
 
 	App::geometry.coordinateAxis.Draw();
 	App::debuglines->SendToGPU();

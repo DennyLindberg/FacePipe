@@ -17,6 +17,8 @@ int main(int argc, char* args[])
 		.clearColor = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f),
 		.defaultCameraFOV = 45.0f,
 		.viewportMouseSensitivity = 0.25f,
+		.skyLightDirection = glm::normalize(glm::fvec3(1.0f)),
+		.skyLightColor = glm::fvec4(1.0f),
 	};
 	auto& settings = App::settings;
 
@@ -154,21 +156,16 @@ int main(int argc, char* args[])
 		/*
 			Render scene
 		*/
-		GLFramebuffers::ClearActive();
+		App::ui.applicationViewport->UseForRendering(EGLFramebufferClear::All);
 
 		// Background color gradient
 		backgroundShader.Use();
 		App::geometry.quad.Draw();
-		GLFramebuffers::ClearActiveDepth();
+		App::ui.applicationViewport->Clear(EGLFramebufferClear::Depth);
 
 		WeakPtr<Camera> camera = App::ui.applicationViewport->input.camera;
 		WeakPtr<Camera> cameraPreview = App::ui.previewViewport->input.camera;
 		
-		// Set scene render properties
-		glPolygonMode(GL_FRONT_AND_BACK, (App::ui.renderWireframe? GL_LINE : GL_FILL));
-		App::shaders.UpdateCameraUBO(camera);
-		App::shaders.UpdateLightUBOPosition(App::ui.lightFollowsCamera? camera->GetPosition() : glm::fvec3{ 999999.0f });
-
 		// Debug: Test changing the mesh transform over time
 		if (cube) cube->transform.rotation.y = sinf((float)App::clock.time);
 		head->transform.position.z = abs(sinf((float)App::clock.time));
@@ -197,21 +194,16 @@ int main(int argc, char* args[])
 		// Test debug lines
 		App::debuglines->AddLine({ 0.0f, 0.0f, 0.0f }, Transform::Position(head->ComputeWorldMatrix()), { 0.0f, 1.0f, 0.0f, 1.0f });
 		GLMesh::AppendCoordinateAxis(*App::debuglines, head->ComputeWorldMatrix());
-		App::Render(App::ui.applicationViewport->input.camera);
+		App::Render();
 
-		if (auto F = GLFramebuffers::BindScoped(App::ui.previewViewport->framebuffer))
-		{
-			GLFramebuffers::ClearActive();
-			App::shaders.UpdateCameraUBO(cameraPreview);
-			App::shaders.UpdateLightUBOPosition(App::ui.lightFollowsCamera? cameraPreview->GetPosition() : glm::fvec3{ 999999.0f });
-
+		App::ui.previewViewport->RenderScoped(EGLFramebufferClear::All, [&](){
 			if (cube)
 			{
 				meshShader.SetUniformMat4("model", cube->transform.Matrix());
 				meshShader.SetUniformInt("useTexture", 0);
 				cubemesh->Draw();
 			}
-		}
+		});
 
 		// Done
 		App::window.RenderImgui();

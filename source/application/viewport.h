@@ -2,6 +2,7 @@
 
 #include "core/objectpool.h"
 #include "core/input.h"
+#include "opengl/framebuffer.h"
 
 class Viewport : public ObjectPoolInterface<Viewport, ObjectType_Viewport>
 {
@@ -19,6 +20,12 @@ public:
 
 	void Initialize();
 	void Destroy();
+
+	void Clear(EGLFramebufferClear clear = EGLFramebufferClear::All);
+
+	void UseForRendering(EGLFramebufferClear clear = EGLFramebufferClear::None);
+
+	void RenderScoped(EGLFramebufferClear clear, std::function<void()> func);
 
 	void Resize(GLuint newWidth, GLuint newHeight);
 };
