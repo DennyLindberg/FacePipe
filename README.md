@@ -6,7 +6,7 @@ Created by Denny Lindberg and Lisa Gren.
 # Platform
 
 - C++17
-- For Windows and Linux
+- For Windows
 - OpenGL 4.6
 
 # Building the code
