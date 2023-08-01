@@ -1,7 +1,10 @@
 #pragma once
 
+#if PYTHON_ENABLED
 #include <filesystem>
 #include <atomic>
+
+#include "core/objecttypes.h"
 
 enum class PythonScriptError
 {
@@ -12,9 +15,6 @@ enum class PythonScriptError
 	ExecuteException,
 	PybindException
 };
-
-typedef int ScriptId;
-#define INVALID_SCRIPT_ID -1
 
 struct PythonScript
 {
@@ -49,3 +49,4 @@ public:
 	bool Execute(const std::filesystem::path& filePath, ScriptId id = INVALID_SCRIPT_ID);
 	bool Execute(PythonScript& script);
 };
+#endif

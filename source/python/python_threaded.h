@@ -1,5 +1,6 @@
 #pragma once
 
+#if PYTHON_ENABLED
 #include <filesystem>
 #include <atomic>
 #include "python.h"
@@ -22,8 +23,9 @@ public:
 	void Initialize();
 	void Shutdown();
 
-	void Execute(const std::string& code, ScriptId id = INVALID_SCRIPT_ID);
-	void Execute(const std::filesystem::path& filePath, ScriptId id = INVALID_SCRIPT_ID);
+	bool Execute(const std::string& code, ScriptId id = INVALID_SCRIPT_ID);
+	bool Execute(const std::filesystem::path& filePath, ScriptId id = INVALID_SCRIPT_ID);
 
 	bool PopScriptResponse(ScriptExecutionResponse& response);
 };
+#endif

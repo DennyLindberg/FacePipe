@@ -35,23 +35,30 @@ function getPythonPathAndVersion(desired_version)
     return python_dir, python_version
 end
 
-expected_version = "python311"
-python_path, version = getPythonPathAndVersion(expected_version)
+function setupPython(expected_version)
+    python_path, version = getPythonPathAndVersion(expected_version)
 
-python_includes_folder  = python_path .. "/include/"
-python_libs_folder      = python_path .. "/libs/"
-python_lib              = version .. ".lib"
-print("Python includes: " .. python_includes_folder)
-print("Python libs: " .. python_libs_folder)
-print("lib: " .. python_lib)
+    if version ~= expected_version then
+        error("Failed to find correct python! Expected " .. expected_version)
+    end
 
-if version ~= expected_version then
-    error("Failed to find correct python! Expected " .. expected_version)
+    python_includes_folder  = python_path .. "/include/"
+    python_libs_folder      = python_path .. "/libs/"
+    python_lib              = version .. ".lib"
+    print("Python includes: " .. python_includes_folder)
+    print("Python libs: " .. python_libs_folder)
+    print("lib: " .. python_lib)
+
+    includedirs { python_includes_folder }
+    libdirs { python_libs_folder }
+    links   { python_lib }
 end
 
 ---
 -- Solution
 ---
+python_enable = "0"
+python_multithreaded = "0"
 binaries_folder = "binaries/"
 includes_folder = "include/"
 source_folder   = "source/"
@@ -70,7 +77,9 @@ workspace "FacePipe"
     platforms { "win64" }
     defines   { 
         "OS_WINDOWS",
-        "TINYOBJLOADER_IMPLEMENTATION"
+        "TINYOBJLOADER_IMPLEMENTATION",
+        "PYTHON_ENABLED="..python_enable,
+        "PYTHON_MULTITHREADED="..python_multithreaded
     }        
 
     filter { "platforms:*64"} architecture "x64"
@@ -79,10 +88,14 @@ workspace "FacePipe"
     staticruntime "on"
 
     debugdir(binaries_folder)
-    includedirs { includes_folder, source_folder, source_thirdparty_folder, python_includes_folder }
-    libdirs     { libs_folder, python_libs_folder }
-    links       { "opengl32", "SDL2", python_lib }
+    includedirs { includes_folder, source_folder, source_thirdparty_folder }
+    libdirs     { libs_folder }
+    links       { "opengl32", "SDL2" }
     flags       { "MultiProcessorCompile" }
+
+    if python_enable == "1" then
+        setupPython("python311")
+    end
 
     filter { "configurations:Debug" }
         defines { "DEBUG" }

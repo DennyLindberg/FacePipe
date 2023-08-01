@@ -1,5 +1,6 @@
 #include "python_threaded.h"
 
+#if PYTHON_ENABLED
 #include "core/utilities.h"
 #include "core/threads.h"
 
@@ -158,25 +159,28 @@ void PythonInterpreterThreaded::Shutdown()
 	Thread.Stop();
 }
 
-void PythonInterpreterThreaded::Execute(const std::string& code, ScriptId id)
+bool PythonInterpreterThreaded::Execute(const std::string& code, ScriptId id)
 {
 	PythonScriptInfo script;
 	script.id = id;
 	script.bFile = false;
 	script.code = code;
 	Thread.ScriptExecutionQueue.Push(script);
+	return true;
 }
 
-void PythonInterpreterThreaded::Execute(const std::filesystem::path& filePath, ScriptId id)
+bool PythonInterpreterThreaded::Execute(const std::filesystem::path& filePath, ScriptId id)
 {
 	PythonScriptInfo script;
 	script.id = id;
 	script.bFile = true;
 	script.file = filePath;
 	Thread.ScriptExecutionQueue.Push(script);
+	return true;
 }
 
 bool PythonInterpreterThreaded::PopScriptResponse(ScriptExecutionResponse& response)
 {
 	return Thread.ScriptExecutionResponses.Pop(response);
 }
+#endif

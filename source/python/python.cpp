@@ -1,5 +1,6 @@
 #include "python.h"
 
+#if PYTHON_ENABLED
 #include "core/utilities.h"
 #include "core/threads.h"
 
@@ -146,3 +147,4 @@ bool PythonInterpreter::Execute(PythonScript& script)
 
 	return true;
 }
+#endif

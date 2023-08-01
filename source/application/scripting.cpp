@@ -3,12 +3,13 @@
 #include "core/threads.h"
 #include <iostream>
 
+#if PYTHON_ENABLED
 #include <pybind11/pybind11.h>
 #include <pybind11/embed.h>
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
 
-#if USE_PYTHON_THREADED
+#if PYTHON_MULTITHREADED
 struct ScriptReturnData
 {
 	ScriptId id = INVALID_SCRIPT_ID;
@@ -27,7 +28,7 @@ enum class ExampleEnum
 
 void ScriptReturnValue(ExampleEnum s)
 {
-#if USE_PYTHON_THREADED
+#if PYTHON_MULTITHREADED
 	ScriptReturnData r;
 	r.id = PythonInterpreter::activeScriptId;
 	r.data = std::to_string((int) s);
@@ -61,7 +62,7 @@ void Scripting::Shutdown()
 
 void Scripting::Tick()
 {
-#if USE_PYTHON_THREADED
+#if PYTHON_MULTITHREADED
 	ScriptExecutionResponse response;
 	if (python.PopScriptResponse(response))
 	{
@@ -85,3 +86,28 @@ void Scripting::Tick()
 	python.Tick();
 #endif
 }
+
+bool Scripting::Execute(const std::string& code, ScriptId id)
+{
+	return python.Execute(code, id);
+}
+
+bool Scripting::Execute(const std::filesystem::path& filePath, ScriptId id)
+{
+	return python.Execute(filePath, id);
+}
+
+
+#else
+
+bool Scripting::Execute(const std::string& code, ScriptId id)
+{
+	return false;
+}
+
+bool Scripting::Execute(const std::filesystem::path& filePath, ScriptId id)
+{
+	return false;
+}
+
+#endif

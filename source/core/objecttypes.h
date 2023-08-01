@@ -1,14 +1,16 @@
 #pragma once
 
+inline constexpr uint8_t ObjectTypeMax = ~uint8_t(0);
 typedef uint8_t ObjectType;
 typedef uint32_t ObjectId;
+
+typedef int ScriptId;
+#define INVALID_SCRIPT_ID -1
 
 // Remember to update App::InitializePools() if a new type is added
 // User defined ObjectTypes should be defined in the 100+ range (can't be larger than the max value of ObjectType)
 
 // Core types are in the 0-19 range
-
-inline constexpr uint8_t ObjectTypeMax = ~uint8_t(0);
 
 #define ObjectType_Unknown 0
 #define ObjectType_Object 1
