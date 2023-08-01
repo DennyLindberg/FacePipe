@@ -2,6 +2,9 @@
 #include <atomic>
 #include "opengl/framebuffer.h"
 
+bool App::bQuit = false;
+bool App::bUnsavedChanges = false;
+
 ApplicationSettings App::settings = ApplicationSettings();
 ApplicationClock App::clock = ApplicationClock();
 OpenGLWindow App::window = OpenGLWindow();
@@ -90,3 +93,7 @@ void App::Tick()
 	App::shaders.Tick();
 }
 
+void App::Quit()
+{
+	bQuit = true;
+}

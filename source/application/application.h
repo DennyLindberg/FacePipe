@@ -31,6 +31,10 @@ struct ApplicationSettings
 
 class App
 {
+protected:
+	static bool bQuit;
+	static bool bUnsavedChanges;
+
 public:
 	App() = delete;
 	~App() = delete;
@@ -39,6 +43,11 @@ public:
 	static void Shutdown();
 	static bool ReadyToTick();
 	static void Tick();
+
+	static bool ReadyToQuit() { return bQuit; }
+	static bool HasUnsavedChanges() { return bUnsavedChanges; }
+	static void SaveChanges() { bUnsavedChanges = false; } // TODO
+	static void Quit();
 
 	static inline std::filesystem::path Path(const std::string& RelativePath) { return std::filesystem::current_path().parent_path() / std::filesystem::path(RelativePath); }
 

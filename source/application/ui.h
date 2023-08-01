@@ -23,6 +23,9 @@ public:
 	std::vector<WeakPtr<Viewport>> viewports;
 
 public:
+	bool displayQuitDialog = false;
+
+public:
 	void Initialize();
 	void Shutdown();
 
@@ -38,4 +41,7 @@ public:
 public:
 	bool HasKeyboardFocus() const;
 	bool HasMouseFocus() const;
+
+public:
+	void HandleQuit();
 };

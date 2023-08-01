@@ -1,6 +1,8 @@
 #include "ui_layout_ouliner.h"
 #include "ui_core.h"
 
+#include "imgui_internal.h"
+
 namespace UI
 {
 	void DisplayOutliner_Tree(const WeakPtr<Object> weakObject)

@@ -75,8 +75,7 @@ int main(int argc, char* args[])
 	/*
 		Main application loop
 	*/
-	bool quit = false;
-	while (!quit)
+	while (!App::ReadyToQuit())
 	{
 		if (!App::ReadyToTick())
 		{
@@ -89,7 +88,7 @@ int main(int argc, char* args[])
 		while (SDL_PollEvent(&event))
 		{
 			if (event.type == SDL_QUIT)
-				quit = true;
+				App::ui.HandleQuit();
 
 			if (App::ui.HandleInputEvent(&event))
 				continue;
@@ -130,6 +129,8 @@ int main(int argc, char* args[])
 				cubemesh->Draw();
 			}
 		});
+
+		App::ui.applicationViewport->Clear();
 
 		App::ui.applicationViewport->Render([&](Viewport& viewport){
 			viewport.debuglines->AddLine({ 0.0f, 0.0f, 0.0f }, Transform::Position(head->ComputeWorldMatrix()), { 0.0f, 1.0f, 0.0f, 1.0f });

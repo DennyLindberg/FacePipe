@@ -29,7 +29,8 @@ void UIManager::Initialize()
 	previewViewport->Resize(GLuint(App::settings.windowWidth*0.25f), GLuint(App::settings.windowHeight*0.25f));
 
 	App::window.drawImguiCallback = [this]() -> void {
-		UI::GenerateMainLayout(*this);
+		//UI::GenerateMainLayout(*this);
+		UI::GenerateMainLayout_Deprecated(*this);
 	};
 }
 
@@ -102,4 +103,20 @@ bool UIManager::HasKeyboardFocus() const
 bool UIManager::HasMouseFocus() const
 {
 	return ImGui::GetIO().WantCaptureMouse;
+}
+
+void UIManager::HandleQuit()
+{
+	if (displayQuitDialog)
+	{
+		displayQuitDialog = false;
+	}
+	else if (App::HasUnsavedChanges())
+	{
+		displayQuitDialog = true;
+	}
+	else
+	{
+		App::Quit();
+	}
 }

@@ -5,4 +5,5 @@
 namespace UI
 {
 	void GenerateMainLayout(UIManager& ui);
+	void GenerateMainLayout_Deprecated(UIManager& ui);
 }
