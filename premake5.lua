@@ -9,7 +9,7 @@ function findLatestPython(path, desired_version)
         -- folders are iterated in name order (keep picking the latest to get the greatest version of python)
         if string.find(dir, "python") or string.find(dir, "Python") then
             python_dir = path .. dir
-            python_version = "" .. dir
+            python_version =  string.lower(dir)
 
             if python_version == desired_version then
                 return python_dir, python_version
@@ -27,7 +27,7 @@ function getPythonPathAndVersion(desired_version)
     localappdata = os.getenv('LOCALAPPDATA') .. "\\Programs\\Python\\" -- C:\Users\name\AppData\Local\Programs\
     python_dir, python_version = findLatestPython(localappdata, desired_version)
     
-    if python_version == "" then
+    if python_version ~= desired_version then
         program_files = 'C:/Program Files/'
         python_dir, python_version = findLatestPython(program_files, desired_version)
     end
@@ -35,18 +35,19 @@ function getPythonPathAndVersion(desired_version)
     return python_dir, python_version
 end
 
-python_path, version = getPythonPathAndVersion("python311")
-
-if version == "" then
-    error("Failed to find python!")
-end
+expected_version = "python311"
+python_path, version = getPythonPathAndVersion(expected_version)
 
 python_includes_folder  = python_path .. "/include/"
 python_libs_folder      = python_path .. "/libs/"
-python_lib              = python_libs_folder .. version .. ".lib"
+python_lib              = version .. ".lib"
 print("Python includes: " .. python_includes_folder)
 print("Python libs: " .. python_libs_folder)
 print("lib: " .. python_lib)
+
+if version ~= expected_version then
+    error("Failed to find correct python! Expected " .. expected_version)
+end
 
 ---
 -- Solution
