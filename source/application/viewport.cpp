@@ -26,11 +26,15 @@ void Viewport::Initialize()
 		hasInitialViewport = true;
 		framebuffer = 0;
 	}
+
+	debuglines = GLLine::Pool.CreateWeak();
 }
 
 void Viewport::Destroy()
 {
 	input.Shutdown();
+
+	debuglines.Destroy();
 
 	if (framebuffer == 0)
 	{
@@ -49,7 +53,6 @@ void Viewport::UseForRendering(EGLFramebufferClear clear)
 	GLFramebuffers::Bind(framebuffer);
 	GLFramebuffers::ClearActive(clear);
 
-	glPolygonMode(GL_FRONT_AND_BACK, (App::ui.renderWireframe? GL_LINE : GL_FILL));
 	App::shaders.UpdateCameraUBO(input.camera);
 	App::shaders.UpdateLightUBODirection(App::ui.lightFollowsCamera ? -input.camera->ForwardVector() : App::settings.skyLightDirection);
 	App::shaders.UpdateLightUBOColor(App::settings.skyLightColor);
@@ -69,6 +72,34 @@ void Viewport::RenderScoped(EGLFramebufferClear clear, std::function<void()> fun
 			func();
 		}
 	}
+}
+
+void Viewport::Render(std::function<void(Viewport&)> func)
+{
+	UseForRendering(EGLFramebufferClear::All);
+
+	// Background color gradient
+	App::shaders.backgroundShader.Use();
+	App::geometry.quad.Draw();
+	Clear(EGLFramebufferClear::Depth);
+
+	// Scene geometry
+	glPolygonMode(GL_FRONT_AND_BACK, (App::ui.renderWireframe? GL_LINE : GL_FILL));
+	func(*this);
+
+	// Grid
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	if (input.camera->GetView() == CameraView::Perspective)
+		App::geometry.grid.Draw(App::geometry.quad, input.camera->ViewProjectionMatrix());
+	else
+		App::geometry.grid.Draw(App::geometry.quad, input.camera->ViewProjectionMatrix(), input.camera->ForwardVector(), input.camera->SideVector());
+
+	// Line overlays (coordinates, debug lines, etc)
+	App::shaders.lineShader.Use();
+	App::geometry.coordinateAxis.Draw();
+	debuglines->SendToGPU();
+	debuglines->Draw();
+	debuglines->Clear();
 }
 
 void Viewport::Resize(GLuint newWidth, GLuint newHeight)

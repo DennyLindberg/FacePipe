@@ -153,50 +153,17 @@ int main(int argc, char* args[])
 			}
 		}
 
-		/*
-			Render scene
-		*/
-		App::ui.applicationViewport->UseForRendering(EGLFramebufferClear::All);
-
-		// Background color gradient
-		backgroundShader.Use();
-		App::geometry.quad.Draw();
-		App::ui.applicationViewport->Clear(EGLFramebufferClear::Depth);
-
-		WeakPtr<Camera> camera = App::ui.applicationViewport->input.camera;
-		WeakPtr<Camera> cameraPreview = App::ui.previewViewport->input.camera;
-		
+		// Test debug lines		
 		// Debug: Test changing the mesh transform over time
 		if (cube) cube->transform.rotation.y = sinf((float)App::clock.time);
 		head->transform.position.z = abs(sinf((float)App::clock.time));
 		head->transform.rotation.x = (float)App::clock.time*2.0f;
 		//head->transform.scale = glm::vec3(0.1f*abs(sinf((float)App::clock.time*0.5f)));
 
-		pointCloudShader.Use();
-		pointCloudShader.SetUniformMat4("model", arhead->ComputeWorldMatrix());
-		pointCloudShader.SetUniformFloat("size", App::settings.pointCloudSize);
-		armesh->Draw(GL_POINTS);
-
-		meshShader.Use();
-		meshShader.SetUniformMat4("model", head->ComputeWorldMatrix());
-		meshShader.SetUniformInt("useTexture", 0);
-		meshShader.SetUniformInt("useFlatShading", 0);
-		DefaultTexture->UseForDrawing();
-		headmesh->Draw();
-			
-		// Grid
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		if (camera->GetView() == CameraView::Perspective)
-			App::geometry.grid.Draw(App::geometry.quad, camera->ViewProjectionMatrix());
-		else
-			App::geometry.grid.Draw(App::geometry.quad, camera->ViewProjectionMatrix(), camera->ForwardVector(), camera->SideVector());
-		
-		// Test debug lines
-		App::debuglines->AddLine({ 0.0f, 0.0f, 0.0f }, Transform::Position(head->ComputeWorldMatrix()), { 0.0f, 1.0f, 0.0f, 1.0f });
-		GLMesh::AppendCoordinateAxis(*App::debuglines, head->ComputeWorldMatrix());
-		App::Render();
-
-		App::ui.previewViewport->RenderScoped(EGLFramebufferClear::All, [&](){
+		/*
+			Render scene
+		*/
+		App::ui.previewViewport->Render([&](Viewport& viewport) {
 			if (cube)
 			{
 				meshShader.SetUniformMat4("model", cube->transform.Matrix());
@@ -205,8 +172,25 @@ int main(int argc, char* args[])
 			}
 		});
 
-		// Done
-		App::window.RenderImgui();
+		App::ui.applicationViewport->Render([&](Viewport& viewport){
+			viewport.debuglines->AddLine({ 0.0f, 0.0f, 0.0f }, Transform::Position(head->ComputeWorldMatrix()), { 0.0f, 1.0f, 0.0f, 1.0f });
+			GLMesh::AppendCoordinateAxis(*viewport.debuglines, head->ComputeWorldMatrix());
+
+			pointCloudShader.Use();
+			pointCloudShader.SetUniformMat4("model", arhead->ComputeWorldMatrix());
+			pointCloudShader.SetUniformFloat("size", App::settings.pointCloudSize);
+			armesh->Draw(GL_POINTS);
+
+			meshShader.Use();
+			meshShader.SetUniformMat4("model", head->ComputeWorldMatrix());
+			meshShader.SetUniformInt("useTexture", 0);
+			meshShader.SetUniformInt("useFlatShading", 0);
+			DefaultTexture->UseForDrawing();
+			headmesh->Draw();
+		});
+
+		App::ui.RenderUI();
+
 		App::window.SwapFramebuffer();
 	}
 

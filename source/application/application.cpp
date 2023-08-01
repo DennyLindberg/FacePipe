@@ -14,7 +14,6 @@ GeometryManager App::geometry = GeometryManager();
 UniformRandomGenerator App::random = UniformRandomGenerator();
 
 WeakPtr<Object> App::world = WeakPtr<Object>();
-WeakPtr<GLLine> App::debuglines = WeakPtr<GLLine>();
 WebCam App::webcam = WebCam();
 
 namespace ObjectPoolInternals
@@ -47,7 +46,6 @@ void App::Initialize()
 
 	App::world = Object::Pool.CreateWeak();
 	App::world->name = "World";
-	App::debuglines = GLLine::Pool.CreateWeak();
 
 	App::webcam.Initialize();
 }
@@ -92,14 +90,3 @@ void App::Tick()
 	App::shaders.Tick();
 }
 
-void App::Render()
-{
-	App::ui.applicationViewport->UseForRendering(EGLFramebufferClear::Depth);
-	
-	App::shaders.lineShader.Use();
-
-	App::geometry.coordinateAxis.Draw();
-	App::debuglines->SendToGPU();
-	App::debuglines->Draw();
-	App::debuglines->Clear();
-}

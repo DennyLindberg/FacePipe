@@ -27,7 +27,7 @@ public:
 	void Shutdown();
 
 	bool HandleInputEvent(const void* event);
-	void DrawUI();
+	void RenderUI();
 
 	WeakPtr<Viewport> CreateViewport();
 

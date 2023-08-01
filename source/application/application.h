@@ -39,7 +39,6 @@ public:
 	static void Shutdown();
 	static bool ReadyToTick();
 	static void Tick();
-	static void Render();
 
 	static inline std::filesystem::path Path(const std::string& RelativePath) { return std::filesystem::current_path().parent_path() / std::filesystem::path(RelativePath); }
 
@@ -56,7 +55,5 @@ public:
 
 	static WeakPtr<Object> world;
 
-	// TODO: move to draw debug manager
-	static WeakPtr<GLLine> debuglines;
 	static WebCam webcam;
 };

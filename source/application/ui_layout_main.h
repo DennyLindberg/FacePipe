@@ -4,5 +4,5 @@
 
 namespace UI
 {
-	void DrawMainLayout(UIManager& ui);
+	void GenerateMainLayout(UIManager& ui);
 }

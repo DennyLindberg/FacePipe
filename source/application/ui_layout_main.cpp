@@ -3,7 +3,7 @@
 
 #include "ui_layout_ouliner.h"
 
-void UI::DrawMainLayout(UIManager& ui)
+void UI::GenerateMainLayout(UIManager& ui)
 {
 	std::string helpString = R"(Controls:
 		- Mouse buttons: Camera

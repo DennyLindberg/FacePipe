@@ -29,7 +29,7 @@ void UIManager::Initialize()
 	previewViewport->Resize(GLuint(App::settings.windowWidth*0.25f), GLuint(App::settings.windowHeight*0.25f));
 
 	App::window.drawImguiCallback = [this]() -> void {
-		DrawUI();
+		UI::GenerateMainLayout(*this);
 	};
 }
 
@@ -57,9 +57,10 @@ bool UIManager::HandleInputEvent(const void* event)
 	return true;
 }
 
-void UIManager::DrawUI()
+void UIManager::RenderUI()
 {
-	UI::DrawMainLayout(*this);
+	App::ui.applicationViewport->UseForRendering(EGLFramebufferClear::None);
+	App::window.RenderImgui();
 }
 
 WeakPtr<Viewport> UIManager::CreateViewport()
