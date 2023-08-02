@@ -25,7 +25,7 @@ public:
 
 	std::function<void()> drawImguiCallback = [](auto&&...) {};
 
-	void Initialize(int width, int height, bool fullscreenEnabled, bool vsync);
+	void Initialize(int width, int height, bool fullscreenEnabled, bool vsync, bool showConsole);
 	void Destroy();
 	SDL_Window* GetSDLWindow() { return window; }
 };

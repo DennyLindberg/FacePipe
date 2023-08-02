@@ -14,6 +14,7 @@
 
 struct ApplicationSettings
 {
+	bool showConsole = false;
 	bool vsync = true;
 	bool fullscreen = false;
 	int windowWidth = 0;

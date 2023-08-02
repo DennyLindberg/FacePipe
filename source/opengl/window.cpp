@@ -90,7 +90,7 @@ void OpenGLWindow::RenderImgui()
 	}
 }
 
-void OpenGLWindow::Initialize(int width, int height, bool fullscreen, bool vsync)
+void OpenGLWindow::Initialize(int width, int height, bool fullscreen, bool vsync, bool showConsole)
 {
 	auto sdl_die = [](const char* message) {
 		fprintf(stderr, "%s: %s\n", message, SDL_GetError());
@@ -132,6 +132,9 @@ void OpenGLWindow::Initialize(int width, int height, bool fullscreen, bool vsync
 		);
 	}
 	if (window == NULL) sdl_die("Couldn't set video mode");
+
+	HWND consoleWindow = GetConsoleWindow();
+	ShowWindow(consoleWindow, (int) (showConsole && !fullscreen)); // 0 = SW_HIDE, 1 = SW_SHOW
 
 	maincontext = SDL_GL_CreateContext(window);
 	if (maincontext == NULL)

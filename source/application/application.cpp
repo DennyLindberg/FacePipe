@@ -39,7 +39,7 @@ void App::Initialize()
 	Logging::StartLoggingThread();
 	
 	App::settings.windowRatio = App::settings.windowWidth / (float)App::settings.windowHeight;
-	App::window.Initialize(App::settings.windowWidth, App::settings.windowHeight, App::settings.fullscreen, App::settings.vsync);
+	App::window.Initialize(App::settings.windowWidth, App::settings.windowHeight, App::settings.fullscreen, App::settings.vsync, App::settings.showConsole);
 	App::scripting.Initialize();
 
 	ObjectPoolInternals::InitializeDefaultPools();

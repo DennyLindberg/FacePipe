@@ -8,8 +8,9 @@ namespace fs = std::filesystem;
 int main(int argc, char* args[])
 {
 	App::settings = {
+		.showConsole = false,
 		.vsync = true,
-		.fullscreen = 0,
+		.fullscreen = false,
 		.windowWidth = 1280,
 		.windowHeight = 720,
 		.maxFPS = 0,
