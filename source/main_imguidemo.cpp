@@ -1,5 +1,7 @@
 #include "application/application.h"
 
+#include "application/ui_core.h"
+
 namespace fs = std::filesystem;
 
 /*

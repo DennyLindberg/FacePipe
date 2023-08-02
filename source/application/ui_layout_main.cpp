@@ -43,7 +43,7 @@ void UI::GenerateMainLayout(UIManager& ui)
 	ImGui::SetNextWindowSize(viewport->WorkSize);
 	ImGui::Begin("Example: Fullscreen window", NULL, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings);
 
-		ui.logger.Draw("Log");
+		ui.logging.Draw();
 
 		static const char* save_popup = "SaveChanges?";
 		if (ui.displayQuitDialog && !ImGui::IsPopupOpen(save_popup))
@@ -113,6 +113,7 @@ void UI::GenerateMainLayout_Deprecated(UIManager& ui)
 		if (ImGui::Button("Execute"))
 		{
 			App::scripting.Execute(input_field_string);
+			Logf(LOG_STDOUT, "Script is not implemented\n");
 		}
 
 		ImGui::InputTextMultiline( "Help", &helpString, ImVec2(0.0f, 100.0f), ImGuiInputTextFlags_ReadOnly );
@@ -141,5 +142,5 @@ void UI::GenerateMainLayout_Deprecated(UIManager& ui)
 	UI::DisplaySelectionDetails(App::ui.selected_object);
 	ImGui::End();
 
-	ui.logger.Draw("Log");
+	ui.logging.Draw();
 }

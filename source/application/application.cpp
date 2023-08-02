@@ -95,14 +95,7 @@ void App::Tick()
 	App::webcam.UpdateTextureWhenDirty();
 	App::scripting.Tick();
 	App::shaders.Tick();
-
-	Logging::Flush();
-
-	std::string logLine;
-	while (Logging::GetLine(logLine))
-	{
-		App::ui.logger.AddLog(logLine.c_str());
-	}
+	App::ui.logging.Tick();
 }
 
 void App::Quit()

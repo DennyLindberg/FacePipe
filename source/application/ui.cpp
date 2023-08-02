@@ -5,7 +5,7 @@
 
 void UIManager::Initialize()
 {
-	logger.Initialize();
+	logging.Initialize();
 
 	ImGuiIO& io = ImGui::GetIO();
 
@@ -47,7 +47,7 @@ void UIManager::Shutdown()
 
 	viewports.clear();
 
-	logger.Shutdown();
+	logging.Shutdown();
 }
 
 bool UIManager::HandleInputEvent(const void* event)

@@ -27,7 +27,7 @@ public:
 	bool displayQuitDialog = false;
 
 public:
-	UILogger logger;
+	UILoggerManager logging;
 
 public:
 	void Initialize();

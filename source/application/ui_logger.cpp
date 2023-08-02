@@ -23,31 +23,8 @@ void UILogger::AddLog(const char* fmt)
 	logString.append(fmt);
 }
 
-void UILogger::Draw(const char* title, bool* p_open)
+void UILogger::Draw(bool* p_open)
 {
-	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-	if (!ImGui::Begin(title, p_open))
-	{
-		ImGui::PopStyleVar();
-		ImGui::End();
-		return;
-	}
-	ImGui::PopStyleVar();
-
-	ImGui::SameLine();
-	if (ImGui::Button("Clear"))
-	{
-		Clear();
-	}
-
-	ImGui::SameLine();
-	if (ImGui::Button("Copy"))
-	{
-		ImGui::SetClipboardText(logString.c_str());
-	}
-
-	ImGui::Separator();
-
 	const float lineHeight = ImGui::GetTextLineHeightWithSpacing();
 	ImGui::BeginChild("##ScrollingRegion", ImVec2(-FLT_MIN, -FLT_MIN), false, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_HorizontalScrollbar);
 	{
@@ -77,5 +54,106 @@ void UILogger::Draw(const char* title, bool* p_open)
 
 		ImGui::EndChild();
 	}
+}
+
+void UILoggerManager::Initialize()
+{
+	Register(LOG_STDOUT, "App");
+}
+
+void UILoggerManager::Shutdown()
+{
+	for (UILogger* logger : loggers)
+	{
+		if (logger)
+		{
+			logger->Shutdown();
+			delete logger;
+			logger = nullptr;
+		}
+	}
+}
+
+void UILoggerManager::Tick()
+{
+	Logging::Flush();
+
+	std::string logLine;
+	while (Logging::GetLine(logLine))
+	{
+		loggers[LOG_STDOUT]->AddLog(logLine.c_str());
+	}
+}
+
+void UILoggerManager::Register(UILoggerId loggerid, const char* name)
+{
+	if (loggerid >= loggers.size())
+	{
+		loggers.resize(loggerid + 1);
+
+		loggers[loggerid] = new UILogger();
+		loggers[loggerid]->Initialize();
+		loggers[loggerid]->name = std::string(name);
+	}
+}
+
+UILoggerId UILoggerManager::Register(const char* name)
+{
+	UILoggerId id = loggers.size();
+	Register(id, name);
+	return id;
+}
+
+void UILoggerManager::Draw(bool* p_open)
+{
+	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+	if (!ImGui::Begin("Log", p_open))
+	{
+		ImGui::PopStyleVar();
+		ImGui::End();
+		return;
+	}
+	ImGui::PopStyleVar();
+
+	UILogger* activeLogger = loggers[activeUiLogger];
+
+	ImGui::SameLine();
+	if (ImGui::Button(ICON_FA_ERASER))
+		activeLogger->Clear();
+	if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
+		ImGui::SetTooltip("Clear log");
+
+	ImGui::SameLine();
+	if (ImGui::Button(ICON_FA_COPY))
+		ImGui::SetClipboardText(activeLogger->logString.c_str());
+	if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
+		ImGui::SetTooltip("Copy log to clipboard");
+
+	ImGui::SameLine();
+	ImGui::Text(" | ");
+
+	for (UILoggerId i=0; i<loggers.size(); i++)
+	{
+		if (!loggers[i])
+			continue;
+
+		bool bIsActive = activeUiLogger == i;
+		if (bIsActive)
+			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.15f, 0.3f, 1.0f));
+
+		ImGui::SameLine();
+		if (ImGui::Button(loggers[i]->name.c_str()))
+		{
+			activeUiLogger = i;
+		}
+
+		if (bIsActive)
+			ImGui::PopStyleColor();
+	}
+
+	ImGui::Separator();
+
+	activeLogger->Draw(p_open);
+
 	ImGui::End();
 }
