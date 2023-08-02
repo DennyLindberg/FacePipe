@@ -51,5 +51,5 @@ public:
 
 	UILogger* Get(UILoggerId loggerid) { return loggers[loggerid]; }
 
-	void Draw(bool* p_open = NULL);
+	void Draw(bool* p_open = NULL, bool bSeparateWindow = false);
 };

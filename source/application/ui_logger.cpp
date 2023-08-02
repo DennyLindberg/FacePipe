@@ -112,16 +112,19 @@ void UILoggerManager::AddLog(UILoggerId loggerid, const char* message)
 		loggers[loggerid]->AddLog(message);
 }
 
-void UILoggerManager::Draw(bool* p_open)
+void UILoggerManager::Draw(bool* p_open, bool bSeparateWindow)
 {
-	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-	if (!ImGui::Begin("Log", p_open))
+	if (bSeparateWindow)
 	{
+		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+		if (!ImGui::Begin("Log", p_open))
+		{
+			ImGui::PopStyleVar();
+			ImGui::End();
+			return;
+		}
 		ImGui::PopStyleVar();
-		ImGui::End();
-		return;
 	}
-	ImGui::PopStyleVar();
 
 	UILogger* activeLogger = loggers[activeUiLogger];
 
@@ -163,5 +166,6 @@ void UILoggerManager::Draw(bool* p_open)
 
 	activeLogger->Draw(p_open);
 
-	ImGui::End();
+	if (bSeparateWindow)
+		ImGui::End();
 }

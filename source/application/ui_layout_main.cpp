@@ -14,71 +14,133 @@ void UI::GenerateMainLayout(UIManager& ui)
 
 	static std::string input_field_string = "";
 
-	// Fill everything
-
 	const ImGuiViewport* viewport = ImGui::GetMainViewport();
 	ImGui::SetNextWindowPos(viewport->WorkPos);
 	ImGui::SetNextWindowSize(viewport->WorkSize);
-	//ImGui::SetNextWindowSize(ImVec2(viewport->WorkSize.x*0.25f, viewport->WorkSize.y));
 
+	ImGuiWindowFlags ChildFlags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings;
+
+	float splitterThickness = 4.0f;
+
+	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-	ImGui::Begin("Example: Fullscreen window", NULL, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings);
-	//ImGui::Begin("##LeftColumn", NULL, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings);
-	ImGui::BeginChild("##LeftColumn", ImVec2(viewport->WorkSize.x*0.25f, viewport->WorkSize.y), true, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings);
-	{
-		ImGui::PopStyleVar();
+	ImGui::Begin("Example: Fullscreen window", NULL, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings);
+		const float ws = ImGui::GetContentRegionAvail().x;
+		const float hs = ImGui::GetContentRegionAvail().y;
+		static float w = 0.33f;
+		static float h = 0.8f;
+		w = glm::clamp(w, 0.1f, 0.9f);
+		h = glm::clamp(h, 0.1f, 0.9f);
 
-		ImGui::DrawViewport(&ui, ui.sceneViewport, 0.5f);
-
-		if (App::webcam.IsActive())
+		// Viewport region
 		{
-			if (ImGui::Button("Stop"))
-				App::webcam.Stop();
+			ImGui::BeginChild("viewportregion", ImVec2(w * ws, h * hs), true);
+				ImGui::DrawViewport(&ui, ui.sceneViewport, 1.0f);
+			ImGui::EndChild();
+		}
+
+		// Region splitter next to viewport
+		{
 			ImGui::SameLine();
-			ImGui::Text(App::webcam.DebugString().c_str());
+			ImGui::InvisibleButton("vsplitter", ImVec2(splitterThickness, h*hs));
+			if (ImGui::IsItemHovered())
+				ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
+			if (ImGui::IsItemActive())
+				w += ImGui::GetIO().MouseDelta.x/ws;
 		}
-		else
+
+		// Right region with middle/right divide
 		{
-			if (ImGui::Button("Start Camera"))
-				App::webcam.Start();
+			ImGui::SameLine();
+			ImGui::BeginChild("child2", ImVec2(0, h*hs), true);
+				const float ws2 = ImGui::GetContentRegionAvail().x;
+				const float hs2 = ImGui::GetContentRegionAvail().y;
+				static float w2 = 0.66f;
+				w2 = glm::clamp(w2, 0.1f, 0.9f);
+
+				// Center region
+				{
+					ImGui::BeginChild("centerregion", ImVec2(w2 * ws2, 0), true);
+						UI::DisplayNodeGraph();
+					ImGui::EndChild();
+				}
+
+				// Region splitter
+				{
+					ImGui::SameLine();
+					ImGui::InvisibleButton("vsplitter2", ImVec2(splitterThickness, h * hs2));
+					if (ImGui::IsItemHovered())
+						ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
+					if (ImGui::IsItemActive())
+						w2 += ImGui::GetIO().MouseDelta.x / ws2;
+				}
+
+				// Right region
+				{
+					ImGui::SameLine();
+					ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(5, 5));
+					ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(3, 3));
+					ImGui::BeginChild("detailsregion", ImVec2(0, 0), true);
+						//UI::DisplayOutliner(App::world);
+						//UI::DisplaySelectionDetails(App::ui.selected_object);
+
+						if (App::webcam.Texture())
+						{
+							ImGui::Image((ImTextureID)(intptr_t)App::webcam.Texture(), ImVec2(App::webcam.TextureWidth(), App::webcam.TextureHeight()), { 0, 1 }, { 1, 0 });
+						}
+
+						if (App::webcam.IsActive())
+						{
+							if (ImGui::Button("Stop"))
+								App::webcam.Stop();
+							ImGui::SameLine();
+							ImGui::Text(App::webcam.DebugString().c_str());
+						}
+						else
+						{
+							if (ImGui::Button("Start Camera"))
+								App::webcam.Start();
+						}
+
+						ImGui::InputInt("MaxFPS", &App::settings.maxFPS, 0);
+						ImGui::Checkbox("Wireframe", &ui.renderWireframe);
+						ImGui::Checkbox("Light follows camera", &ui.lightFollowsCamera);
+						ImGui::SliderFloat("PointSize", &App::settings.pointCloudSize, 0.0005f, 0.01f, "%.5f");
+						ImGui::InputTextMultiline("ScriptInput", &input_field_string, ImVec2(0.0f, 100.0f));
+						if (ImGui::Button("Execute"))
+						{
+							App::scripting.Execute(input_field_string);
+							Logf(LOG_STDOUT, "Script is not implemented\n");
+						}
+					ImGui::EndChild();
+					ImGui::PopStyleVar();
+					ImGui::PopStyleVar();
+				}
+			ImGui::EndChild();
 		}
-				
-		ImGui::InputInt("MaxFPS", &App::settings.maxFPS, 0);
-		ImGui::Checkbox("Wireframe", &ui.renderWireframe);
-		ImGui::Checkbox("Light follows camera", &ui.lightFollowsCamera);
-		ImGui::SliderFloat("PointSize", &App::settings.pointCloudSize, 0.0005f, 0.01f, "%.5f");
-		ImGui::InputTextMultiline( "ScriptInput", &input_field_string, ImVec2(0.0f, 100.0f) );
-		if (ImGui::Button("Execute"))
+
+		// Region splitter above log
 		{
-			App::scripting.Execute(input_field_string);
-			Logf(LOG_STDOUT, "Script is not implemented\n");
+			ImGui::InvisibleButton("hsplitter", ImVec2(-1, splitterThickness));
+			if (ImGui::IsItemHovered())
+				ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);
+			if (ImGui::IsItemActive())
+				h += ImGui::GetIO().MouseDelta.y/hs;
 		}
 
-		if (App::webcam.Texture())
+		// Log region
 		{
-			ImGui::Image((ImTextureID)(intptr_t)App::webcam.Texture(), ImVec2(App::webcam.TextureWidth() * 0.25f, App::webcam.TextureHeight() * 0.25f), { 0, 1 }, { 1, 0 });
+			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(3, 3));
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(5, 5));
+				ImGui::BeginChild("logregion", ImVec2(0, 0), true);
+					ui.logging.Draw(NULL, false);
+				ImGui::EndChild();
+			ImGui::PopStyleVar();
+			ImGui::PopStyleVar();
 		}
-
-		ImGui::EndChild();
-	}
 	ImGui::End();
-
-	//ImGui::SetNextWindowSize(ImVec2(App::settings.windowWidth * 1.0f, App::settings.windowHeight * 0.25f));
-	//ImGui::SetNextWindowPos(ImVec2(0, App::settings.windowHeight * 0.75f));
-
-	//ImGui::Begin("Nodes");
-	//UI::DisplayNodeGraph();
-	//ImGui::End();
-
-	ImGui::Begin("Outliner");
-	UI::DisplayOutliner(App::world);
-	ImGui::End();
-
-	ImGui::Begin("Details");
-	UI::DisplaySelectionDetails(App::ui.selected_object);
-	ImGui::End();
-
-	ui.logging.Draw();
+	ImGui::PopStyleVar();
+	ImGui::PopStyleVar();
 }
 
 void UI::GenerateMainMenuBar(UIManager& ui)
