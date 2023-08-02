@@ -18,9 +18,9 @@ void UILogger::Clear()
 	logString.clear();
 }
 
-void UILogger::AddLog(const char* fmt)
+void UILogger::AddLog(const char* message)
 {
-	logString.append(fmt);
+	logString.append(message);
 }
 
 void UILogger::Draw(bool* p_open)
@@ -102,6 +102,14 @@ UILoggerId UILoggerManager::Register(const char* name)
 	UILoggerId id = loggers.size();
 	Register(id, name);
 	return id;
+}
+
+void UILoggerManager::AddLog(UILoggerId loggerid, const char* message)
+{
+	if (loggerid == LOG_STDOUT)
+		std::cout << message; // needed so that our pipe sends to the console window - our logger will get the message once the pipe buffer is read on the thread
+	else
+		loggers[loggerid]->AddLog(message);
 }
 
 void UILoggerManager::Draw(bool* p_open)

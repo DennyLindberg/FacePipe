@@ -8,7 +8,7 @@ typedef size_t UILoggerId;
 #define LOG_STDOUT 0
 
 #define RegisterLogger(loggerid, name) UILoggerId loggerid = App::ui.logging.Register(name)
-#define Log(loggerid, str) App::ui.logging.Get(loggerid)->AddLog(str)
+#define Log(loggerid, str) App::ui.logging.AddLog(loggerid, str)
 #define Logf(loggerid, str, ...) Log(loggerid, std::format(str, __VA_ARGS__).c_str())
 
 class UILogger
@@ -24,7 +24,7 @@ public:
 
 	void Clear();
 
-	void AddLog(const char* fmt);
+	void AddLog(const char* message);
 
 	void Draw(bool* p_open = NULL);
 };
@@ -46,6 +46,8 @@ public:
 	UILoggerId Register(const char* name);
 
 	const std::vector<UILogger*>& GetLoggers() const { return loggers; }
+
+	void AddLog(UILoggerId loggerid, const char* message);
 
 	UILogger* Get(UILoggerId loggerid) { return loggers[loggerid]; }
 
