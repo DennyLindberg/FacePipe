@@ -10,55 +10,12 @@ void UI::GenerateMainLayout(UIManager& ui)
 {
 	UI::GenerateMainMenuBar(ui);
 	UI::GenerateStatusBar(ui);
-
-	const ImGuiViewport* viewport = ImGui::GetMainViewport();
-	ImGui::SetNextWindowPos(viewport->WorkPos);
-	ImGui::SetNextWindowSize(viewport->WorkSize);
-	ImGui::Begin("Example: Fullscreen window", NULL, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings);
-
-		ui.logging.Draw();
-
-		static const char* save_popup = "SaveChanges?";
-		if (ui.displayQuitDialog && !ImGui::IsPopupOpen(save_popup))
-		{
-			ImGui::OpenPopup(save_popup);
-		}
-
-		static std::vector<const char*> save_choices = { "Save", "Don't Save", "Cancel" };
-		ImGui::OnPopupModalSave(save_popup, ICON_FA_FLOPPY_DISK" (?)", "Save changes before closing?", save_choices, [](const char* button) {
-			if (button == save_choices[0])
-			{
-				App::SaveChanges();
-				std::cout << "SAVED!";
-			}
-
-			if (button == save_choices[2])
-			{
-				App::ui.displayQuitDialog = false;
-				ImGui::CloseCurrentPopup();
-			}
-			else
-			{
-				App::Quit();
-			}
-		});
-
-	ImGui::End();
-}
-
-
-void UI::GenerateMainLayout_Deprecated(UIManager& ui)
-{
-	UI::GenerateMainMenuBar(ui);
-	UI::GenerateStatusBar(ui);
-
-	std::string helpString = R"(Controls:
-		- Mouse buttons: Camera
-		- S: Screenshot
-		- F: Re-center camera
-	)";
+	UI::GenerateSaveDialog(ui);
 
 	static std::string input_field_string = "";
+
+	// Fill everything
+	//ImGui::Begin("Example: Fullscreen window", NULL, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings);
 
 	const ImGuiViewport* viewport = ImGui::GetMainViewport();
 	ImGui::SetNextWindowPos(viewport->WorkPos);
@@ -69,7 +26,7 @@ void UI::GenerateMainLayout_Deprecated(UIManager& ui)
 	{
 		ImGui::PopStyleVar();
 
-		ImGui::DrawViewport(&ui, ui.previewViewport, 0.5f);
+		ImGui::DrawViewport(&ui, ui.sceneViewport, 0.5f);
 
 		if (App::webcam.IsActive())
 		{
@@ -94,8 +51,6 @@ void UI::GenerateMainLayout_Deprecated(UIManager& ui)
 			App::scripting.Execute(input_field_string);
 			Logf(LOG_STDOUT, "Script is not implemented\n");
 		}
-
-		ImGui::InputTextMultiline( "Help", &helpString, ImVec2(0.0f, 100.0f), ImGuiInputTextFlags_ReadOnly );
 
 		if (App::webcam.Texture())
 		{
@@ -139,6 +94,7 @@ void UI::GenerateMainMenuBar(UIManager& ui)
 			}
 			ImGui::EndMenu();
 		}
+
 		if (ImGui::BeginMenu("Edit"))
 		{
 			if (ImGui::MenuItem("Undo", "CTRL+Z"))
@@ -152,6 +108,18 @@ void UI::GenerateMainMenuBar(UIManager& ui)
 			if (ImGui::MenuItem("Paste", "CTRL+V")) {}
 			ImGui::EndMenu();
 		}
+
+		ImGui::TextUnformatted("(?)");
+		if (ImGui::BeginItemTooltip())
+		{
+			ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+			ImGui::TextUnformatted("Control camera    [Mouse buttons]");
+			ImGui::TextUnformatted("Re-center camera  [F]");
+			ImGui::TextUnformatted("Take Screenshot   [S]");
+			ImGui::PopTextWrapPos();
+			ImGui::EndTooltip();
+		}
+
 		ImGui::EndMainMenuBar();
 	}
 }
@@ -183,4 +151,32 @@ void UI::GenerateStatusBar(UIManager& ui)
 		}
 	}
 	ImGui::End();
+}
+
+void UI::GenerateSaveDialog(UIManager& ui)
+{
+	static const char* save_popup = "SaveChanges?";
+	if (ui.displayQuitDialog && !ImGui::IsPopupOpen(save_popup))
+	{
+		ImGui::OpenPopup(save_popup);
+	}
+
+	static std::vector<const char*> save_choices = { "Save", "Don't Save", "Cancel" };
+	ImGui::OnPopupModalSave(save_popup, ICON_FA_FLOPPY_DISK" (?)", "Save changes before closing?", save_choices, [](const char* button) {
+		if (button == save_choices[0])
+		{
+			App::SaveChanges();
+			std::cout << "SAVED!";
+		}
+
+		if (button == save_choices[2])
+		{
+			App::ui.displayQuitDialog = false;
+			ImGui::CloseCurrentPopup();
+		}
+		else
+		{
+			App::Quit();
+		}
+	});
 }

@@ -7,8 +7,6 @@ void Viewport::Initialize()
 {
 	input.Initialize();
 
-	// TODO: Remove once UI layout is good
-	input.turntablePivot = glm::vec3{ -0.15f, 0.0f, 0.0f };
 	input.Set(-65.0f, 15.0f, 0.75f);
 
 	if (hasInitialViewport)
@@ -56,7 +54,7 @@ void Viewport::RenderScoped(EGLFramebufferClear clear, std::function<void()> fun
 {
 	if (auto F = GLFramebuffers::BindScoped(framebuffer))
 	{
-		App::ui.previewViewport->UseForRendering();
+		App::ui.sceneViewport->UseForRendering();
 
 		GLFramebuffers::ClearActive(clear);
 

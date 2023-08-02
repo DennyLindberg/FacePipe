@@ -20,7 +20,7 @@ public:
 
 	WeakPtr<Viewport> applicationViewport;
 	WeakPtr<Viewport> activeViewport;
-	WeakPtr<Viewport> previewViewport;
+	WeakPtr<Viewport> sceneViewport;
 	std::vector<WeakPtr<Viewport>> viewports;
 
 public:

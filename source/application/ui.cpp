@@ -27,12 +27,11 @@ void UIManager::Initialize()
 	}
 
 	applicationViewport = Viewport::Pool.CreateWeak();
-	previewViewport = Viewport::Pool.CreateWeak();
-	previewViewport->Resize(GLuint(App::settings.windowWidth*0.25f), GLuint(App::settings.windowHeight*0.25f));
+	sceneViewport = Viewport::Pool.CreateWeak();
+	sceneViewport->Resize(GLuint(App::settings.windowWidth*0.25f), GLuint(App::settings.windowHeight*0.25f));
 
 	App::window.drawImguiCallback = [this]() -> void {
-		//UI::GenerateMainLayout(*this);
-		UI::GenerateMainLayout_Deprecated(*this);
+		UI::GenerateMainLayout(*this);
 	};
 }
 
@@ -93,10 +92,14 @@ Viewport* UIManager::GetActiveViewport()
 	{
 		return nullptr;
 	}
-	else
-	{
-		return applicationViewport;
-	}
+
+	return nullptr;
+
+	// We don't use the application viewport for anything else than UI drawing
+	//else
+	//{
+	//	return applicationViewport;
+	//}
 }
 
 bool UIManager::HasKeyboardFocus() const

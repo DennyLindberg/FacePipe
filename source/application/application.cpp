@@ -162,6 +162,7 @@ bool App::Tick()
 	App::OnTickScene(App::clock.time, App::clock.deltaTime);
 
 	// Rendering
+	App::ui.applicationViewport->Clear();
 	App::OnTickRender(App::clock.time, App::clock.deltaTime);
 	App::ui.RenderUI();
 

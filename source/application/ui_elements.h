@@ -12,7 +12,7 @@ namespace ImGui
 	void GetWindowContentRegionScreenSpace(ImVec2& min, ImVec2& max);
 	void DebugDrawWindowContentRegion();
 	void DrawWindowContentRegionFilled(const ImVec4 color);
-	void HelpMarker(const char* desc); // from imgui_demo.cpp
+	void HelpMarker(const char* title, const char* desc); // from imgui_demo.cpp
 
 	void DrawViewport(UIManager* ui, Viewport* viewport, float desiredHeightPercentage = 0.0f);
 

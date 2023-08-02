@@ -39,31 +39,24 @@ int main(int argc, char* args[])
 		Load head mesh
 	*/
 	WeakPtr<GLTriangleMesh> cubemesh = GLTriangleMesh::Pool.CreateWeak();
-	WeakPtr<GLTriangleMesh> headmesh = GLTriangleMesh::Pool.CreateWeak();
+	WeakPtr<GLTriangleMesh> suzannemesh = GLTriangleMesh::Pool.CreateWeak();
 	WeakPtr<GLTriangleMesh> armesh = GLTriangleMesh::Pool.CreateWeak();
 	GLMesh::LoadPLY(App::Path("content/meshes/cube.ply"), *cubemesh);
-	GLMesh::LoadPLY(App::Path("content/meshes/blender_suzanne.ply"), *headmesh);
+	GLMesh::LoadPLY(App::Path("content/meshes/blender_suzanne.ply"), *suzannemesh);
 	GLMesh::LoadPLY(App::Path("content/meshes/ARFaceGeometry.ply"), *armesh);
 
-	WeakPtr<Object> cube = Object::Pool.CreateWeak();
-	WeakPtr<Object> head = Object::Pool.CreateWeak();
+	WeakPtr<Object> suzanne = Object::Pool.CreateWeak();
 	WeakPtr<Object> arhead = Object::Pool.CreateWeak();
-	cube->name = "Cube";
-	head->name = "Head";
+	suzanne->name = "Head";
 	arhead->name = "ARhead";
 
-	App::world->AddChild(cube);
-	App::world->AddChild(head);
+	App::world->AddChild(suzanne);
 	App::world->AddChild(arhead);
 
-	cube->AddComponent(cubemesh);
-	cube->AddComponent(headmesh);
-	cube->AddComponent(Camera::Pool.CreateWeak());
-	head->AddComponent(headmesh);
+	suzanne->AddComponent(suzannemesh);
 	arhead->AddComponent(armesh);
 
-	cube->transform.scale = glm::vec3(0.1f);
-	head->transform.scale = glm::vec3(0.1f);
+	suzanne->transform.scale = glm::vec3(0.1f);
 	//head->transform.position.x = -0.25f;
 	arhead->transform.scale = glm::vec3(0.001f);
 
@@ -71,7 +64,7 @@ int main(int argc, char* args[])
 	DefaultTexture->LoadPNG(App::Path("content/textures/default.png"));
 	DefaultTexture->CopyToGPU();
 
-	App::ui.selected_object = cube;
+	App::ui.selected_object = suzanne;
 
 	App::OnTickEvent = [&](double time, double dt, const SDL_Event& event) -> void 
 	{
@@ -80,28 +73,16 @@ int main(int argc, char* args[])
 
 	App::OnTickScene = [&](double time, double dt) -> void 
 	{
-		if (cube) cube->transform.rotation.y = sinf((float)time);
-		head->transform.position.z = abs(sinf((float)time));
-		head->transform.rotation.x = (float)time*2.0f;
+		suzanne->transform.position.z = abs(sinf((float)time));
+		suzanne->transform.rotation.x = (float)time*2.0f;
 		//head->transform.scale = glm::vec3(0.1f*abs(sinf((float)time*0.5f)));
 	};
 
 	App::OnTickRender = [&](double time, double dt) -> void 
 	{
-		App::ui.previewViewport->Render([&](Viewport& viewport) {
-			if (cube)
-			{
-				meshShader.SetUniformMat4("model", cube->transform.Matrix());
-				meshShader.SetUniformInt("useTexture", 0);
-				cubemesh->Draw();
-			}
-		});
-
-		App::ui.applicationViewport->Clear();
-
-		App::ui.applicationViewport->Render([&](Viewport& viewport) {
-			viewport.debuglines->AddLine({ 0.0f, 0.0f, 0.0f }, Transform::Position(head->ComputeWorldMatrix()), { 0.0f, 1.0f, 0.0f, 1.0f });
-			GLMesh::AppendCoordinateAxis(*viewport.debuglines, head->ComputeWorldMatrix());
+		App::ui.sceneViewport->Render([&](Viewport& viewport) {
+			viewport.debuglines->AddLine({ 0.0f, 0.0f, 0.0f }, Transform::Position(suzanne->ComputeWorldMatrix()), { 0.0f, 1.0f, 0.0f, 1.0f });
+			GLMesh::AppendCoordinateAxis(*viewport.debuglines, suzanne->ComputeWorldMatrix());
 
 			pointCloudShader.Use();
 			pointCloudShader.SetUniformMat4("model", arhead->ComputeWorldMatrix());
@@ -109,11 +90,11 @@ int main(int argc, char* args[])
 			armesh->Draw(GL_POINTS);
 
 			meshShader.Use();
-			meshShader.SetUniformMat4("model", head->ComputeWorldMatrix());
+			meshShader.SetUniformMat4("model", suzanne->ComputeWorldMatrix());
 			meshShader.SetUniformInt("useTexture", 0);
 			meshShader.SetUniformInt("useFlatShading", 0);
 			DefaultTexture->UseForDrawing();
-			headmesh->Draw();
+			suzannemesh->Draw();
 		});
 	};
 

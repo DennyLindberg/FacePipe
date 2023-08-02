@@ -41,9 +41,9 @@ namespace ImGui
 		ImGui::GetWindowDrawList()->AddRectFilled(min, max, ImColor(color), 0.0f, 0);
 	}
 
-	void HelpMarker(const char* desc)
+	void HelpMarker(const char* title, const char* desc)
 	{
-		ImGui::TextDisabled("(?)");
+		ImGui::TextDisabled("%s(?)", title);
 		if (ImGui::BeginItemTooltip())
 		{
 			ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
@@ -80,7 +80,7 @@ namespace ImGui
 			viewport->Resize(TextureWidth, TextureHeight);
 
 			ImGui::Image((ImTextureID)(intptr_t)Texture, ImVec2((float)TextureWidth, (float)TextureHeight), { 0, 1 }, { 1, 0 });
-			ui->UpdateActiveViewport(ui->previewViewport, ImGui::IsItemHovered());
+			ui->UpdateActiveViewport(ui->sceneViewport, ImGui::IsItemHovered());
 		}
 	}
 
