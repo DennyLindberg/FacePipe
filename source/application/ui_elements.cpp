@@ -58,6 +58,19 @@ namespace ImGui
 		GLuint Texture, TextureWidth, TextureHeight;
 		if (GLFramebuffers::GetTexture(viewport->framebuffer, Texture, TextureWidth, TextureHeight))
 		{
+			float availWidth = ImGui::GetContentRegionAvail().x;
+
+			if (availWidth < 16.0f)
+				availWidth = 16.0f;
+
+			if (availWidth > App::settings.windowWidth)
+				availWidth = (float) App::settings.windowWidth;
+
+			TextureWidth = (GLuint)(availWidth);
+			TextureHeight = (GLuint)(availWidth/App::settings.WindowRatio());
+
+			viewport->Resize(TextureWidth, TextureHeight);
+
 			ImGui::Image((ImTextureID)(intptr_t)Texture, ImVec2((float)TextureWidth, (float)TextureHeight), { 0, 1 }, { 1, 0 });
 			ui->UpdateActiveViewport(ui->previewViewport, ImGui::IsItemHovered());
 		}

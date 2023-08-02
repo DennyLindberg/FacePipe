@@ -48,7 +48,7 @@ void App::Initialize()
 		{
 			App::settings.windowWidth = low;
 			App::settings.windowHeight = high;
-			GLFramebuffers::Resize(0, low, high);
+			GLFramebuffers::Resize(0, low, high, true);
 		}
 		else if (event == EGLWindowEvent::SizeMoveTimer)
 		{
@@ -117,6 +117,9 @@ bool App::Tick()
 
 	if (!App::ReadyToTick())
 		return true;
+
+	// Framebuffer size changes are deferred to this point in the tick to not mess with ongoing rendering
+	GLFramebuffers::UpdateDirtyTextures();
 		
 	// Internals
 	App::clock.Tick();

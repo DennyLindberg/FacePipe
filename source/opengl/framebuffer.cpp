@@ -18,6 +18,7 @@ GLuint ActiveFBO = 0;
 
 struct RenderTarget
 {
+	bool bDirty = false;
 	GLuint width = 0;
 	GLuint height = 0;
 	GLuint fbo = 0;
@@ -91,17 +92,43 @@ void GLFramebuffers::Shutdown()
 	RenderTargets.clear();
 }
 
-void GLFramebuffers::Resize(GLuint FBO, GLuint Width, GLuint Height)
+void GLFramebuffers::Resize(GLuint FBO, GLuint Width, GLuint Height, bool bDeferTextureUpdateToTick)
 {
-	if (RenderTarget* Target = FindRenderTarget(FBO))
+	if (RenderTarget* target = FindRenderTarget(FBO))
 	{
-		Target->width = Width;
-		Target->height = Height;
+		if (target->width == Width && target->height == Height)
+			return;
 
-		Bind(FBO);
-		glBindTexture(GL_TEXTURE_2D, Target->texture);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, Width, Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+		target->width = Width;
+		target->height = Height;
+		target->bDirty = true;
+
+		if (!bDeferTextureUpdateToTick)
+		{
+			UpdateDirtyTexture(target);
+		}
+	}
+}
+
+void GLFramebuffers::UpdateDirtyTexture(RenderTarget* target)
+{
+	if (target && target->bDirty)
+	{
+		target->bDirty = false;
+
+		//Bind(FBO);
+		glBindFramebuffer(GL_FRAMEBUFFER, target->fbo);
+		glBindTexture(GL_TEXTURE_2D, target->texture);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, target->width, target->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 		glBindTexture(GL_TEXTURE_2D, 0);
+	}
+}
+
+void GLFramebuffers::UpdateDirtyTextures()
+{
+	for (RenderTarget& target : RenderTargets)
+	{
+		UpdateDirtyTexture(&target);
 	}
 }
 

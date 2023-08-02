@@ -43,7 +43,9 @@ public:
 	static void Initialize(GLuint Width, GLuint Height, glm::vec4 DefaultClearColor);
 	static void Shutdown();
 
-	static void Resize(GLuint FBO, GLuint Width, GLuint Height);
+	static void Resize(GLuint FBO, GLuint Width, GLuint Height, bool bDeferTextureUpdateToTick);
+	static void UpdateDirtyTexture(struct RenderTarget* target);
+	static void UpdateDirtyTextures();
 	static GLuint Create(GLuint Width, GLuint Height, glm::vec4 ClearColor);
 	static void Destroy(GLuint& FBO);
 

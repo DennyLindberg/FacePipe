@@ -11,15 +11,9 @@ void Viewport::Initialize()
 	input.turntablePivot = glm::vec3{ -0.15f, 0.0f, 0.0f };
 	input.Set(-65.0f, 15.0f, 0.75f);
 
-	if (width == 0 || height == 0)
-	{
-		width = App::settings.windowWidth;
-		height = App::settings.windowWidth;
-	}
-
 	if (hasInitialViewport)
 	{
-		framebuffer = GLFramebuffers::Create(width, height, App::settings.clearColor);
+		framebuffer = GLFramebuffers::Create(App::settings.windowWidth, App::settings.windowWidth, App::settings.clearColor);
 	}
 	else
 	{
@@ -104,18 +98,15 @@ void Viewport::Render(std::function<void(Viewport&)> func)
 
 void Viewport::Resize(GLuint newWidth, GLuint newHeight)
 {
-	width = newWidth;
-	height = newHeight;
+	if (newWidth <= 0)
+		newWidth = App::settings.windowWidth;
 
-	if (width <= 0)
-		width = App::settings.windowWidth;
-
-	if (height <= 0)
-		width = App::settings.windowHeight;
+	if (newHeight <= 0)
+		newHeight = App::settings.windowHeight;
 
 	if (framebuffer)
 	{
-		GLFramebuffers::Resize(framebuffer, width, height);
+		GLFramebuffers::Resize(framebuffer, newWidth, newHeight, true);
 	}
 }
 

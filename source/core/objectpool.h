@@ -41,7 +41,7 @@ public:
 		return IsValid(id, safeguard)? &objects[id] : nullptr;
 	}
 
-	const std::vector<T>& Objects() const
+	std::vector<T> Objects()
 	{ 
 		return objects; 
 	}
