@@ -69,6 +69,7 @@ public:
 };
 
 // Draws a separate line per start/end pair of points - each segment has its own color
+// TODO: Implement lines supporting thickness like in this repo https://github.com/mhalber/Lines
 class GLLine : public ObjectPoolInterface<GLLine, ObjectType_GLLine>
 {
 protected:
