@@ -84,11 +84,6 @@ void UI::GenerateMainLayout(UIManager& ui)
 						//UI::DisplayOutliner(App::world);
 						//UI::DisplaySelectionDetails(App::ui.selected_object);
 
-						if (App::webcam.Texture())
-						{
-							ImGui::Image((ImTextureID)(intptr_t)App::webcam.Texture(), ImVec2(App::webcam.TextureWidth(), App::webcam.TextureHeight()), { 0, 1 }, { 1, 0 });
-						}
-
 						if (App::webcam.IsActive())
 						{
 							if (ImGui::Button("Stop"))
@@ -105,13 +100,20 @@ void UI::GenerateMainLayout(UIManager& ui)
 						ImGui::InputInt("MaxFPS", &App::settings.maxFPS, 0);
 						ImGui::Checkbox("Wireframe", &ui.renderWireframe);
 						ImGui::Checkbox("Light follows camera", &ui.lightFollowsCamera);
-						ImGui::SliderFloat("PointSize", &App::settings.pointCloudSize, 0.0005f, 0.01f, "%.5f");
+						ImGui::SliderFloat("PointSize", &App::settings.pointCloudSize, 0.0005f, 0.1f, "%.5f");
 						ImGui::InputTextMultiline("ScriptInput", &input_field_string, ImVec2(0.0f, 100.0f));
 						if (ImGui::Button("Execute"))
 						{
 							App::scripting.Execute(input_field_string);
 							Logf(LOG_STDOUT, "Script is not implemented\n");
 						}
+
+						if (App::webcam.Texture())
+						{
+							float ratio = App::webcam.TextureWidth() / (float) App::webcam.TextureHeight();
+							ImGui::Image((ImTextureID)(intptr_t)App::webcam.Texture(), ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().x/ratio), { 0, 1 }, { 1, 0 });
+						}
+
 					ImGui::EndChild();
 					ImGui::PopStyleVar();
 					ImGui::PopStyleVar();

@@ -83,7 +83,7 @@ void CameraController::SnapToOrigin()
 glm::vec3 PlacementVector(float yaw, float pitch)
 {
 	// Angle is inverted to create a right handed system
-	float yawRad = -yaw * Math::Pi / 180.0f;
+	float yawRad = -(yaw-90.0f) * Math::Pi / 180.0f; // we want 0.0f to be from camera front
 	float pitchRad = pitch * Math::Pi / 180.0f;
 
 	float b = cosf(pitchRad);

@@ -18,6 +18,7 @@ int main(int argc, char* args[])
 		.sleepWhenFpsLimited = true,
 		.clearColor = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f),
 		.defaultCameraFOV = 45.0f,
+		.maintainVerticalFOV = true,
 		.viewportMouseSensitivity = 0.25f,
 		.skyLightDirection = glm::normalize(glm::fvec3(1.0f)),
 		.skyLightColor = glm::fvec4(1.0f),
@@ -58,8 +59,8 @@ int main(int argc, char* args[])
 	arhead->AddComponent(armesh);
 
 	suzanne->transform.scale = glm::vec3(0.1f);
-	//head->transform.position.x = -0.25f;
-	arhead->transform.scale = glm::vec3(0.001f);
+	suzanne->transform.position = glm::vec3(-1.0f, 0.0f, -1.0f);
+	arhead->transform.scale = glm::vec3(0.01f);
 
 	WeakPtr<GLTexture> DefaultTexture = GLTexture::Pool.CreateWeak();
 	DefaultTexture->LoadPNG(App::Path("content/textures/default.png"));
@@ -67,24 +68,34 @@ int main(int argc, char* args[])
 
 	App::ui.selected_object = suzanne;
 
-	App::OnTickEvent = [&](double time, double dt, const SDL_Event& event) -> void 
+	App::OnTickEvent = [&](float time, float dt, const SDL_Event& event) -> void 
 	{
 		
 	};
 
-	App::OnTickScene = [&](double time, double dt) -> void 
+	App::OnTickScene = [&](float time, float dt) -> void 
 	{
-		suzanne->transform.position.z = abs(sinf((float)time));
-		suzanne->transform.rotation.x = (float)time*2.0f;
-		//head->transform.scale = glm::vec3(0.1f*abs(sinf((float)time*0.5f)));
+		static float yvel = -0.0f;
+		yvel += -9.8f*dt;
+
+		// bounce
+		suzanne->transform.position.y += yvel*dt;
+		if (suzanne->transform.position.y < 0.0f)
+		{
+			suzanne->transform.position.y = 0.0f;
+			yvel = abs(yvel);
+		}
+
+		suzanne->transform.position.x += 0.1f*dt;
+		suzanne->transform.rotation.z = -(float)time * 2.0f;
+
+		//viewport.debuglines->AddLine({ 0.0f, 0.0f, 0.0f }, Transform::Position(suzanne->ComputeWorldMatrix()), { 0.0f, 1.0f, 0.0f, 1.0f });
+		//GLMesh::AppendCoordinateAxis(*viewport.debuglines, suzanne->ComputeWorldMatrix());
 	};
 
-	App::OnTickRender = [&](double time, double dt) -> void 
+	App::OnTickRender = [&](float time, float dt) -> void 
 	{
 		App::ui.sceneViewport->Render([&](Viewport& viewport) {
-			viewport.debuglines->AddLine({ 0.0f, 0.0f, 0.0f }, Transform::Position(suzanne->ComputeWorldMatrix()), { 0.0f, 1.0f, 0.0f, 1.0f });
-			GLMesh::AppendCoordinateAxis(*viewport.debuglines, suzanne->ComputeWorldMatrix());
-
 			pointCloudShader.Use();
 			pointCloudShader.SetUniformMat4("model", arhead->ComputeWorldMatrix());
 			pointCloudShader.SetUniformFloat("size", App::settings.pointCloudSize);

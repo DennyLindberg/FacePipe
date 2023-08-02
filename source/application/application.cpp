@@ -19,9 +19,9 @@ UniformRandomGenerator App::random = UniformRandomGenerator();
 WeakPtr<Object> App::world = WeakPtr<Object>();
 WebCam App::webcam = WebCam();
 
-std::function<void(double, double, const SDL_Event& event)> App::OnTickEvent = [](double time, double dt, const SDL_Event& event) -> void {};
-std::function<void(double, double)> App::OnTickScene = [](double time, double dt) -> void {};
-std::function<void(double, double)> App::OnTickRender = [](double time, double dt) -> void {};
+std::function<void(float, float, const SDL_Event& event)> App::OnTickEvent = [](float time, float dt, const SDL_Event& event) -> void {};
+std::function<void(float, float)> App::OnTickScene = [](float time, float dt) -> void {};
+std::function<void(float, float)> App::OnTickRender = [](float time, float dt) -> void {};
 
 namespace ObjectPoolInternals
 {
@@ -155,15 +155,15 @@ bool App::Tick()
 			activeViewport->HandleInputEvent((const void*)&event);
 		}
 
-		App::OnTickEvent(App::clock.time, App::clock.deltaTime, event);
+		App::OnTickEvent((float) App::clock.time, (float) App::clock.deltaTime, event);
 	}
 
 	// Scene
-	App::OnTickScene(App::clock.time, App::clock.deltaTime);
+	App::OnTickScene((float) App::clock.time, (float) App::clock.deltaTime);
 
 	// Rendering
 	App::ui.applicationViewport->Clear();
-	App::OnTickRender(App::clock.time, App::clock.deltaTime);
+	App::OnTickRender((float) App::clock.time, (float) App::clock.deltaTime);
 	App::ui.RenderUI();
 
 	// End frame

@@ -41,7 +41,7 @@ void main()
 
     float w = gl_in[0].gl_Position.w;
     float x = size;
-    float y = size*screenRatio;
+    float y = size;
 
     Emit(center + vec3(-x, y, 0.0f), w);
     Emit(center + vec3(-x, -y, 0.0f), w);

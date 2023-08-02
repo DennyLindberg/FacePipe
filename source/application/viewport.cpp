@@ -7,7 +7,7 @@ void Viewport::Initialize()
 {
 	input.Initialize();
 
-	input.Set(-65.0f, 15.0f, 0.75f);
+	input.Set(0.0f, 0.0f, 4.0f);
 
 	if (hasInitialViewport)
 	{

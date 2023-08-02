@@ -114,7 +114,20 @@ float GLFramebuffers::GetAspectRatio(GLuint FBO)
 {
 	if (RenderTarget* target = FindRenderTarget(FBO))
 	{
-		return target->width / ((float)target->height);
+		if (App::settings.maintainVerticalFOV)
+		{
+			if (target->height > 0.0f)
+			{
+				return target->width / ((float)target->height);
+			}
+		}
+		else
+		{
+			if (target->width > 0.0f)
+			{
+				return target->height / ((float)target->width);
+			}
+		}
 	}
 
 	return 1.0f;

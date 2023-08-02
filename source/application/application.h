@@ -23,8 +23,9 @@ struct ApplicationSettings
 	int maxFPS = 0;
 	bool sleepWhenFpsLimited = true;
 	glm::vec4 clearColor = glm::vec4(0.0f);
-	float pointCloudSize = 0.001f;
+	float pointCloudSize = 0.03f;
 	float defaultCameraFOV = 45.0f;
+	bool maintainVerticalFOV = true;
 	float viewportMouseSensitivity = 0.25f;
 	glm::fvec3 skyLightDirection = glm::normalize(glm::fvec3(1.0f));
 	glm::fvec4 skyLightColor = glm::fvec4(1.0f);
@@ -49,9 +50,9 @@ public:
 	static void Run();
 	static bool Tick();
 
-	static std::function<void(double, double, const SDL_Event& event)> OnTickEvent;
-	static std::function<void(double, double)> OnTickScene;
-	static std::function<void(double, double)> OnTickRender;
+	static std::function<void(float, float, const SDL_Event& event)> OnTickEvent;
+	static std::function<void(float, float)> OnTickScene;
+	static std::function<void(float, float)> OnTickRender;
 
 	static bool ReadyToQuit() { return bQuit; }
 	static bool HasUnsavedChanges() { return bUnsavedChanges; }

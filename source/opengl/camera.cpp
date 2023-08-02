@@ -24,11 +24,23 @@ glm::mat4 Camera::ProjectionMatrix(float aspectRatio) const
 {
 	if (view == CameraView::Perspective)
 	{
-		return glm::perspective(
+		glm::mat4 m = glm::perspective(
 			glm::radians(fieldOfView),
 			aspectRatio,
 			nearClipPlane, farClipPlane
 		);
+
+		if (!App::settings.maintainVerticalFOV)
+		{
+			// Quickfix
+			// https://community.khronos.org/t/horizontal-vertical-fov-glm-projection-matrix/73854
+			float a = m[0][0];
+			float b = m[1][1];
+			m[0][0] = b;
+			m[1][1] = a;
+		}
+
+		return m;
 	}
 	else
 	{
