@@ -14,6 +14,7 @@
 
 struct ApplicationSettings
 {
+	bool showImguiDemo = false;
 	bool showConsole = false;
 	bool vsync = true;
 	bool fullscreen = false;

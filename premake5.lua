@@ -116,11 +116,3 @@ project "FacePipeApp"
     files ({source_folder .. "**.h", source_folder .. "**.c", source_folder .. "**.cpp"})
     removefiles{ source_folder .. "main*.cpp"}
     files ({source_folder .. "main.cpp"})
-    
-project "ImguiDemo"
-    kind "ConsoleApp"
-    targetdir(binaries_folder)
-    targetname("imguidemo")
-    files ({source_folder .. "**.h", source_folder .. "**.c", source_folder .. "**.cpp"})
-    removefiles{ source_folder .. "main*.cpp"}
-    files ({source_folder .. "main_imguidemo.cpp"})

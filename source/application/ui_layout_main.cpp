@@ -15,14 +15,16 @@ void UI::GenerateMainLayout(UIManager& ui)
 	static std::string input_field_string = "";
 
 	// Fill everything
-	//ImGui::Begin("Example: Fullscreen window", NULL, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings);
 
 	const ImGuiViewport* viewport = ImGui::GetMainViewport();
 	ImGui::SetNextWindowPos(viewport->WorkPos);
-	ImGui::SetNextWindowSize(ImVec2(viewport->WorkSize.x*0.25f, viewport->WorkSize.y));
+	ImGui::SetNextWindowSize(viewport->WorkSize);
+	//ImGui::SetNextWindowSize(ImVec2(viewport->WorkSize.x*0.25f, viewport->WorkSize.y));
 
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-	ImGui::Begin("##LeftColumn", NULL, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings);
+	ImGui::Begin("Example: Fullscreen window", NULL, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings);
+	//ImGui::Begin("##LeftColumn", NULL, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings);
+	ImGui::BeginChild("##LeftColumn", ImVec2(viewport->WorkSize.x*0.25f, viewport->WorkSize.y), true, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings);
 	{
 		ImGui::PopStyleVar();
 
@@ -57,6 +59,7 @@ void UI::GenerateMainLayout(UIManager& ui)
 			ImGui::Image((ImTextureID)(intptr_t)App::webcam.Texture(), ImVec2(App::webcam.TextureWidth() * 0.25f, App::webcam.TextureHeight() * 0.25f), { 0, 1 }, { 1, 0 });
 		}
 
+		ImGui::EndChild();
 	}
 	ImGui::End();
 

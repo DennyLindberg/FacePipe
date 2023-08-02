@@ -8,6 +8,7 @@ namespace fs = std::filesystem;
 int main(int argc, char* args[])
 {
 	App::settings = {
+		.showImguiDemo = false,
 		.showConsole = false,
 		.vsync = true,
 		.fullscreen = false,

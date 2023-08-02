@@ -131,7 +131,14 @@ void OpenGLWindow::RenderImgui()
 		ImGui::NewFrame();
 	}
 
-	drawImguiCallback();
+	if (App::settings.showImguiDemo)
+	{
+		ImGui::ShowDemoWindow();
+	}
+	else
+	{
+		drawImguiCallback();
+	}
 
 	{
 		ImGui::Render();
