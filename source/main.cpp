@@ -132,7 +132,7 @@ int main(int argc, char* args[])
 
 		App::ui.applicationViewport->Clear();
 
-		App::ui.applicationViewport->Render([&](Viewport& viewport){
+		App::ui.applicationViewport->Render([&](Viewport& viewport) {
 			viewport.debuglines->AddLine({ 0.0f, 0.0f, 0.0f }, Transform::Position(head->ComputeWorldMatrix()), { 0.0f, 1.0f, 0.0f, 1.0f });
 			GLMesh::AppendCoordinateAxis(*viewport.debuglines, head->ComputeWorldMatrix());
 

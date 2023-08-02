@@ -36,6 +36,8 @@ namespace ObjectPoolInternals
 
 void App::Initialize()
 {
+	Logging::StartLoggingThread();
+
 	App::settings.windowRatio = App::settings.windowWidth / (float)App::settings.windowHeight;
 	App::window.Initialize(App::settings.windowWidth, App::settings.windowHeight, App::settings.fullscreen, App::settings.vsync);
 	App::scripting.Initialize();
@@ -67,6 +69,8 @@ void App::Shutdown()
 	App::scripting.Shutdown();
 	App::window.Destroy();
 
+	Logging::StopLoggingThread();
+
 	exit(0);
 }
 
@@ -91,6 +95,9 @@ void App::Tick()
 	App::webcam.UpdateTextureWhenDirty();
 	App::scripting.Tick();
 	App::shaders.Tick();
+
+	std::string logLine;
+	while (Logging::GetLine(logLine));
 }
 
 void App::Quit()

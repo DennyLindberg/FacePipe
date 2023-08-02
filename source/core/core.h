@@ -18,3 +18,4 @@
 #include "threads.h"
 #include "utilities.h"
 #include "input.h"
+#include "logging.h"
