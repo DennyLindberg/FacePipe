@@ -22,19 +22,21 @@ void Camera::SetView(CameraView newView)
 
 glm::mat4 Camera::ProjectionMatrix() const
 {
+	float windowRatio = App::settings.WindowRatio();
+
 	if (view == CameraView::Perspective)
 	{
 		return glm::perspective(
 			glm::radians(fieldOfView),
-			App::settings.windowRatio,
+			windowRatio,
 			nearClipPlane, farClipPlane
 		);
 	}
 	else
 	{
 		return glm::ortho(
-			-orthographicZoom*App::settings.windowRatio,
-			orthographicZoom*App::settings.windowRatio,
+			-orthographicZoom*windowRatio,
+			orthographicZoom*windowRatio,
 			-orthographicZoom,
 			orthographicZoom,
 			-farClipPlane, farClipPlane

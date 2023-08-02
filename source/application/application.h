@@ -21,13 +21,14 @@ struct ApplicationSettings
 	int windowHeight = 0;
 	int maxFPS = 0;
 	bool sleepWhenFpsLimited = true;
-	float windowRatio = 0;
 	glm::vec4 clearColor = glm::vec4(0.0f);
 	float pointCloudSize = 0.001f;
 	float defaultCameraFOV = 45.0f;
 	float viewportMouseSensitivity = 0.25f;
 	glm::fvec3 skyLightDirection = glm::normalize(glm::fvec3(1.0f));
 	glm::fvec4 skyLightColor = glm::fvec4(1.0f);
+
+	float WindowRatio() const { return windowWidth / (float)windowHeight; }
 };
 
 class App
@@ -43,7 +44,13 @@ public:
 	static void Initialize();
 	static void Shutdown();
 	static bool ReadyToTick();
-	static void Tick();
+
+	static void Run();
+	static bool Tick();
+
+	static std::function<void(double, double, const SDL_Event& event)> OnTickEvent;
+	static std::function<void(double, double)> OnTickScene;
+	static std::function<void(double, double)> OnTickRender;
 
 	static bool ReadyToQuit() { return bQuit; }
 	static bool HasUnsavedChanges() { return bUnsavedChanges; }

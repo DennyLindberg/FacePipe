@@ -73,55 +73,21 @@ int main(int argc, char* args[])
 
 	App::ui.selected_object = cube;
 
-	/*
-		Main application loop
-	*/
-	while (!App::ReadyToQuit())
+	App::OnTickEvent = [&](double time, double dt, const SDL_Event& event) -> void 
 	{
-		if (!App::ReadyToTick())
-		{
-			continue;
-		}
+		
+	};
 
-		App::Tick();
+	App::OnTickScene = [&](double time, double dt) -> void 
+	{
+		if (cube) cube->transform.rotation.y = sinf((float)time);
+		head->transform.position.z = abs(sinf((float)time));
+		head->transform.rotation.x = (float)time*2.0f;
+		//head->transform.scale = glm::vec3(0.1f*abs(sinf((float)time*0.5f)));
+	};
 
-		SDL_Event event;
-		while (SDL_PollEvent(&event))
-		{
-			if (event.type == SDL_QUIT)
-				App::ui.HandleQuit();
-
-			if (App::ui.HandleInputEvent(&event))
-				continue;
-
-			SDL_Keymod mod = SDL_GetModState();
-			bool bCtrlModifier = mod & KMOD_CTRL;
-			bool bShiftModifier = mod & KMOD_SHIFT;
-			bool bAltModifier = mod & KMOD_ALT;
-
-			if (event.type == SDL_KEYDOWN)
-			{
-				auto key = event.key.keysym.sym;
-
-				// global keys here
-			}
-
-			if (Viewport* activeViewport = App::ui.GetActiveViewport())
-			{
-				activeViewport->HandleInputEvent((const void*)&event);
-			}
-		}
-
-		// Test debug lines		
-		// Debug: Test changing the mesh transform over time
-		if (cube) cube->transform.rotation.y = sinf((float)App::clock.time);
-		head->transform.position.z = abs(sinf((float)App::clock.time));
-		head->transform.rotation.x = (float)App::clock.time*2.0f;
-		//head->transform.scale = glm::vec3(0.1f*abs(sinf((float)App::clock.time*0.5f)));
-
-		/*
-			Render scene
-		*/
+	App::OnTickRender = [&](double time, double dt) -> void 
+	{
 		App::ui.previewViewport->Render([&](Viewport& viewport) {
 			if (cube)
 			{
@@ -149,13 +115,9 @@ int main(int argc, char* args[])
 			DefaultTexture->UseForDrawing();
 			headmesh->Draw();
 		});
+	};
 
-		App::ui.RenderUI();
-
-		App::window.SwapFramebuffer();
-	}
-
-	App::Shutdown();
+	App::Run();
 
 	return 0;
 }

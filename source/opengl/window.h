@@ -6,6 +6,12 @@
 #include <string>
 #include <functional>
 
+enum class EGLWindowEvent
+{
+	Resize,
+	SizeMoveTimer
+};
+
 class OpenGLWindow
 {
 protected:
@@ -24,6 +30,7 @@ public:
 	void RenderImgui();
 
 	std::function<void()> drawImguiCallback = [](auto&&...) {};
+	static std::function<void(EGLWindowEvent, int, int)> OnWindowChanged;
 
 	void Initialize(int width, int height, bool fullscreenEnabled, bool vsync, bool showConsole);
 	void Destroy();

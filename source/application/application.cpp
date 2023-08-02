@@ -19,6 +19,10 @@ UniformRandomGenerator App::random = UniformRandomGenerator();
 WeakPtr<Object> App::world = WeakPtr<Object>();
 WebCam App::webcam = WebCam();
 
+std::function<void(double, double, const SDL_Event& event)> App::OnTickEvent = [](double time, double dt, const SDL_Event& event) -> void {};
+std::function<void(double, double)> App::OnTickScene = [](double time, double dt) -> void {};
+std::function<void(double, double)> App::OnTickRender = [](double time, double dt) -> void {};
+
 namespace ObjectPoolInternals
 {
 	void InitializeDefaultPools()
@@ -38,8 +42,19 @@ void App::Initialize()
 {
 	Logging::StartLoggingThread();
 	
-	App::settings.windowRatio = App::settings.windowWidth / (float)App::settings.windowHeight;
 	App::window.Initialize(App::settings.windowWidth, App::settings.windowHeight, App::settings.fullscreen, App::settings.vsync, App::settings.showConsole);
+	OpenGLWindow::OnWindowChanged = [](EGLWindowEvent event, int low, int high) -> void {
+		if (event == EGLWindowEvent::Resize)
+		{
+			App::settings.windowWidth = low;
+			App::settings.windowHeight = high;
+			GLFramebuffers::Resize(0, low, high);
+		}
+		else if (event == EGLWindowEvent::SizeMoveTimer)
+		{
+			App::Tick();
+		}
+	};
 	App::scripting.Initialize();
 
 	ObjectPoolInternals::InitializeDefaultPools();
@@ -89,13 +104,68 @@ bool App::ReadyToTick()
 	return false;
 }
 
-void App::Tick()
+void App::Run()
 {
+	while (App::Tick()) {}
+	App::Shutdown();
+}
+
+bool App::Tick()
+{
+	if (App::ReadyToQuit())
+		return false;
+
+	if (!App::ReadyToTick())
+		return true;
+		
+	// Internals
 	App::clock.Tick();
 	App::webcam.UpdateTextureWhenDirty();
 	App::scripting.Tick();
 	App::shaders.Tick();
 	App::ui.logging.Tick();
+	
+	// Input
+	SDL_Event event;
+	while (SDL_PollEvent(&event))
+	{
+		if (event.type == SDL_QUIT)
+			App::ui.HandleQuit();
+
+		if (App::ui.HandleInputEvent(&event))
+			continue;
+
+		SDL_Keymod mod = SDL_GetModState();
+		bool bCtrlModifier = mod & KMOD_CTRL;
+		bool bShiftModifier = mod & KMOD_SHIFT;
+		bool bAltModifier = mod & KMOD_ALT;
+
+		if (event.type == SDL_KEYDOWN)
+		{
+			auto key = event.key.keysym.sym;
+
+			// global keys here
+		}
+
+		if (Viewport* activeViewport = App::ui.GetActiveViewport())
+		{
+			activeViewport->HandleInputEvent((const void*)&event);
+		}
+
+		App::OnTickEvent(App::clock.time, App::clock.deltaTime, event);
+	}
+
+	// Scene
+	App::OnTickScene(App::clock.time, App::clock.deltaTime);
+
+	// Rendering
+	App::OnTickRender(App::clock.time, App::clock.deltaTime);
+	App::ui.RenderUI();
+
+	// End frame
+	App::window.SwapFramebuffer();
+
+	return true;
 }
 
 void App::Quit()

@@ -1,5 +1,6 @@
 #include "window.h"
 #include "glad/glad.h"
+#include "SDL2/SDL_syswm.h"
 #include <string>
 
 // IMGUI support
@@ -9,6 +10,8 @@
 
 #include "imnodes.h"
 #include "framebuffer.h"
+
+#include "application/application.h"
 
 extern "C" {
 	/*
@@ -23,6 +26,50 @@ extern "C" {
 	*/
 	__declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;			// Nvidia
 	__declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;		// AMD
+}
+
+std::function<void(EGLWindowEvent, int, int)> OpenGLWindow::OnWindowChanged = [](auto&&...) {};
+
+// window proc override for SDL2
+#define SIZEMOVETIMER 100
+WNDPROC sdl2WndProc;
+LRESULT CALLBACK FacepipeWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
+{
+	// We use a event timer to keep pumping updates while moving or resizing the window,
+	// otherwise the window freezes until the user lets go of their input.
+	// Related but not needed: WM_MOVE, WM_PAINT
+
+	switch (uMsg) 
+	{
+	case WM_ENTERSIZEMOVE:
+	{
+		SetTimer(hWnd, SIZEMOVETIMER, 1, NULL);
+		break;
+	}
+	case WM_EXITSIZEMOVE:
+	{
+		KillTimer(hWnd, SIZEMOVETIMER);
+		break;
+	}
+	case WM_TIMER:
+	{
+		if (wParam == SIZEMOVETIMER)
+		{
+			OpenGLWindow::OnWindowChanged(EGLWindowEvent::SizeMoveTimer, 0, 0);
+			return 0;
+		}
+		break;
+	}
+	case WM_SIZE:
+	{
+		OpenGLWindow::OnWindowChanged(EGLWindowEvent::Resize, LOWORD(lParam),  HIWORD(lParam));
+		break;
+	}
+	default: {}
+	}
+
+	// Trickle events to SDL2
+	return CallWindowProc(sdl2WndProc, hWnd, uMsg, wParam, lParam);
 }
 
 void InitIMGUI(SDL_Window* window, SDL_GLContext gl_context)
@@ -69,6 +116,11 @@ void OpenGLWindow::SwapFramebuffer()
 void OpenGLWindow::HandleImguiEvent(const SDL_Event* event)
 {
 	ImGui_ImplSDL2_ProcessEvent(event);
+
+	//if (event->type == SDL_WINDOWEVENT && event->window.event == SDL_WINDOWEVENT_RESIZED)
+	//{
+	//	onWindowResized(event->window.data1, event->window.data2);
+	//}
 }
 
 void OpenGLWindow::RenderImgui()
@@ -128,7 +180,7 @@ void OpenGLWindow::Initialize(int width, int height, bool fullscreen, bool vsync
 		window = SDL_CreateWindow(
 			"",
 			SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-			width, height, SDL_WINDOW_OPENGL
+			width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE
 		);
 	}
 	if (window == NULL) sdl_die("Couldn't set video mode");
@@ -137,6 +189,7 @@ void OpenGLWindow::Initialize(int width, int height, bool fullscreen, bool vsync
 	ShowWindow(consoleWindow, (int) (showConsole && !fullscreen)); // 0 = SW_HIDE, 1 = SW_SHOW
 
 	maincontext = SDL_GL_CreateContext(window);
+
 	if (maincontext == NULL)
 	{
 		sdl_die("Failed to create OpenGL context");
@@ -163,6 +216,14 @@ void OpenGLWindow::Initialize(int width, int height, bool fullscreen, bool vsync
 	glScissor(0, 0, w, h);
 
 	InitIMGUI(window, maincontext);
+
+	// Everything is ready - now hook the Win32 events
+	SDL_SysWMinfo wmInfo;
+	SDL_VERSION(&wmInfo.version);
+	if (SDL_GetWindowWMInfo(window, &wmInfo)) 
+	{
+		sdl2WndProc = (WNDPROC)SetWindowLongPtr(wmInfo.info.win.window, GWLP_WNDPROC, (LONG_PTR)FacepipeWndProc);
+	}
 }
 
 void OpenGLWindow::Destroy()
@@ -170,6 +231,13 @@ void OpenGLWindow::Destroy()
 	ShutdownIMGUI();
 	if (window)
 	{
+		if (sdl2WndProc) 
+		{
+			SDL_SysWMinfo wmInfo;
+			SDL_GetWindowWMInfo(window, &wmInfo);
+			SetWindowLongPtr(wmInfo.info.win.window, GWLP_WNDPROC, (LONG_PTR)sdl2WndProc);
+		}
+
 		SDL_GL_DeleteContext(maincontext);
 		SDL_DestroyWindow(window);
 	}

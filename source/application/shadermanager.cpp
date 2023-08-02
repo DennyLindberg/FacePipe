@@ -46,7 +46,7 @@ void ShaderManager::InitializeDefaultShaders()
 	LoadShader(backgroundShader, L"background_vertex.glsl", L"background_fragment.glsl");
 	LoadShader(bezierLinesShader, L"bezier_vertex.glsl", L"line_fragment.glsl", L"bezier_lines_geometry.glsl");
 	LoadLiveShader(pointCloudShader, L"defaultmesh_vertex.glsl", L"pointcloud_fragment.glsl", L"pointcloud_geometry.glsl");
-	pointCloudShader.SetUniformFloat("screenRatio", App::settings.windowRatio);
+	pointCloudShader.SetUniformFloat("screenRatio", App::settings.WindowRatio());
 	pointCloudShader.SetUniformFloat("size", App::settings.pointCloudSize);
 	pointCloudShader.SetUniformInt("drawShaded", 1);
 }
