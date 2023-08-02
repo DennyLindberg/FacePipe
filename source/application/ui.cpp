@@ -76,10 +76,14 @@ WeakPtr<Viewport> UIManager::CreateViewport()
 
 void UIManager::UpdateActiveViewport(WeakPtr<Viewport> viewport, bool bActiveByMouse)
 {
-	if (bActiveByMouse)
-		activeViewport = viewport;
-	else
-		activeViewport.Clear();
+	// Only update the active viewport if we are not currently interacting with one
+	if (!App::ui.viewportCaptureMouse)
+	{
+		if (bActiveByMouse)
+			activeViewport = viewport;
+		else
+			activeViewport.Clear();
+	}
 }
 
 Viewport* UIManager::GetActiveViewport()
@@ -94,12 +98,6 @@ Viewport* UIManager::GetActiveViewport()
 	}
 
 	return nullptr;
-
-	// We don't use the application viewport for anything else than UI drawing
-	//else
-	//{
-	//	return applicationViewport;
-	//}
 }
 
 bool UIManager::HasKeyboardFocus() const
