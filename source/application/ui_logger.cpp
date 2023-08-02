@@ -25,11 +25,14 @@ void UILogger::AddLog(const char* fmt)
 
 void UILogger::Draw(const char* title, bool* p_open)
 {
+	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
 	if (!ImGui::Begin(title, p_open))
 	{
+		ImGui::PopStyleVar();
 		ImGui::End();
 		return;
 	}
+	ImGui::PopStyleVar();
 
 	ImGui::SameLine();
 	if (ImGui::Button("Clear"))
@@ -40,18 +43,27 @@ void UILogger::Draw(const char* title, bool* p_open)
 	ImGui::SameLine();
 	if (ImGui::Button("Copy"))
 	{
-		ImGui::LogToClipboard();
+		ImGui::SetClipboardText(logString.c_str());
 	}
-		
-	ImGui::Separator();
-	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-	const float lineHeight = ImGui::GetTextLineHeightWithSpacing();
-	if (ImGui::BeginListBox("##ScrollingRegion", ImVec2(-FLT_MIN, -FLT_MIN)))
-	{
-		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 1)); // Tighten spacing
-		ImGui::TextUnformatted(logString.c_str());
 
-		if (ImGui::GetActiveID() == ImGui::GetWindowScrollbarID(ImGui::GetCurrentWindow(), ImGuiAxis_Y))
+	ImGui::Separator();
+
+	const float lineHeight = ImGui::GetTextLineHeightWithSpacing();
+	ImGui::BeginChild("##ScrollingRegion", ImVec2(-FLT_MIN, -FLT_MIN), false, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_HorizontalScrollbar);
+	{
+		ImGui::PushStyleColor(ImGuiCol_FrameBg, { 0.f, 0.f, 0.f, 0.f }); // remove text input box
+
+		static const char* textid = "##logtext";
+		ImGui::InputTextMultiline(
+			textid,
+			const_cast<char*>(logString.c_str()), // ugly const cast
+			logString.size() + 1, // needs to include '\0'
+			ImVec2(-FLT_MIN, -FLT_MIN),
+			ImGuiInputTextFlags_ReadOnly
+		);
+
+		ImGui::BeginChild(textid);
+		if (ImGui::GetActiveID() || ImGui::GetScrollMaxY() == 0.0f)
 		{
 			autoScrollToBottom = ImGui::GetScrollY() >= ImGui::GetScrollMaxY();
 		}
@@ -59,10 +71,11 @@ void UILogger::Draw(const char* title, bool* p_open)
 		{
 			ImGui::SetScrollHereY(1.0f);
 		}
+		ImGui::EndChild();
 
-		ImGui::PopStyleVar();
-		ImGui::EndListBox();
+		ImGui::PopStyleColor();
+
+		ImGui::EndChild();
 	}
-	ImGui::PopStyleVar();
 	ImGui::End();
 }
