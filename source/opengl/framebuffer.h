@@ -44,6 +44,7 @@ public:
 	static void Shutdown();
 
 	static void Resize(GLuint FBO, GLuint Width, GLuint Height, bool bDeferTextureUpdateToTick);
+	static float GetAspectRatio(GLuint FBO);
 	static void UpdateDirtyTexture(struct RenderTarget* target);
 	static void UpdateDirtyTextures();
 	static GLuint Create(GLuint Width, GLuint Height, glm::vec4 ClearColor);

@@ -32,4 +32,6 @@ public:
 	void Resize(GLuint newWidth, GLuint newHeight);
 
 	void HandleInputEvent(const void* eventPtr);
+
+	inline float AspectRatio() const { return GLFramebuffers::GetAspectRatio(framebuffer); }
 };

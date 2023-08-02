@@ -41,7 +41,7 @@ public:
 	void UpdateShader(GLProgram& targetProgram, std::filesystem::path filePath, ShaderType type);
 	void Tick();
 
-	void UpdateCameraUBO(WeakPtrGeneric camera);
+	void UpdateCameraUBO(WeakPtrGeneric camera, float aspectRatio);
 	void UpdateLightUBODirection(const glm::fvec3& direction);
 	void UpdateLightUBOColor(const glm::fvec4& color);
 

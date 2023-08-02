@@ -47,10 +47,9 @@ void Viewport::UseForRendering(EGLFramebufferClear clear)
 	GLFramebuffers::Bind(framebuffer);
 	GLFramebuffers::ClearActive(clear);
 
-	App::shaders.UpdateCameraUBO(input.camera);
+	App::shaders.UpdateCameraUBO(input.camera, AspectRatio());
 	App::shaders.UpdateLightUBODirection(App::ui.lightFollowsCamera ? -input.camera->ForwardVector() : App::settings.skyLightDirection);
 	App::shaders.UpdateLightUBOColor(App::settings.skyLightColor);
-
 }
 
 void Viewport::RenderScoped(EGLFramebufferClear clear, std::function<void()> func)
@@ -84,9 +83,9 @@ void Viewport::Render(std::function<void(Viewport&)> func)
 	// Grid
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	if (input.camera->GetView() == CameraView::Perspective)
-		App::geometry.grid.Draw(App::geometry.quad, input.camera->ViewProjectionMatrix());
+		App::geometry.grid.Draw(App::geometry.quad, input.camera->ViewProjectionMatrix(AspectRatio()));
 	else
-		App::geometry.grid.Draw(App::geometry.quad, input.camera->ViewProjectionMatrix(), input.camera->ForwardVector(), input.camera->SideVector());
+		App::geometry.grid.Draw(App::geometry.quad, input.camera->ViewProjectionMatrix(AspectRatio()), input.camera->ForwardVector(), input.camera->SideVector());
 
 	// Line overlays (coordinates, debug lines, etc)
 	App::shaders.lineShader.Use();

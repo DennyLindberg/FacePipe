@@ -81,11 +81,11 @@ public:
 
 	inline glm::mat4 ViewMatrix() const { return glm::lookAt(position, focusPoint, upVector); }
 
-	glm::mat4 ProjectionMatrix() const;
+	glm::mat4 ProjectionMatrix(float aspectRatio) const;
 
-	inline glm::mat4 ViewProjectionMatrix()
+	inline glm::mat4 ViewProjectionMatrix(float aspectRatio)
 	{
-		return ProjectionMatrix() * ViewMatrix();
+		return ProjectionMatrix(aspectRatio) * ViewMatrix();
 	}
 
 	inline glm::vec3 UpVector() { return upVector; }

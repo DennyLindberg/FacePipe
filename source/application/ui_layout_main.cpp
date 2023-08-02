@@ -8,35 +8,8 @@
 
 void UI::GenerateMainLayout(UIManager& ui)
 {
-	if (ImGui::BeginMainMenuBar())
-	{
-		if (ImGui::BeginMenu("File"))
-		{
-			ImGui::MenuItem("New", "CTRL+N");
-			ImGui::MenuItem("Open", "CTRL+O");
-			ImGui::MenuItem("Save", "CTRL+S");
-			ImGui::MenuItem("Save As", "CTRL+SHIFT+S");
-			if (ImGui::MenuItem("Quit", ""))
-			{
-				ui.HandleQuit();
-			}
-			ImGui::EndMenu();
-		}
-		if (ImGui::BeginMenu("Edit"))
-		{
-			if (ImGui::MenuItem("Undo", "CTRL+Z")) 
-			{
-				std::cout << "Undo" << std::endl;
-			}
-			if (ImGui::MenuItem("Redo", "CTRL+Y", false, false)) {}  // Disabled item
-			ImGui::Separator();
-			if (ImGui::MenuItem("Cut", "CTRL+X")) {}
-			if (ImGui::MenuItem("Copy", "CTRL+C")) {}
-			if (ImGui::MenuItem("Paste", "CTRL+V")) {}
-			ImGui::EndMenu();
-		}
-		ImGui::EndMainMenuBar();
-	}
+	UI::GenerateMainMenuBar(ui);
+	UI::GenerateStatusBar(ui);
 
 	const ImGuiViewport* viewport = ImGui::GetMainViewport();
 	ImGui::SetNextWindowPos(viewport->WorkPos);
@@ -76,6 +49,9 @@ void UI::GenerateMainLayout(UIManager& ui)
 
 void UI::GenerateMainLayout_Deprecated(UIManager& ui)
 {
+	UI::GenerateMainMenuBar(ui);
+	UI::GenerateStatusBar(ui);
+
 	std::string helpString = R"(Controls:
 		- Mouse buttons: Camera
 		- S: Screenshot
@@ -84,14 +60,17 @@ void UI::GenerateMainLayout_Deprecated(UIManager& ui)
 
 	static std::string input_field_string = "";
 
-	ImGui::SetNextWindowSize(ImVec2(App::settings.windowWidth * 0.25f, App::settings.windowHeight * 1.0f));
-	ImGui::SetNextWindowPos(ImVec2(0, 0));
+	const ImGuiViewport* viewport = ImGui::GetMainViewport();
+	ImGui::SetNextWindowPos(viewport->WorkPos);
+	ImGui::SetNextWindowSize(ImVec2(viewport->WorkSize.x*0.25f, viewport->WorkSize.y));
 
-	ImGui::Begin("App");
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+	ImGui::Begin("##LeftColumn", NULL, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings);
 	{
-		ImGui::Text("Scene");
-		ImGui::Text(("App - FPS: " + FpsString(App::clock.deltaTime)).c_str());
-		ImGui::Text(("App - Time: " + std::to_string(App::clock.time)).c_str());
+		ImGui::PopStyleVar();
+
+		ImGui::DrawViewport(&ui, ui.previewViewport, 0.5f);
+
 		if (App::webcam.IsActive())
 		{
 			if (ImGui::Button("Stop"))
@@ -123,7 +102,6 @@ void UI::GenerateMainLayout_Deprecated(UIManager& ui)
 			ImGui::Image((ImTextureID)(intptr_t)App::webcam.Texture(), ImVec2(App::webcam.TextureWidth() * 0.25f, App::webcam.TextureHeight() * 0.25f), { 0, 1 }, { 1, 0 });
 		}
 
-		ImGui::DrawViewport(&ui, ui.previewViewport);
 	}
 	ImGui::End();
 
@@ -143,4 +121,66 @@ void UI::GenerateMainLayout_Deprecated(UIManager& ui)
 	ImGui::End();
 
 	ui.logging.Draw();
+}
+
+void UI::GenerateMainMenuBar(UIManager& ui)
+{
+	if (ImGui::BeginMainMenuBar())
+	{
+		if (ImGui::BeginMenu("File"))
+		{
+			ImGui::MenuItem("New", "CTRL+N");
+			ImGui::MenuItem("Open", "CTRL+O");
+			ImGui::MenuItem("Save", "CTRL+S");
+			ImGui::MenuItem("Save As", "CTRL+SHIFT+S");
+			if (ImGui::MenuItem("Quit", ""))
+			{
+				ui.HandleQuit();
+			}
+			ImGui::EndMenu();
+		}
+		if (ImGui::BeginMenu("Edit"))
+		{
+			if (ImGui::MenuItem("Undo", "CTRL+Z"))
+			{
+				std::cout << "Undo" << std::endl;
+			}
+			if (ImGui::MenuItem("Redo", "CTRL+Y", false, false)) {}  // Disabled item
+			ImGui::Separator();
+			if (ImGui::MenuItem("Cut", "CTRL+X")) {}
+			if (ImGui::MenuItem("Copy", "CTRL+C")) {}
+			if (ImGui::MenuItem("Paste", "CTRL+V")) {}
+			ImGui::EndMenu();
+		}
+		ImGui::EndMainMenuBar();
+	}
+}
+
+void UI::GenerateStatusBar(UIManager& ui)
+{
+	// Thanks to https://github.com/ocornut/imgui/issues/3518
+
+	ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs |
+		ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollWithMouse |
+		ImGuiWindowFlags_NoSavedSettings |
+		ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoBackground |
+		ImGuiWindowFlags_MenuBar;
+
+	float height = ImGui::GetFrameHeight();
+	if (ImGui::BeginViewportSideBar("##StatusBar", NULL, ImGuiDir_Down, height, window_flags)) 
+	{
+		if (ImGui::BeginMenuBar()) 
+		{
+			// Text right align thanks to https://stackoverflow.com/a/66109051
+			std::string text = "FPS: " + FpsString(App::clock.deltaTime);
+			auto posX = (ImGui::GetCursorPosX() + ImGui::GetColumnWidth() - ImGui::CalcTextSize(text.c_str()).x
+				- ImGui::GetScrollX() - 2 * ImGui::GetStyle().ItemSpacing.x);
+			if (posX > ImGui::GetCursorPosX())
+				ImGui::SetCursorPosX(posX);
+			ImGui::Text(text.c_str());
+
+			ImGui::EndMenuBar();
+		}
+	}
+	ImGui::End();
 }

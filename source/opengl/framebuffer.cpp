@@ -110,6 +110,16 @@ void GLFramebuffers::Resize(GLuint FBO, GLuint Width, GLuint Height, bool bDefer
 	}
 }
 
+float GLFramebuffers::GetAspectRatio(GLuint FBO)
+{
+	if (RenderTarget* target = FindRenderTarget(FBO))
+	{
+		return target->width / ((float)target->height);
+	}
+
+	return 1.0f;
+}
+
 void GLFramebuffers::UpdateDirtyTexture(RenderTarget* target)
 {
 	if (target && target->bDirty)

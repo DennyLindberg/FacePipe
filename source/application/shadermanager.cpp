@@ -175,11 +175,11 @@ void ShaderManager::Tick()
 	fileListener.ProcessCallbacksOnMainThread();
 }
 
-void ShaderManager::UpdateCameraUBO(WeakPtrGeneric camera)
+void ShaderManager::UpdateCameraUBO(WeakPtrGeneric camera, float viewportAspect)
 {
 	if (Camera* cam = Camera::Pool.Get(camera))
 	{
-		cameraUBO.SetData(glm::value_ptr(cam->ProjectionMatrix()), 0, 64);
+		cameraUBO.SetData(glm::value_ptr(cam->ProjectionMatrix(viewportAspect)), 0, 64);
 		cameraUBO.SetData(glm::value_ptr(cam->ViewMatrix()), 64, 64);
 		cameraUBO.SetData(glm::value_ptr(cam->GetPosition()), 128, 16);
 	}

@@ -14,7 +14,7 @@ namespace ImGui
 	void DrawWindowContentRegionFilled(const ImVec4 color);
 	void HelpMarker(const char* desc); // from imgui_demo.cpp
 
-	void DrawViewport(UIManager* ui, Viewport* viewport);
+	void DrawViewport(UIManager* ui, Viewport* viewport, float desiredHeightPercentage = 0.0f);
 
 	void DrawModal(const char* label, ImVec2 modalSize, std::function<void()> modalContents);
 	void OnPopupModalSave(const char* label, const char* header, const char* message, const std::vector<const char*>& buttons, std::function<void(const char*)> callback_fun);

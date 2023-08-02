@@ -120,7 +120,7 @@ bool App::Tick()
 
 	// Framebuffer size changes are deferred to this point in the tick to not mess with ongoing rendering
 	GLFramebuffers::UpdateDirtyTextures();
-		
+	
 	// Internals
 	App::clock.Tick();
 	App::webcam.UpdateTextureWhenDirty();

@@ -53,21 +53,29 @@ namespace ImGui
 		}
 	}
 
-	void DrawViewport(UIManager* ui, Viewport* viewport)
+	void DrawViewport(UIManager* ui, Viewport* viewport, float desiredHeightPercentage)
 	{
 		GLuint Texture, TextureWidth, TextureHeight;
 		if (GLFramebuffers::GetTexture(viewport->framebuffer, Texture, TextureWidth, TextureHeight))
 		{
-			float availWidth = ImGui::GetContentRegionAvail().x;
+			if (desiredHeightPercentage <= 0.0f)
+			{
+				float availWidth = ImGui::GetContentRegionAvail().x;
 
-			if (availWidth < 16.0f)
-				availWidth = 16.0f;
+				if (availWidth < 16.0f)
+					availWidth = 16.0f;
 
-			if (availWidth > App::settings.windowWidth)
-				availWidth = (float) App::settings.windowWidth;
+				if (availWidth > App::settings.windowWidth)
+					availWidth = (float) App::settings.windowWidth;
 
-			TextureWidth = (GLuint)(availWidth);
-			TextureHeight = (GLuint)(availWidth/App::settings.WindowRatio());
+				TextureWidth = (GLuint)(availWidth);
+				TextureHeight = (GLuint)(availWidth/App::settings.WindowRatio());
+			}
+			else
+			{
+				TextureWidth = (GLuint)(ImGui::GetContentRegionAvail().x);
+				TextureHeight = (GLuint)(ImGui::GetContentRegionAvail().y * desiredHeightPercentage);
+			}
 
 			viewport->Resize(TextureWidth, TextureHeight);
 
