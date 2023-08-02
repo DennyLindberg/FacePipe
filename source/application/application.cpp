@@ -37,7 +37,7 @@ namespace ObjectPoolInternals
 void App::Initialize()
 {
 	Logging::StartLoggingThread();
-
+	
 	App::settings.windowRatio = App::settings.windowWidth / (float)App::settings.windowHeight;
 	App::window.Initialize(App::settings.windowWidth, App::settings.windowHeight, App::settings.fullscreen, App::settings.vsync);
 	App::scripting.Initialize();
@@ -96,8 +96,13 @@ void App::Tick()
 	App::scripting.Tick();
 	App::shaders.Tick();
 
+	Logging::Flush();
+
 	std::string logLine;
-	while (Logging::GetLine(logLine));
+	while (Logging::GetLine(logLine))
+	{
+		App::ui.logger.AddLog(logLine.c_str());
+	}
 }
 
 void App::Quit()

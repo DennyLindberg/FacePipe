@@ -43,30 +43,32 @@ void UI::GenerateMainLayout(UIManager& ui)
 	ImGui::SetNextWindowSize(viewport->WorkSize);
 	ImGui::Begin("Example: Fullscreen window", NULL, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings);
 
-	static const char* save_popup = "SaveChanges?";
-	if (ui.displayQuitDialog && !ImGui::IsPopupOpen(save_popup))
-	{
-		ImGui::OpenPopup(save_popup);
-	}
+		ui.logger.Draw("Log");
 
-	static std::vector<const char*> save_choices = { "Save", "Don't Save", "Cancel" };
-	ImGui::OnPopupModalSave(save_popup, ICON_FA_FLOPPY_DISK" (?)", "Save changes before closing?", save_choices, [](const char* button) {
-		if (button == save_choices[0])
+		static const char* save_popup = "SaveChanges?";
+		if (ui.displayQuitDialog && !ImGui::IsPopupOpen(save_popup))
 		{
-			App::SaveChanges();
-			std::cout << "SAVED!";
+			ImGui::OpenPopup(save_popup);
 		}
 
-		if (button == save_choices[2])
-		{
-			App::ui.displayQuitDialog = false;
-			ImGui::CloseCurrentPopup();
-		}
-		else
-		{
-			App::Quit();
-		}
-	});
+		static std::vector<const char*> save_choices = { "Save", "Don't Save", "Cancel" };
+		ImGui::OnPopupModalSave(save_popup, ICON_FA_FLOPPY_DISK" (?)", "Save changes before closing?", save_choices, [](const char* button) {
+			if (button == save_choices[0])
+			{
+				App::SaveChanges();
+				std::cout << "SAVED!";
+			}
+
+			if (button == save_choices[2])
+			{
+				App::ui.displayQuitDialog = false;
+				ImGui::CloseCurrentPopup();
+			}
+			else
+			{
+				App::Quit();
+			}
+		});
 
 	ImGui::End();
 }
@@ -138,4 +140,6 @@ void UI::GenerateMainLayout_Deprecated(UIManager& ui)
 	ImGui::Begin("Details");
 	UI::DisplaySelectionDetails(App::ui.selected_object);
 	ImGui::End();
+
+	ui.logger.Draw("Log");
 }

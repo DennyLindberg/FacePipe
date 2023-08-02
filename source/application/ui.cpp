@@ -5,6 +5,8 @@
 
 void UIManager::Initialize()
 {
+	logger.Initialize();
+
 	ImGuiIO& io = ImGui::GetIO();
 
 	// fontawesome 6 example from https://github.com/juliettef/IconFontCppHeaders
@@ -44,6 +46,8 @@ void UIManager::Shutdown()
 	}
 
 	viewports.clear();
+
+	logger.Shutdown();
 }
 
 bool UIManager::HandleInputEvent(const void* event)

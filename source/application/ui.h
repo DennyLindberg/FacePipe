@@ -3,6 +3,7 @@
 #include "core/math.h"
 #include "core/object.h"
 #include "viewport.h"
+#include "ui_logger.h"
 
 class UIManager
 {
@@ -24,6 +25,9 @@ public:
 
 public:
 	bool displayQuitDialog = false;
+
+public:
+	UILogger logger;
 
 public:
 	void Initialize();
