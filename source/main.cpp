@@ -28,6 +28,11 @@ int main(int argc, char* args[])
 	App::Initialize();
 	App::window.SetTitle("FacePipe");
 
+
+	NetSocket sendTarget(Net::LocalHost, 1337);
+	UDPSocket udp(9000);
+	udp.Start();
+
 	/*
 		Load and initialize shaders
 	*/
@@ -91,6 +96,20 @@ int main(int argc, char* args[])
 
 		//viewport.debuglines->AddLine({ 0.0f, 0.0f, 0.0f }, Transform::Position(suzanne->ComputeWorldMatrix()), { 0.0f, 1.0f, 0.0f, 1.0f });
 		//GLMesh::AppendCoordinateAxis(*viewport.debuglines, suzanne->ComputeWorldMatrix());
+
+
+		// Sending packets
+		//std::string send = std::format("Time: {}", time);
+		//Logf(LOG_NET_SEND, "[{}:{}]: {}\n", sendTarget.ip, sendTarget.port, send);
+		//udp.Send(send, sendTarget);
+		
+		// Receiving packets
+		std::string message;
+		NetSocket sender;
+		if (udp.Receive(message, sender))
+		{
+			Logf(LOG_NET_RECEIVE, "[{}:{}]: {}\n", sender.ip, sender.port, message);
+		}
 	};
 
 	App::OnTickRender = [&](float time, float dt) -> void 
@@ -111,6 +130,8 @@ int main(int argc, char* args[])
 	};
 
 	App::Run();
+
+	udp.Close();
 
 	return 0;
 }

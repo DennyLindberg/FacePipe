@@ -90,7 +90,7 @@ workspace "FacePipe"
     debugdir(binaries_folder)
     includedirs { includes_folder, source_folder, source_thirdparty_folder }
     libdirs     { libs_folder }
-    links       { "opengl32", "SDL2" }
+    links       { "opengl32", "SDL2", "ws2_32.lib" }
     flags       { "MultiProcessorCompile" }
 
     if python_enable == "1" then

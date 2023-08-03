@@ -6,6 +6,9 @@
 typedef size_t UILoggerId;
 
 #define LOG_STDOUT 0
+#define LOG_NET 0
+#define LOG_NET_SEND 1
+#define LOG_NET_RECEIVE 2
 
 #define RegisterLogger(loggerid, name) UILoggerId loggerid = App::ui.logging.Register(name)
 #define Log(loggerid, str) App::ui.logging.AddLog(loggerid, str)

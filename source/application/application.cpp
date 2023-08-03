@@ -41,7 +41,6 @@ namespace ObjectPoolInternals
 void App::Initialize()
 {
 	Logging::StartLoggingThread();
-	
 	App::window.Initialize(App::settings.windowWidth, App::settings.windowHeight, App::settings.fullscreen, App::settings.vsync, App::settings.showConsole);
 	OpenGLWindow::OnWindowChanged = [](EGLWindowEvent event, int low, int high) -> void {
 		if (event == EGLWindowEvent::Resize)
@@ -64,6 +63,14 @@ void App::Initialize()
 	App::geometry.Initialize();
 	App::ui.Initialize();
 
+	App::ui.logging.Register(LOG_NET, "Network");
+	App::ui.logging.Register(LOG_NET_SEND, "Net Send");
+	App::ui.logging.Register(LOG_NET_RECEIVE, "Net Receive");
+	if (Net::StartWinsock() != 0)
+	{
+		Logf(LOG_STDOUT, "Failed to initialize Winsock\n");
+	}
+
 	App::world = Object::Pool.CreateWeak();
 	App::world->name = "World";
 
@@ -76,6 +83,8 @@ void App::Shutdown()
 
 	ObjectPoolInternals::ShutdownPools();
 
+	Net::StopWinsock();
+
 	App::ui.Shutdown();
 	App::shaders.Shutdown();
 	App::geometry.Shutdown();
@@ -85,7 +94,6 @@ void App::Shutdown()
 	App::window.Destroy();
 
 	Logging::StopLoggingThread();
-
 	exit(0);
 }
 

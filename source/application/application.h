@@ -1,5 +1,6 @@
 #pragma once
 #include "core/core.h"
+#include "net/net.h"
 #include "opengl/opengl.h"
 #include "python/python.h"
 
