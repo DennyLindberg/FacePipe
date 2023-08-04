@@ -78,4 +78,5 @@ public:
 	static WebCam webcam;
 
 	static std::vector<float> arkitBlendshapes;
+	static std::vector<float> mediapipeLandmarks;
 };

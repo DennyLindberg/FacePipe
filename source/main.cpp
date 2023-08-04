@@ -2,17 +2,22 @@
 
 namespace fs = std::filesystem;
 
-void decode_arkit_blendshapes(const std::string& line, std::vector<float>& values)
+void decode_mediapipe(const std::string& line, std::vector<float>& values, char datagramCode)
 {
-	values.clear();
-
 	if (line.size() == 0)
 	{
 		return;
 	}
 
-	size_t s = 0;
-	size_t e = 0;
+	if (line[0] != datagramCode)
+	{
+		return;
+	}
+
+	values.clear();
+
+	size_t s = 1;
+	size_t e = 1;
 	while (e < line.size())
 	{
 		while (line[++e] != ',' && e < line.size())
@@ -101,7 +106,7 @@ int main(int argc, char* args[])
 	suzanne->transform.scale = glm::vec3(0.1f);
 	suzanne->transform.position = glm::vec3(-1.0f, 0.0f, -1.0f);
 	arhead->transform.scale = glm::vec3(0.01f);
-	mphead->transform.scale = glm::vec3(10.0f);
+	mphead->transform.scale = glm::vec3(-1.0f);
 
 	WeakPtr<GLTexture> DefaultTexture = GLTexture::Pool.CreateWeak();
 	DefaultTexture->LoadPNG(App::Path("content/textures/default.png"));
@@ -145,10 +150,26 @@ int main(int argc, char* args[])
 		{
 			for (UDPDatagram& datagram : datagrams)
 			{
-				decode_arkit_blendshapes(datagram.message, App::arkitBlendshapes);
+				decode_mediapipe(datagram.message, App::arkitBlendshapes, 'b');
+				decode_mediapipe(datagram.message, App::mediapipeLandmarks, 'l');
 				//Logf(LOG_NET_RECEIVE, "[{}:{}]: {}\n", datagram.source.ip, datagram.source.port, datagram.message);
 			}
 		}
+
+		//Logf(LOG_NET_RECEIVE, "{} vs {}\n", mpmesh->positions.size(), App::mediapipeLandmarks.size()/3);
+		
+		size_t mpcount = App::mediapipeLandmarks.size()/3;
+		size_t maxcount = mpmesh->positions.size();
+		if (maxcount > mpcount)
+			maxcount = mpcount;
+
+		for (size_t i=0; i<maxcount; ++i)
+		{
+			mpmesh->positions[i].x = -App::mediapipeLandmarks[i*3];
+			mpmesh->positions[i].y = App::mediapipeLandmarks[i*3+1];
+			mpmesh->positions[i].z = App::mediapipeLandmarks[i*3+2];
+		}
+		mpmesh->SendToGPU();
 	};
 
 	App::OnTickRender = [&](float time, float dt) -> void 

@@ -48,6 +48,19 @@ port = udp_socket.getsockname()[1]
 def on_mp_facelandmarker_result(result: FaceLandmarkerResult, output_image: mp.Image, timestamp_ms: int):
     global udp_socket
 
+    if len(result.face_landmarks) > 0:
+        values = []
+        for lm in result.face_landmarks[0]:
+            values.append(lm.x)
+            values.append(lm.y)
+            values.append(lm.z)
+        message = 'l'+str(values)
+        message = message.replace('[', '')
+        message = message.replace(']', '')
+        message = message.replace(' ', '')
+        udp_socket.sendto(message.encode(), (targetip, targetport))
+
+    #print(result.facial_transformation_matrices)
     if len(result.face_blendshapes) > 0:
         # remove redundant character for simpler parsing in C++ until we have a JSON parser
         message = str([bs.score for bs in result.face_blendshapes[0]])
@@ -56,14 +69,14 @@ def on_mp_facelandmarker_result(result: FaceLandmarkerResult, output_image: mp.I
         message = message.replace(' ', '')
         #message = message.replace('e-0', '')
 
-        message = message.encode()
+        message = 'b'+message
         # message = "/arkit/{} {}".format(bs.category_name, bs.score)
         # for bs in result.face_blendshapes[0]:
         #     # Each bs entry:
         #     #   Category(index=3, score=0.00010917118197539821, display_name='', category_name='browInnerUp')
         #     message = "/arkit/{} {}".format(bs.category_name, bs.score)
         #     udp_socket.sendto(message.encode(), (targetip, targetport))            
-        udp_socket.sendto(message, (targetip, targetport))
+        udp_socket.sendto(message.encode(), (targetip, targetport))
             
 options = FaceLandmarkerOptions(
     base_options = BaseOptions(model_asset_path='thirdparty/mediapipe/face_landmarker.task'),
@@ -73,7 +86,7 @@ options = FaceLandmarkerOptions(
     min_face_presence_confidence = 0.1,
     min_tracking_confidence = 0.1,
     output_face_blendshapes = True,
-    output_facial_transformation_matrixes = False,
+    output_facial_transformation_matrixes = True,
     result_callback = on_mp_facelandmarker_result)
 
 with FaceLandmarker.create_from_options(options) as landmarker:

@@ -20,6 +20,7 @@ WeakPtr<Object> App::world = WeakPtr<Object>();
 WebCam App::webcam = WebCam();
 
 std::vector<float> App::arkitBlendshapes;
+std::vector<float> App::mediapipeLandmarks;
 
 std::function<void(float, float, const SDL_Event& event)> App::OnTickEvent = [](float time, float dt, const SDL_Event& event) -> void {};
 std::function<void(float, float)> App::OnTickScene = [](float time, float dt) -> void {};
