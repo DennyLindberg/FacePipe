@@ -114,6 +114,12 @@ void UI::GenerateMainLayout(UIManager& ui)
 							ImGui::Image((ImTextureID)(intptr_t)App::webcam.Texture(), ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().x/ratio), { 0, 1 }, { 1, 0 });
 						}
 
+						ImGui::Text("Arkit Blendshapes");
+						for (size_t i=0; i<App::arkitBlendshapes.size(); ++i)
+						{
+							ImGui::SliderFloat(("##" + std::to_string(i)).c_str(), &App::arkitBlendshapes[i], -1.0f, 1.0f, "%.3f", ImGuiSliderFlags_NoInput);
+						}
+
 					ImGui::EndChild();
 					ImGui::PopStyleVar();
 					ImGui::PopStyleVar();

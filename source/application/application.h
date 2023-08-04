@@ -76,4 +76,6 @@ public:
 	static WeakPtr<Object> world;
 
 	static WebCam webcam;
+
+	static std::vector<float> arkitBlendshapes;
 };

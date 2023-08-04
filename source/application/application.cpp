@@ -19,6 +19,8 @@ UniformRandomGenerator App::random = UniformRandomGenerator();
 WeakPtr<Object> App::world = WeakPtr<Object>();
 WebCam App::webcam = WebCam();
 
+std::vector<float> App::arkitBlendshapes;
+
 std::function<void(float, float, const SDL_Event& event)> App::OnTickEvent = [](float time, float dt, const SDL_Event& event) -> void {};
 std::function<void(float, float)> App::OnTickScene = [](float time, float dt) -> void {};
 std::function<void(float, float)> App::OnTickRender = [](float time, float dt) -> void {};

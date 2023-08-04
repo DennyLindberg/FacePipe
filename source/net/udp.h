@@ -4,6 +4,12 @@
 #include <queue>
 #include "netsocket.h"
 
+struct UDPDatagram
+{
+	NetSocket source;
+	std::string message = "";
+};
+
 class UDPSocket : public NetSocket
 {
 protected:
@@ -30,5 +36,5 @@ public:
 	void Close();
 
 	bool Send(const std::string& message, const NetSocket& sock);
-	bool Receive(std::string& out, NetSocket& sender);
+	bool Receive(std::vector<UDPDatagram>& datagrams);
 };

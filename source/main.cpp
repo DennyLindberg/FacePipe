@@ -2,6 +2,35 @@
 
 namespace fs = std::filesystem;
 
+void decode_arkit_blendshapes(const std::string& line, std::vector<float>& values)
+{
+	values.clear();
+
+	if (line.size() == 0)
+	{
+		return;
+	}
+
+	size_t s = 0;
+	size_t e = 0;
+	while (e < line.size())
+	{
+		while (line[++e] != ',' && e < line.size())
+		{}
+
+		std::string val(line, s, e-1); // don't include the comma
+
+		values.push_back(stof(val));
+
+		e++;
+		s = e;
+	}
+
+	// [6.933183271939924e-08, 0.20715045928955078, 0.30037829279899597]
+
+	return;
+}
+
 /*
 	Application
 */
@@ -29,7 +58,7 @@ int main(int argc, char* args[])
 	App::window.SetTitle("FacePipe");
 
 
-	NetSocket sendTarget(Net::LocalHost, 1337);
+	//NetSocket sendTarget(Net::LocalHost, 1337);
 	UDPSocket udp(9000);
 	udp.Start();
 
@@ -48,24 +77,31 @@ int main(int argc, char* args[])
 	WeakPtr<GLTriangleMesh> cubemesh = GLTriangleMesh::Pool.CreateWeak();
 	WeakPtr<GLTriangleMesh> suzannemesh = GLTriangleMesh::Pool.CreateWeak();
 	WeakPtr<GLTriangleMesh> armesh = GLTriangleMesh::Pool.CreateWeak();
+	WeakPtr<GLTriangleMesh> mpmesh = GLTriangleMesh::Pool.CreateWeak();
 	GLMesh::LoadPLY(App::Path("content/meshes/cube.ply"), *cubemesh);
 	GLMesh::LoadPLY(App::Path("content/meshes/blender_suzanne.ply"), *suzannemesh);
-	GLMesh::LoadPLY(App::Path("content/meshes/ARFaceGeometry.ply"), *armesh);
+	GLMesh::LoadPLY(App::Path("content/thirdparty/arkit/ARFaceGeometry.ply"), *armesh);
+	GLMesh::LoadPLY(App::Path("content/thirdparty/mediapipe/canonical_face_model.ply"), *mpmesh);
 
 	WeakPtr<Object> suzanne = Object::Pool.CreateWeak();
 	WeakPtr<Object> arhead = Object::Pool.CreateWeak();
+	WeakPtr<Object> mphead = Object::Pool.CreateWeak();
 	suzanne->name = "Head";
-	arhead->name = "ARhead";
+	arhead->name = "ArkitHead";
+	mphead->name = "MediaPipeHead";
 
 	App::world->AddChild(suzanne);
 	App::world->AddChild(arhead);
+	App::world->AddChild(mphead);
 
 	suzanne->AddComponent(suzannemesh);
 	arhead->AddComponent(armesh);
+	mphead->AddComponent(mpmesh);
 
 	suzanne->transform.scale = glm::vec3(0.1f);
 	suzanne->transform.position = glm::vec3(-1.0f, 0.0f, -1.0f);
 	arhead->transform.scale = glm::vec3(0.01f);
+	mphead->transform.scale = glm::vec3(10.0f);
 
 	WeakPtr<GLTexture> DefaultTexture = GLTexture::Pool.CreateWeak();
 	DefaultTexture->LoadPNG(App::Path("content/textures/default.png"));
@@ -104,21 +140,29 @@ int main(int argc, char* args[])
 		//udp.Send(send, sendTarget);
 		
 		// Receiving packets
-		std::string message;
-		NetSocket sender;
-		if (udp.Receive(message, sender))
+		std::vector<UDPDatagram> datagrams;
+		if (udp.Receive(datagrams))
 		{
-			Logf(LOG_NET_RECEIVE, "[{}:{}]: {}\n", sender.ip, sender.port, message);
+			for (UDPDatagram& datagram : datagrams)
+			{
+				decode_arkit_blendshapes(datagram.message, App::arkitBlendshapes);
+				//Logf(LOG_NET_RECEIVE, "[{}:{}]: {}\n", datagram.source.ip, datagram.source.port, datagram.message);
+			}
 		}
 	};
 
 	App::OnTickRender = [&](float time, float dt) -> void 
 	{
 		App::ui.sceneViewport->Render([&](Viewport& viewport) {
+			//pointCloudShader.Use();
+			//pointCloudShader.SetUniformMat4("model", arhead->ComputeWorldMatrix());
+			//pointCloudShader.SetUniformFloat("size", App::settings.pointCloudSize);
+			//armesh->Draw(GL_POINTS);
+
 			pointCloudShader.Use();
-			pointCloudShader.SetUniformMat4("model", arhead->ComputeWorldMatrix());
+			pointCloudShader.SetUniformMat4("model", mphead->ComputeWorldMatrix());
 			pointCloudShader.SetUniformFloat("size", App::settings.pointCloudSize);
-			armesh->Draw(GL_POINTS);
+			mpmesh->Draw(GL_POINTS);
 
 			meshShader.Use();
 			meshShader.SetUniformMat4("model", suzanne->ComputeWorldMatrix());

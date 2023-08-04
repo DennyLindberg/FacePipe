@@ -62,7 +62,7 @@ class NetworkThread(threading.Thread):
     def interrupt(self):
         self.running.set()
 
-is_sender = False
+is_sender = True
 if is_sender:
     print("INIT SENDER")
 else:

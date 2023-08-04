@@ -136,36 +136,53 @@ bool is_socket_valid(SOCKET sock)
 	return true;
 }
 
-bool UDPSocket::Receive(std::string& out, NetSocket& sender)
+bool UDPSocket::Receive(std::vector<UDPDatagram>& datagrams)
 {
 	static const int bufferLength = 65535; // 16 bit max value, max theoretical size for a UDP datagram is 65507
 	static char buffer[bufferLength]; // Buffer to hold received data
 
-	sockaddr_in sender_addr{};
-	int sender_len = sizeof(sender_addr);
-	int bytes_received = recvfrom((SOCKET)ossocket, buffer, sizeof(buffer), 0, (struct sockaddr*)&sender_addr, &sender_len);
+	bool bReceivedAnyDatagram = false;
+	int bytes_received = 0;
+	do 
+	{
+		sockaddr_in sender_addr{};
+		int sender_len = sizeof(sender_addr);
+		int bytes_received = recvfrom((SOCKET)ossocket, buffer, sizeof(buffer), 0, (struct sockaddr*)&sender_addr, &sender_len);
 
-	if (bytes_received == 0)
-		return false;
-	
-	if (bytes_received == SOCKET_ERROR) 
-	{	
-		int error_code = WSAGetLastError();
-		if (error_code == WSAEWOULDBLOCK)
-		{
-			return false; // all ok, no incoming data
+		if (bytes_received == SOCKET_ERROR) 
+		{	
+			int error_code = WSAGetLastError();
+			if (error_code == WSAEWOULDBLOCK)
+			{
+				break; // no more incoming data
+			}
+			else if (error_code == WSAENETDOWN || error_code == WSAESHUTDOWN || error_code == WSAENOTCONN || !is_socket_valid((SOCKET)ossocket))
+			{
+				Close();
+				Logf(LOG_NET, "Socket closed unexpectedly during recvfrom() [{}:{}]\n", ip, port);
+				break;
+			}
+			else
+			{
+				// Other errors should be harmless
+				break;
+			}
 		}
-		else if (error_code == WSAENETDOWN || error_code == WSAESHUTDOWN || error_code == WSAENOTCONN || !is_socket_valid((SOCKET)ossocket))
+		else if (bytes_received > 0)
 		{
-			Close();
-			Logf(LOG_NET, "Socket closed unexpectedly during recvfrom() [{}:{}]\n", ip, port);
+			bReceivedAnyDatagram = true;
+			datagrams.push_back(UDPDatagram());
+			to_netsocket(sender_addr, datagrams.back().source);
+
+			std::string& message = datagrams.back().message;
+			message.assign((const char*)&buffer, (size_t)bytes_received);
+			for (size_t i = 0; i < message.length(); i++)
+			{
+				if (message[i] == '\0')
+					message[i] = '\n';
+			}
 		}
+	} while (bytes_received > 0);
 
-		// Other errors should be harmless
-
-		return false;
-	}
-
-	out.assign((const char*)&buffer, (size_t)bytes_received);
-	return to_netsocket(sender_addr, sender); // get info for datagram
+	return bReceivedAnyDatagram;
 }
