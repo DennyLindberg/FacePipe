@@ -46,58 +46,50 @@ udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 udp_socket.bind((host, 0)) # gets free port from OS
 port = udp_socket.getsockname()[1] 
 
-def send_datagram(socket: socket.socket, targetip: str, targetport: int, scene: int, camera: int, subject: int, message):
-    # first four bytes represent the header [scene|camera|subject|datatype]
-    # datatype: b = bytes, s = string, j = json
-
-    # Combine header with message encoded as bytes (looks verbose but it is to speed up python with as few operations as possible...)
+def send_datagram(socket: socket.socket, targetip: str, targetport: int, message):
+    # first byte datagram type [b = bytes, s = string, j = json]
     if isinstance(message, str):
-        header = bytearray(5)
-        header[0] = scene
-        header[1] = camera
-        header[2] = subject
-        header[3] = ord('s')
-        header[4] = 0       # TODO: [0,1,2,...] = [ascii/utf8/byte, Base64, wide]
-        udp_socket.sendto(bytes(header) + message.encode(), (targetip, targetport))
+        udp_socket.sendto(b's' + message.encode(), (targetip, targetport))
     elif isinstance(message, bytes):
-        header = bytearray(4)
-        header[0] = scene
-        header[1] = camera
-        header[2] = subject
-        header[3] = ord('b')
-        udp_socket.sendto(bytes(header) + message, (targetip, targetport))
+        udp_socket.sendto(b'b' + message, (targetip, targetport))
     else: # treat as json
-        header = bytearray(4)
-        header[0] = scene
-        header[1] = camera
-        header[2] = subject
-        header[3] = ord('j')
-        udp_socket.sendto(bytes(header) + json.dumps(message, separators=(',', ':')).encode(), (targetip, targetport))
+        udp_socket.sendto(b'j' + json.dumps(message, separators=(',', ':')).encode(), (targetip, targetport))
 
 def on_mp_facelandmarker_result(result: FaceLandmarkerResult, output_image: mp.Image, timestamp_ms: int):
     global udp_socket
 
+    # list ids for readability
+    subject = 3
+    dataType = 2
+
+    # message template
+    message = {
+        'channel': [0,0,0,0], # api version, scene, camera, subject
+        'header': ['mediapipe','1.0.0.0',''],
+        'data': {}
+    }
+
+    message['header'][dataType] = 'landmarks'
     for i in range(0, len(result.face_landmarks)):
-        message = { 
-            'type': 0, 
-            'data': np.array([(lm.x, lm.y, lm.z) for lm in result.face_landmarks[i]]).flatten().tolist() # each array is a set of landmark objects { 'x': 0, 'y': 0, 'z': 0, ... } - this unpacks it to a continuous list
+        message['channel'][subject] = i
+        message['data'] = {
+            'values': np.array([(lm.x, lm.y, lm.z) for lm in result.face_landmarks[i]]).flatten().tolist() # each array is a set of landmark objects { 'x': 0, 'y': 0, 'z': 0, ... } - this unpacks it to a continuous list
         }
-        send_datagram(udp_socket, targetip, targetport, scene=0, camera=0, subject=i, message=message)
+        send_datagram(udp_socket, targetip, targetport, message=message)
 
+    message['header'][dataType] = 'blendshapes'
     for i in range(0, len(result.face_blendshapes)):
-        message = { 
-            'type': 1, 
-            'data': {
-                'names': [bs.category_name for bs in result.face_blendshapes[i]],
-                'values': [bs.score for bs in result.face_blendshapes[i]]
-            }
+        message['channel'][subject] = i
+        message['data'] = {
+            'names': [bs.category_name for bs in result.face_blendshapes[i]],
+            'values': [bs.score for bs in result.face_blendshapes[i]]
         }
-        send_datagram(udp_socket, targetip, targetport, scene=0, camera=0, subject=0, message=message)
+        send_datagram(udp_socket, targetip, targetport, message=message)
 
+    message['header'][dataType] = 'transforms'
     for i in range(0, len(result.facial_transformation_matrixes)):
-        message = {
-            'type': 2,
-            'data': []
+        message['channel'][subject] = i
+        message['data'] = {
         }
         # TODO
         pass

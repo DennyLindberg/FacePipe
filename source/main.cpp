@@ -26,32 +26,9 @@ enum class EDatagramType : uint8_t
 	MAX = 4
 };
 
-void decode_header(const UDPDatagram& datagram, int& scene, int& camera, int& subject, EDatagramType& datatype)
-{
-	scene = 0;
-	camera = 0;
-	subject = 0;
-	datatype = EDatagramType::Invalid;
-
-	if (datagram.message.size() >= 4)
-	{
-		scene = (int)datagram.message[0];
-		camera = (int)datagram.message[1];
-		subject = (int)datagram.message[2];
-
-		switch (datagram.message[3])
-		{
-		case 'b': { datatype = EDatagramType::Bytes; break; }
-		case 's': { datatype = EDatagramType::String; break; }
-		case 'j': { datatype = EDatagramType::JSON; break; }
-		default:  { datatype = EDatagramType::Invalid; break; }
-		}
-	}
-}
-
 std::string data_as_str(UDPDatagram& datagram)
 {
-	return std::string(datagram.message.begin() + 4, datagram.message.end());
+	return std::string(datagram.message.begin() + 1, datagram.message.end());
 }
 
 /*
@@ -166,12 +143,20 @@ int main(int argc, char* args[])
 		{
 			for (UDPDatagram& datagram : datagrams)
 			{
-				int scene, camera, subject;
-				EDatagramType data_type;
+				if (datagram.message.size() <= 1)
+					continue; // nothing to parse
 
-				decode_header(datagram, scene, camera, subject, data_type);
+				// first byte depicts what this datagram is about
+				EDatagramType datatype;
+				switch (datagram.message[0])
+				{
+				case 'b': { datatype = EDatagramType::Bytes; break; }
+				case 's': { datatype = EDatagramType::String; break; }
+				case 'j': { datatype = EDatagramType::JSON; break; }
+				default:  { datatype = EDatagramType::Invalid; break; }
+				}
 
-				switch (data_type)
+				switch (datatype)
 				{
 				case EDatagramType::Bytes:	
 				{ 
@@ -183,46 +168,61 @@ int main(int argc, char* args[])
 				}
 				case EDatagramType::JSON:	
 				{
+					/*
+					* Protocol layout
+					* First byte datagram.message[0] is the type
+					* Remainder datagram.message[1] to end is JSON
+					*   {
+					*		'channel': [0,0,0,0],								# api version, scene, camera, subject
+					*		'header': ['mediapipe','1.0.0.0','blendshapes'],	# source, version, data type
+					*		'data': {}											# data that changes with type
+					*	}
+					*/
 					try {
 						json mpdata = json::parse(data_as_str(datagram));
 
-						json& type = mpdata["type"];
-						json& data = mpdata["data"];
+						int api, scene, camera, subject;
+						json& channel = mpdata["channel"];
+						if (channel.is_array())
+						{
+							auto values = channel.get<std::vector<int>>();			// [0,0,0,0] api version, scene, camera, subject
+							if (values.size() < 4)
+								continue; // skip this datagram, invalid header
 
-						if (!type.is_number_integer())
+							api = values[0];
+							scene = values[1];
+							camera = values[2];
+							subject = values[3];
+						}
+
+						std::string source, version, datatype;
+						json& header = mpdata["header"];
+						if (channel.is_array())
+						{
+							auto values = header.get<std::vector<std::string>>();	// ['source', 'version', 'datatype'] e.g. ['mediapipe', '1.0.0.0', 'blendshapes']
+							if (values.size() < 3)
+								continue;
+
+							source = values[0];
+							version = values[1];
+							datatype = values[2];
+						}
+
+						json& data = mpdata["data"];
+						if (!data.is_object())
 							continue;
 
-						EFacepipeData facedata = (EFacepipeData) type.get<int>();
-
-						switch (facedata)
+						if (datatype == "blendshapes")
 						{
-						case EFacepipeData::Landmarks:
-						{
-							if (data.is_array())
-							{
-								App::mediapipeLandmarks = data.get<std::vector<float>>();
-							}
-							break;
+							App::arkitBlendshapeNames = data["names"].get<std::vector<std::string>>();
+							App::arkitBlendshapeValues = data["values"].get<std::vector<float>>();
 						}
-						case EFacepipeData::Blendshapes:
+						else if (datatype == "landmarks")
 						{
-							if (data.is_object())
-							{
-								json& names = data["names"];
-								json& values = data["values"];
-								if (names.is_array() && values.is_array())
-								{
-									App::arkitBlendshapeNames = names.get<std::vector<std::string>>();
-									App::arkitBlendshapeValues = values.get<std::vector<float>>();
-								}
-							}
-							break;
+							App::mediapipeLandmarks = data["values"].get<std::vector<float>>();
 						}
-						case EFacepipeData::Transforms:
+						else if (datatype == "transforms")
 						{
-							break;
-						}
-						default: {}
 						}
 					}
 					catch (std::exception e)
