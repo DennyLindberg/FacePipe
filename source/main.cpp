@@ -206,9 +206,15 @@ int main(int argc, char* args[])
 						}
 						case EFacepipeData::Blendshapes:
 						{
-							if (data.is_array())
+							if (data.is_object())
 							{
-								App::arkitBlendshapes = data.get<std::vector<float>>();
+								json& names = data["names"];
+								json& values = data["values"];
+								if (names.is_array() && values.is_array())
+								{
+									App::arkitBlendshapeNames = names.get<std::vector<std::string>>();
+									App::arkitBlendshapeValues = values.get<std::vector<float>>();
+								}
 							}
 							break;
 						}

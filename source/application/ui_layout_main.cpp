@@ -119,9 +119,9 @@ void UI::GenerateMainLayout(UIManager& ui)
 						if (bShowBlendshapes)
 						{
 							ImGui::Text("Arkit Blendshapes");
-							for (size_t i=0; i<App::arkitBlendshapes.size(); ++i)
+							for (size_t i=0; i<App::arkitBlendshapeValues.size(); ++i)
 							{
-								ImGui::SliderFloat(("##" + std::to_string(i)).c_str(), &App::arkitBlendshapes[i], -1.0f, 1.0f, "%.3f", ImGuiSliderFlags_NoInput);
+								ImGui::SliderFloat(App::arkitBlendshapeNames[i].c_str(), &App::arkitBlendshapeValues[i], -1.0f, 1.0f, "%.3f", ImGuiSliderFlags_NoInput);
 							}
 						}
 						else

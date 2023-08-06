@@ -87,7 +87,10 @@ def on_mp_facelandmarker_result(result: FaceLandmarkerResult, output_image: mp.I
     for i in range(0, len(result.face_blendshapes)):
         message = { 
             'type': 1, 
-            'data': [bs.score for bs in result.face_blendshapes[i]] 
+            'data': {
+                'names': [bs.category_name for bs in result.face_blendshapes[i]],
+                'values': [bs.score for bs in result.face_blendshapes[i]]
+            }
         }
         send_datagram(udp_socket, targetip, targetport, scene=0, camera=0, subject=0, message=message)
 
