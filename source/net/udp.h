@@ -7,7 +7,7 @@
 struct UDPDatagram
 {
 	NetSocket source;
-	std::string message = "";
+	std::vector<char> message;
 };
 
 class UDPSocket : public NetSocket

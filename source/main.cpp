@@ -1,39 +1,57 @@
 #include "application/application.h"
 
+#include "nlohmann/json.hpp"
+
 namespace fs = std::filesystem;
+using json = nlohmann::json;
 
-void decode_mediapipe(const std::string& line, std::vector<float>& values, char datagramCode)
+#define INVALID_TYPE '\0'
+#define BYTES_TYPE 'b'
+#define STRING_TYPE 's'
+#define JSON_TYPE 'j'
+
+enum class EFacepipeData : uint8_t
 {
-	if (line.size() == 0)
+	Landmarks = 0,
+	Blendshapes = 1,
+	Transforms = 2
+};
+
+enum class EDatagramType : uint8_t
+{
+	Invalid = 0,
+	Bytes = 1,
+	String = 2,
+	JSON = 3,
+	MAX = 4
+};
+
+void decode_header(const UDPDatagram& datagram, int& scene, int& camera, int& subject, EDatagramType& datatype)
+{
+	scene = 0;
+	camera = 0;
+	subject = 0;
+	datatype = EDatagramType::Invalid;
+
+	if (datagram.message.size() >= 4)
 	{
-		return;
+		scene = (int)datagram.message[0];
+		camera = (int)datagram.message[1];
+		subject = (int)datagram.message[2];
+
+		switch (datagram.message[3])
+		{
+		case 'b': { datatype = EDatagramType::Bytes; break; }
+		case 's': { datatype = EDatagramType::String; break; }
+		case 'j': { datatype = EDatagramType::JSON; break; }
+		default:  { datatype = EDatagramType::Invalid; break; }
+		}
 	}
+}
 
-	if (line[0] != datagramCode)
-	{
-		return;
-	}
-
-	values.clear();
-
-	size_t s = 1;
-	size_t e = 1;
-	while (e < line.size())
-	{
-		while (line[++e] != ',' && e < line.size())
-		{}
-
-		std::string val(line, s, e-1); // don't include the comma
-
-		values.push_back(stof(val));
-
-		e++;
-		s = e;
-	}
-
-	// [6.933183271939924e-08, 0.20715045928955078, 0.30037829279899597]
-
-	return;
+std::string data_as_str(UDPDatagram& datagram)
+{
+	return std::string(datagram.message.begin() + 4, datagram.message.end());
 }
 
 /*
@@ -61,7 +79,6 @@ int main(int argc, char* args[])
 
 	App::Initialize();
 	App::window.SetTitle("FacePipe");
-
 
 	//NetSocket sendTarget(Net::LocalHost, 1337);
 	UDPSocket udp(9000);
@@ -106,7 +123,7 @@ int main(int argc, char* args[])
 	suzanne->transform.scale = glm::vec3(0.1f);
 	suzanne->transform.position = glm::vec3(-1.0f, 0.0f, -1.0f);
 	arhead->transform.scale = glm::vec3(0.01f);
-	mphead->transform.scale = glm::vec3(-1.0f);
+	mphead->transform.scale = glm::vec3(1.0f);
 
 	WeakPtr<GLTexture> DefaultTexture = GLTexture::Pool.CreateWeak();
 	DefaultTexture->LoadPNG(App::Path("content/textures/default.png"));
@@ -138,7 +155,6 @@ int main(int argc, char* args[])
 		//viewport.debuglines->AddLine({ 0.0f, 0.0f, 0.0f }, Transform::Position(suzanne->ComputeWorldMatrix()), { 0.0f, 1.0f, 0.0f, 1.0f });
 		//GLMesh::AppendCoordinateAxis(*viewport.debuglines, suzanne->ComputeWorldMatrix());
 
-
 		// Sending packets
 		//std::string send = std::format("Time: {}", time);
 		//Logf(LOG_NET_SEND, "[{}:{}]: {}\n", sendTarget.ip, sendTarget.port, send);
@@ -150,8 +166,67 @@ int main(int argc, char* args[])
 		{
 			for (UDPDatagram& datagram : datagrams)
 			{
-				decode_mediapipe(datagram.message, App::arkitBlendshapes, 'b');
-				decode_mediapipe(datagram.message, App::mediapipeLandmarks, 'l');
+				int scene, camera, subject;
+				EDatagramType data_type;
+
+				decode_header(datagram, scene, camera, subject, data_type);
+
+				switch (data_type)
+				{
+				case EDatagramType::Bytes:	
+				{ 
+					break; 
+				}
+				case EDatagramType::String:	
+				{ 
+					break; 
+				}
+				case EDatagramType::JSON:	
+				{
+					try {
+						json mpdata = json::parse(data_as_str(datagram));
+
+						json& type = mpdata["type"];
+						json& data = mpdata["data"];
+
+						if (!type.is_number_integer())
+							continue;
+
+						EFacepipeData facedata = (EFacepipeData) type.get<int>();
+
+						switch (facedata)
+						{
+						case EFacepipeData::Landmarks:
+						{
+							if (data.is_array())
+							{
+								App::mediapipeLandmarks = data.get<std::vector<float>>();
+							}
+							break;
+						}
+						case EFacepipeData::Blendshapes:
+						{
+							if (data.is_array())
+							{
+								App::arkitBlendshapes = data.get<std::vector<float>>();
+							}
+							break;
+						}
+						case EFacepipeData::Transforms:
+						{
+							break;
+						}
+						default: {}
+						}
+					}
+					catch (std::exception e)
+					{
+					}
+					break;	
+				}
+				default: {}
+				}
+
 				//Logf(LOG_NET_RECEIVE, "[{}:{}]: {}\n", datagram.source.ip, datagram.source.port, datagram.message);
 			}
 		}

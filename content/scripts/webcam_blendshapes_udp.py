@@ -6,10 +6,11 @@ https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/
 '''
 
 import mediapipe as mp
+import json
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
-
 from typing import Tuple, Union
+
 import math
 import cv2
 import numpy as np
@@ -45,41 +46,61 @@ udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 udp_socket.bind((host, 0)) # gets free port from OS
 port = udp_socket.getsockname()[1] 
 
+def send_datagram(socket: socket.socket, targetip: str, targetport: int, scene: int, camera: int, subject: int, message):
+    # first four bytes represent the header [scene|camera|subject|datatype]
+    # datatype: b = bytes, s = string, j = json
+
+    # Combine header with message encoded as bytes (looks verbose but it is to speed up python with as few operations as possible...)
+    if isinstance(message, str):
+        header = bytearray(5)
+        header[0] = scene
+        header[1] = camera
+        header[2] = subject
+        header[3] = ord('s')
+        header[4] = 0       # TODO: [0,1,2,...] = [ascii/utf8/byte, Base64, wide]
+        udp_socket.sendto(bytes(header) + message.encode(), (targetip, targetport))
+    elif isinstance(message, bytes):
+        header = bytearray(4)
+        header[0] = scene
+        header[1] = camera
+        header[2] = subject
+        header[3] = ord('b')
+        udp_socket.sendto(bytes(header) + message, (targetip, targetport))
+    else: # treat as json
+        header = bytearray(4)
+        header[0] = scene
+        header[1] = camera
+        header[2] = subject
+        header[3] = ord('j')
+        udp_socket.sendto(bytes(header) + json.dumps(message).encode(), (targetip, targetport))
+
 def on_mp_facelandmarker_result(result: FaceLandmarkerResult, output_image: mp.Image, timestamp_ms: int):
     global udp_socket
 
-    if len(result.face_landmarks) > 0:
-        values = []
-        for lm in result.face_landmarks[0]:
-            values.append(lm.x)
-            values.append(lm.y)
-            values.append(lm.z)
-        message = 'l'+str(values)
-        message = message.replace('[', '')
-        message = message.replace(']', '')
-        message = message.replace(' ', '')
-        udp_socket.sendto(message.encode(), (targetip, targetport))
+    for i in range(0, len(result.face_landmarks)):
+        message = { 
+            'type': 0, 
+            'data': np.array([(lm.x, lm.y, lm.z) for lm in result.face_landmarks[i]]).flatten().tolist() # each array is a set of landmark objects { 'x': 0, 'y': 0, 'z': 0, ... } - this unpacks it to a continuous list
+        }
+        send_datagram(udp_socket, targetip, targetport, scene=0, camera=0, subject=i, message=message)
 
-    #print(result.facial_transformation_matrices)
-    if len(result.face_blendshapes) > 0:
-        # remove redundant character for simpler parsing in C++ until we have a JSON parser
-        message = str([bs.score for bs in result.face_blendshapes[0]])
-        message = message.replace('[', '')
-        message = message.replace(']', '')
-        message = message.replace(' ', '')
-        #message = message.replace('e-0', '')
+    for i in range(0, len(result.face_blendshapes)):
+        message = { 
+            'type': 1, 
+            'data': [bs.score for bs in result.face_blendshapes[i]] 
+        }
+        send_datagram(udp_socket, targetip, targetport, scene=0, camera=0, subject=0, message=message)
 
-        message = 'b'+message
-        # message = "/arkit/{} {}".format(bs.category_name, bs.score)
-        # for bs in result.face_blendshapes[0]:
-        #     # Each bs entry:
-        #     #   Category(index=3, score=0.00010917118197539821, display_name='', category_name='browInnerUp')
-        #     message = "/arkit/{} {}".format(bs.category_name, bs.score)
-        #     udp_socket.sendto(message.encode(), (targetip, targetport))            
-        udp_socket.sendto(message.encode(), (targetip, targetport))
+    for i in range(0, len(result.facial_transformation_matrixes)):
+        message = {
+            'type': 2,
+            'data': []
+        }
+        # TODO
+        pass
             
 options = FaceLandmarkerOptions(
-    base_options = BaseOptions(model_asset_path='thirdparty/mediapipe/face_landmarker.task'),
+    base_options = BaseOptions(model_asset_path='content/thirdparty/mediapipe/face_landmarker.task'),
     running_mode = VisionRunningMode.LIVE_STREAM,
     num_faces = 1,
     min_face_detection_confidence = 0.1,
@@ -88,6 +109,7 @@ options = FaceLandmarkerOptions(
     output_face_blendshapes = True,
     output_facial_transformation_matrixes = True,
     result_callback = on_mp_facelandmarker_result)
+
 
 with FaceLandmarker.create_from_options(options) as landmarker:
     cv2_webcam_capture = cv2.VideoCapture(0) # 0: first webcam in device list

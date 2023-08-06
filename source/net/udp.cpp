@@ -172,15 +172,8 @@ bool UDPSocket::Receive(std::vector<UDPDatagram>& datagrams)
 		{
 			bReceivedAnyDatagram = true;
 			datagrams.push_back(UDPDatagram());
+			datagrams.back().message.assign(buffer, buffer + bytes_received);
 			to_netsocket(sender_addr, datagrams.back().source);
-
-			std::string& message = datagrams.back().message;
-			message.assign((const char*)&buffer, (size_t)bytes_received);
-			for (size_t i = 0; i < message.length(); i++)
-			{
-				if (message[i] == '\0')
-					message[i] = '\n';
-			}
 		}
 	} while (bytes_received > 0);
 
