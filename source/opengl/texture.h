@@ -5,6 +5,9 @@
 #include "core/math.h"
 #include "core/objectpool.h"
 
+#define FLIP_IMAGES_VERTICALLY false								// set false to keep [0,0] in the top left corner (like most image applications...)
+#define FLIP_TEXTURE_VERTICALLY_IN_SHADER !FLIP_IMAGES_VERTICALLY	// OpenGL expects images to start in the bottom left, the texcoord.y coordinate must be flipped when the image is not otherwise the UV coordinates are wrong (we don't touch the mesh data)
+
 class GLTexture : public ObjectPoolInterface<GLTexture, ObjectType_GLTexture>
 {
 public:
@@ -49,6 +52,6 @@ public:
 
 	void FillDebug();
 	static void SaveAsPNG(std::vector<GLubyte>& glData, int width, int height, std::string filepath, bool incrementNewFile = false);
-	void LoadPNG(std::filesystem::path filepath, bool bFlipVertically = true);
+	void LoadPNG(std::filesystem::path filepath, bool bFlipVertically = FLIP_IMAGES_VERTICALLY);
 	static void FlipVertically(std::vector<GLubyte>& glData, int width, int height, int channelCount = 4);
 };

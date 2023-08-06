@@ -6,6 +6,7 @@ layout(location = 2) in vec4 vertexColor;
 layout(location = 3) in vec4 vertexTCoord;
 
 uniform mat4 mvp;
+uniform bool uFlipY;
 
 out vec3 vPosition;
 out vec3 vNormal;
@@ -19,4 +20,8 @@ void main()
     vNormal = vertexNormal;
     vColor = vertexColor;
     vTCoord = vertexTCoord;
+    
+    vTCoord = vertexTCoord;
+    if (uFlipY)
+        vTCoord.y = 1.0f - vertexTCoord.y;
 }

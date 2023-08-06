@@ -31,17 +31,19 @@ void ShaderManager::InitializeDefaultShaders()
 	defaultMeshShader.SetUniformMat4("model", glm::fmat4(1.0f));
 	defaultMeshShader.SetUniformInt("useTexture", 0);
 	defaultMeshShader.SetUniformInt("useFlatShading", 0);
+	defaultMeshShader.SetUniformInt("uFlipY", FLIP_TEXTURE_VERTICALLY_IN_SHADER);
 
 	LoadShader(screenspaceQuadShader, L"screenspacequad_vertex.glsl", L"screenspacequad_fragment.glsl");
 	screenspaceQuadShader.SetUniformFloat("uOpacity", 1.0f);
 	screenspaceQuadShader.SetUniformVec2("uPos", glm::fvec2(1.0f));
 	screenspaceQuadShader.SetUniformVec2("uSize", glm::fvec2(1.0f));
-	screenspaceQuadShader.SetUniformInt("uFlipY", 0);
+	screenspaceQuadShader.SetUniformInt("uFlipY", FLIP_TEXTURE_VERTICALLY_IN_SHADER);
 
 	LoadShader(gridShader, L"grid_vertex.glsl", L"grid_fragment.glsl");
 	LoadShader(lineShader, L"line_vertex.glsl", L"line_fragment.glsl");
 	lineShader.SetUniformMat4("model", glm::fmat4(1.0f));
 	lineShader.SetUniformFloat("useUniformColor", false);
+	lineShader.SetUniformInt("uFlipY", FLIP_TEXTURE_VERTICALLY_IN_SHADER);
 
 	LoadShader(backgroundShader, L"background_vertex.glsl", L"background_fragment.glsl");
 	LoadShader(bezierLinesShader, L"bezier_vertex.glsl", L"line_fragment.glsl", L"bezier_lines_geometry.glsl");
@@ -49,6 +51,7 @@ void ShaderManager::InitializeDefaultShaders()
 	pointCloudShader.SetUniformFloat("screenRatio", App::settings.WindowRatio());
 	pointCloudShader.SetUniformFloat("size", App::settings.pointCloudSize);
 	pointCloudShader.SetUniformInt("drawShaded", 1);
+	pointCloudShader.SetUniformInt("uFlipY", FLIP_TEXTURE_VERTICALLY_IN_SHADER);
 }
 
 void ShaderManager::Shutdown()

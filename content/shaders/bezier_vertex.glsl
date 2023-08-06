@@ -11,6 +11,7 @@ layout(location = 7) in int vertexSegmentSubdivisions;
 
 uniform int shapeOverride = -1;
 uniform int subdivisionsOverride = -1;
+uniform bool uFlipY;
 
 out CPAttrib
 {
@@ -30,9 +31,18 @@ void main()
     controlpoint.normal = vertexNormal;
     controlpoint.tangent = vertexTangent;
     controlpoint.bitangent = normalize(cross(vertexNormal, vertexTangent));
-    controlpoint.texcoord = vertexTexcoord;
     controlpoint.width = vertexWidth;
     controlpoint.thickness = vertexThickness;
     controlpoint.shape = (shapeOverride >= 0)? shapeOverride : vertexSegmentShape;
     controlpoint.subdivisions = (subdivisionsOverride >= 0)? subdivisionsOverride : vertexSegmentSubdivisions;
+
+    vTCoord = vertexTCoord;
+    if (uFlipY)
+    {
+        vTCoord.y = 1.0f - vertexTCoord.y;
+    }
+
+    controlpoint.texcoord = vertexTexcoord.y;
+    if (uFlipY)
+        controlpoint.texcoord.y = 1.0f - vertexTexcoord.y;
 }
