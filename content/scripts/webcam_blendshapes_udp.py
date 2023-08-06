@@ -72,7 +72,7 @@ def send_datagram(socket: socket.socket, targetip: str, targetport: int, scene: 
         header[1] = camera
         header[2] = subject
         header[3] = ord('j')
-        udp_socket.sendto(bytes(header) + json.dumps(message).encode(), (targetip, targetport))
+        udp_socket.sendto(bytes(header) + json.dumps(message, separators=(',', ':')).encode(), (targetip, targetport))
 
 def on_mp_facelandmarker_result(result: FaceLandmarkerResult, output_image: mp.Image, timestamp_ms: int):
     global udp_socket
