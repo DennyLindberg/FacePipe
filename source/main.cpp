@@ -170,11 +170,25 @@ int main(int argc, char* args[])
 				{
 					/*
 					* Protocol layout
-					* First byte datagram.message[0] is the type
-					* Remainder datagram.message[1] to end is JSON
+					* 
+					* First byte of datagram.message[0] is the type
+					*	'b' = bytes
+					*	'j' = json
+					*	's' = string
+					* 
+					* Remainder datagram.message[1] is handled differently per type
+					* 
+					* bytes
+					*	not implemented
+					* 
+					* string
+					*	only treated as log
+					* 
+					* json
 					*   {
 					*		'channel': [0,0,0,0],								# api version, scene, camera, subject
 					*		'header': ['mediapipe','1.0.0.0','blendshapes'],	# source, version, data type
+					*		'time': 0.0,										# time in seconds at the source (application start, since epoch, does not matter)
 					*		'data': {}											# data that changes with type
 					*	}
 					*/
@@ -208,9 +222,12 @@ int main(int argc, char* args[])
 							datatype = values[2];
 						}
 
+						json& time = mpdata["time"];
 						json& data = mpdata["data"];
-						if (!data.is_object())
+						if (!time.is_number_float() || !data.is_object())
 							continue;
+
+						App::mediapipeTime = time.get<double>();
 
 						if (datatype == "blendshapes")
 						{

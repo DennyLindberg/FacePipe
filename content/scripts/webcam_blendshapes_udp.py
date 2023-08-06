@@ -66,6 +66,7 @@ def on_mp_facelandmarker_result(result: FaceLandmarkerResult, output_image: mp.I
     message = {
         'channel': [0,0,0,0], # api version, scene, camera, subject
         'header': ['mediapipe','1.0.0.0',''],
+        'time': float(timestamp_ms)/1000.0,
         'data': {}
     }
 
