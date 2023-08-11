@@ -36,13 +36,13 @@ void main()
     controlpoint.shape = (shapeOverride >= 0)? shapeOverride : vertexSegmentShape;
     controlpoint.subdivisions = (subdivisionsOverride >= 0)? subdivisionsOverride : vertexSegmentSubdivisions;
 
-    vTCoord = vertexTCoord;
+    vec3 vTCoord = vertexTexcoord;
     if (uFlipY)
     {
-        vTCoord.y = 1.0f - vertexTCoord.y;
+        vTCoord.y = 1.0f - vertexTexcoord.y;
     }
 
-    controlpoint.texcoord = vertexTexcoord.y;
+    controlpoint.texcoord.y = vertexTexcoord.y;
     if (uFlipY)
         controlpoint.texcoord.y = 1.0f - vertexTexcoord.y;
 }
