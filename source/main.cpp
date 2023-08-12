@@ -51,7 +51,7 @@ int main(int argc, char* args[])
 	GLMesh::LoadPLY(App::Path("content/thirdparty/mediapipe/canonical_face_model.ply"), *mpmesh);
 
 	mpmesh->SetColors(glm::fvec4(0.0f, 0.0f, 0.0f, 1.0f));
-	mpmesh->SendToGPU();
+	mpmesh->SetUsage(GL_DYNAMIC_DRAW); // uploads as a side-effect
 
 	WeakPtr<Object> suzanne = Object::Pool.CreateWeak();
 	WeakPtr<Object> arhead = Object::Pool.CreateWeak();
@@ -146,18 +146,26 @@ int main(int argc, char* args[])
 
 		//Logf(LOG_NET_RECEIVE, "{} vs {}\n", mpmesh->positions.size(), App::mediapipeLandmarks.size()/3);
 		
-		size_t mpcount = App::mediapipeLandmarks.size()/3;
-		size_t maxcount = mpmesh->positions.size();
-		if (maxcount > mpcount)
-			maxcount = mpcount;
-
-		for (size_t i=0; i<maxcount; ++i)
+		if (size_t mpcount = App::mediapipeLandmarks.size()/3)
 		{
-			mpmesh->positions[i].x = -App::mediapipeLandmarks[i*3];
-			mpmesh->positions[i].y = App::mediapipeLandmarks[i*3+1];
-			mpmesh->positions[i].z = App::mediapipeLandmarks[i*3+2];
+			//Logf(LOG_NET_RECEIVE, "{} vs {}\n", mpmesh->positions.size(), App::mediapipeLandmarks.size()/3);
+
+			// fill missing points (eyes, etc)
+			while (mpmesh->positions.size() < mpcount)
+			{
+				unsigned int i = (unsigned int)mpmesh->positions.size();
+				mpmesh->AddVertex(glm::fvec3(0.0f), glm::fvec3(1.0f, 0.0f, 0.0f), glm::fvec4(1.0f, 0.0f, 0.0f, 1.0f), glm::fvec4(1.0f));
+				mpmesh->DefineNewTriangle(i, i, i);
+			}
+
+			for (size_t i=0; i<mpcount; ++i)
+			{
+				mpmesh->positions[i].x = -App::mediapipeLandmarks[i*3];
+				mpmesh->positions[i].y = App::mediapipeLandmarks[i*3+1];
+				mpmesh->positions[i].z = App::mediapipeLandmarks[i*3+2];
+			}
+			mpmesh->SendToGPU();
 		}
-		mpmesh->SendToGPU();
 	};
 
 	App::OnTickRender = [&](float time, float dt) -> void 

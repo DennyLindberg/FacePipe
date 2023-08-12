@@ -49,6 +49,7 @@ public:
 	std::vector<glm::fvec4> colors;
 	std::vector<glm::fvec4> texCoords;
 	std::vector<unsigned int> indices;
+	GLenum usage = GL_STATIC_DRAW;
 
 	GLTriangleMesh() {}
 	~GLTriangleMesh() {}
@@ -67,6 +68,7 @@ public:
 	void ApplyMatrix(glm::mat4 transform, int firstIndex, int lastIndex);
 	void ApplyMatrix(glm::mat4 transform);
 
+	void SetUsage(GLenum newUsage);
 	void SetColors(const glm::fvec4& color);
 };
 
@@ -89,6 +91,8 @@ protected:
 	std::vector<glm::fvec4> colors;
 
 public:
+	GLenum usage = GL_STATIC_DRAW;
+
 	GLLine() {}
 	~GLLine() {}
 
@@ -117,6 +121,8 @@ protected:
 	std::vector<unsigned int> indices;
 
 public:
+	GLenum usage = GL_STATIC_DRAW;
+
 	GLLineStrips() {}
 	~GLLineStrips() {}
 
@@ -160,6 +166,8 @@ protected:
 	std::vector<unsigned int> indices;
 
 public:
+	GLenum usage = GL_STATIC_DRAW;
+
 	GLBezierStrips() {}
 	~GLBezierStrips() {}
 
@@ -192,6 +200,8 @@ protected:
 	GLuint texCoordBuffer = 0;
 
 public:
+	GLenum usage = GL_STATIC_DRAW;
+
 	GLQuad() {}
 	~GLQuad() {}
 

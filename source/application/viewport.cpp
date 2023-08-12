@@ -121,7 +121,7 @@ void Viewport::HandleInputEvent(const void* eventPtr)
 		auto key = event.key.keysym.sym;
 
 		if (key == SDLK_s) GLFramebuffers::SaveScreenshot(framebuffer);
-		else if (key == SDLK_f) input.SnapToOrigin();
+		//else if (key == SDLK_f) input.SnapToOrigin(); // changed to toggle fullscreen in main application
 
 		else if (key == SDLK_KP_7) input.SetCameraView(CameraView::OrthographicY);
 		else if (key == SDLK_KP_1) input.SetCameraView(bCtrlModifier ? CameraView::OrthographicZneg : CameraView::OrthographicZ);

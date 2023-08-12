@@ -120,19 +120,19 @@ void GLTriangleMesh::SendToGPU()
 
 	glBindVertexArray(vao);
 	glBindBuffer(GL_ARRAY_BUFFER, positionBuffer);
-	glBufferVector(GL_ARRAY_BUFFER, positions, GL_STATIC_DRAW);
+	glBufferVector(GL_ARRAY_BUFFER, positions, usage);
 
 	glBindBuffer(GL_ARRAY_BUFFER, normalBuffer);
-	glBufferVector(GL_ARRAY_BUFFER, normals, GL_STATIC_DRAW);
+	glBufferVector(GL_ARRAY_BUFFER, normals, usage);
 
 	glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
-	glBufferVector(GL_ARRAY_BUFFER, colors, GL_STATIC_DRAW);
+	glBufferVector(GL_ARRAY_BUFFER, colors, usage);
 
 	glBindBuffer(GL_ARRAY_BUFFER, texCoordBuffer);
-	glBufferVector(GL_ARRAY_BUFFER, texCoords, GL_STATIC_DRAW);
+	glBufferVector(GL_ARRAY_BUFFER, texCoords, usage);
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
-	glBufferVector(GL_ELEMENT_ARRAY_BUFFER, indices, GL_STATIC_DRAW);
+	glBufferVector(GL_ELEMENT_ARRAY_BUFFER, indices, usage);
 }
 
 void GLTriangleMesh::Draw(GLenum drawMode)
@@ -218,6 +218,15 @@ void GLTriangleMesh::ApplyMatrix(glm::mat4 transform)
 	ApplyMatrix(transform, 0, int(positions.size() - 1));
 }
 
+void GLTriangleMesh::SetUsage(GLenum newUsage)
+{
+	if (usage != newUsage)
+	{
+		usage = newUsage;
+		SendToGPU();
+	}
+}
+
 void GLTriangleMesh::SetColors(const glm::fvec4& color)
 {
 	for (auto& c : colors)
@@ -279,11 +288,11 @@ void GLLine::SendToGPU()
 
 	// Positions
 	glBindBuffer(GL_ARRAY_BUFFER, positionBuffer);
-	glBufferVector(GL_ARRAY_BUFFER, lineSegments, GL_STATIC_DRAW);
+	glBufferVector(GL_ARRAY_BUFFER, lineSegments, usage);
 
 	// Colors
 	glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
-	glBufferVector(GL_ARRAY_BUFFER, colors, GL_STATIC_DRAW);
+	glBufferVector(GL_ARRAY_BUFFER, colors, usage);
 }
 
 void GLLine::Draw()
@@ -365,11 +374,11 @@ void GLLineStrips::SendToGPU()
 
 	// Positions
 	glBindBuffer(GL_ARRAY_BUFFER, positionBuffer);
-	glBufferVector(GL_ARRAY_BUFFER, lineStrips, GL_STATIC_DRAW);
+	glBufferVector(GL_ARRAY_BUFFER, lineStrips, usage);
 
 	// Indices
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
-	glBufferVector(GL_ELEMENT_ARRAY_BUFFER, indices, GL_STATIC_DRAW);
+	glBufferVector(GL_ELEMENT_ARRAY_BUFFER, indices, usage);
 }
 
 void GLLineStrips::Draw()
@@ -589,39 +598,39 @@ void GLBezierStrips::SendToGPU()
 
 	// Positions
 	glBindBuffer(GL_ARRAY_BUFFER, positionBuffer);
-	glBufferVector(GL_ARRAY_BUFFER, controlPoints, GL_STATIC_DRAW);
+	glBufferVector(GL_ARRAY_BUFFER, controlPoints, usage);
 
 	// Normals
 	glBindBuffer(GL_ARRAY_BUFFER, normalBuffer);
-	glBufferVector(GL_ARRAY_BUFFER, controlNormals, GL_STATIC_DRAW);
+	glBufferVector(GL_ARRAY_BUFFER, controlNormals, usage);
 
 	// Tangents
 	glBindBuffer(GL_ARRAY_BUFFER, tangentBuffer);
-	glBufferVector(GL_ARRAY_BUFFER, controlTangents, GL_STATIC_DRAW);
+	glBufferVector(GL_ARRAY_BUFFER, controlTangents, usage);
 
 	// Texcoords
 	glBindBuffer(GL_ARRAY_BUFFER, texcoordBuffer);
-	glBufferVector(GL_ARRAY_BUFFER, controlTexcoords, GL_STATIC_DRAW);
+	glBufferVector(GL_ARRAY_BUFFER, controlTexcoords, usage);
 
 	// Widths
 	glBindBuffer(GL_ARRAY_BUFFER, widthBuffer);
-	glBufferVector(GL_ARRAY_BUFFER, controlWidths, GL_STATIC_DRAW);
+	glBufferVector(GL_ARRAY_BUFFER, controlWidths, usage);
 
 	// Thickness
 	glBindBuffer(GL_ARRAY_BUFFER, thicknessBuffer);
-	glBufferVector(GL_ARRAY_BUFFER, controlThickness, GL_STATIC_DRAW);
+	glBufferVector(GL_ARRAY_BUFFER, controlThickness, usage);
 
 	// Shapes
 	glBindBuffer(GL_ARRAY_BUFFER, shapeBuffer);
-	glBufferVector(GL_ARRAY_BUFFER, controlShapes, GL_STATIC_DRAW);
+	glBufferVector(GL_ARRAY_BUFFER, controlShapes, usage);
 
 	// Subdivisions
 	glBindBuffer(GL_ARRAY_BUFFER, subdivisionsBuffer);
-	glBufferVector(GL_ARRAY_BUFFER, controlSubdivisions, GL_STATIC_DRAW);
+	glBufferVector(GL_ARRAY_BUFFER, controlSubdivisions, usage);
 
 	// Indices
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
-	glBufferVector(GL_ELEMENT_ARRAY_BUFFER, indices, GL_STATIC_DRAW);
+	glBufferVector(GL_ELEMENT_ARRAY_BUFFER, indices, usage);
 }
 
 void GLBezierStrips::Draw()
@@ -695,13 +704,13 @@ void GLQuad::Initialize()
 		glBindBuffer(GL_ARRAY_BUFFER, positionBuffer);
 		glEnableVertexAttribArray(ShaderManager::positionAttribId);
 		glVertexAttribPointer(ShaderManager::positionAttribId, valuesPerPosition, GL_FLOAT, false, 0, 0);
-		glBufferVector(GL_ARRAY_BUFFER, positions, GL_STATIC_DRAW);
+		glBufferVector(GL_ARRAY_BUFFER, positions, usage);
 
 		// Load UVs
 		glBindBuffer(GL_ARRAY_BUFFER, texCoordBuffer);
 		glEnableVertexAttribArray(ShaderManager::texCoordAttribId);
 		glVertexAttribPointer(ShaderManager::texCoordAttribId, valuesPerCoord, GL_FLOAT, false, 0, 0);
-		glBufferVector(GL_ARRAY_BUFFER, tcoords, GL_STATIC_DRAW);
+		glBufferVector(GL_ARRAY_BUFFER, tcoords, usage);
 	});
 }
 
