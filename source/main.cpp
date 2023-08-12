@@ -50,6 +50,9 @@ int main(int argc, char* args[])
 	GLMesh::LoadPLY(App::Path("content/thirdparty/arkit/ARFaceGeometry.ply"), *armesh);
 	GLMesh::LoadPLY(App::Path("content/thirdparty/mediapipe/canonical_face_model.ply"), *mpmesh);
 
+	mpmesh->SetColors(glm::fvec4(0.0f, 0.0f, 0.0f, 1.0f));
+	mpmesh->SendToGPU();
+
 	WeakPtr<Object> suzanne = Object::Pool.CreateWeak();
 	WeakPtr<Object> arhead = Object::Pool.CreateWeak();
 	WeakPtr<Object> mphead = Object::Pool.CreateWeak();
@@ -73,6 +76,7 @@ int main(int argc, char* args[])
 	WeakPtr<GLTexture> DefaultTexture = GLTexture::Pool.CreateWeak();
 	DefaultTexture->LoadPNG(App::Path("content/textures/default.png"));
 	DefaultTexture->CopyToGPU();
+
 
 	App::ui.selected_object = suzanne;
 

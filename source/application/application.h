@@ -24,7 +24,7 @@ struct ApplicationSettings
 	int maxFPS = 0;
 	bool sleepWhenFpsLimited = true;
 	glm::vec4 clearColor = glm::vec4(0.0f);
-	float pointCloudSize = 0.03f;
+	float pointCloudSize = 0.005f;
 	float defaultCameraFOV = 45.0f;
 	bool maintainVerticalFOV = true;
 	float viewportMouseSensitivity = 0.25f;

@@ -50,7 +50,7 @@ void ShaderManager::InitializeDefaultShaders()
 	LoadLiveShader(pointCloudShader, L"defaultmesh_vertex.glsl", L"pointcloud_fragment.glsl", L"pointcloud_geometry.glsl");
 	pointCloudShader.SetUniformFloat("screenRatio", App::settings.WindowRatio());
 	pointCloudShader.SetUniformFloat("size", App::settings.pointCloudSize);
-	pointCloudShader.SetUniformInt("drawShaded", 1);
+	pointCloudShader.SetUniformInt("drawShaded", 0);
 	pointCloudShader.SetUniformInt("uFlipY", FLIP_TEXTURE_VERTICALLY_IN_SHADER);
 }
 

@@ -66,6 +66,8 @@ public:
 	void AppendMeshTransformed(const GLTriangleMesh& other, glm::mat4 transform);
 	void ApplyMatrix(glm::mat4 transform, int firstIndex, int lastIndex);
 	void ApplyMatrix(glm::mat4 transform);
+
+	void SetColors(const glm::fvec4& color);
 };
 
 // Draws a separate line per start/end pair of points - each segment has its own color

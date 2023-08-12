@@ -218,6 +218,14 @@ void GLTriangleMesh::ApplyMatrix(glm::mat4 transform)
 	ApplyMatrix(transform, 0, int(positions.size() - 1));
 }
 
+void GLTriangleMesh::SetColors(const glm::fvec4& color)
+{
+	for (auto& c : colors)
+	{
+		c = color;
+	}
+}
+
 void GLLine::Initialize()
 {
 	InitializeVAOAndBuffers(vao, [this]() {
