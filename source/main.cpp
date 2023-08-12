@@ -111,21 +111,23 @@ int main(int argc, char* args[])
 		{
 			for (UDPDatagram& datagram : datagrams)
 			{
-				FacePipe::MetaData metaData;
 				nlohmann::json jsonData;
-				if (!FacePipe::Parse(datagram.message, metaData, jsonData))
+				if (!FacePipe::Parse(datagram.message, datagram.metaData, jsonData))
+				{
+					App::lastReceivedDatagram = UDPDatagram();
 					continue;
+				}
 				
-				switch (metaData.DataType)
+				switch (datagram.metaData.DataType)
 				{
 				case FacePipe::EFacepipeData::Blendshapes:
 				{
-					FacePipe::GetBlendshapes(metaData, jsonData, App::arkitBlendshapeNames, App::arkitBlendshapeValues);
+					FacePipe::GetBlendshapes(datagram.metaData, jsonData, App::arkitBlendshapeNames, App::arkitBlendshapeValues);
 					break;
 				}
 				case FacePipe::EFacepipeData::Landmarks:
 				{
-					FacePipe::GetLandmarks(metaData, jsonData, App::mediapipeLandmarks);
+					FacePipe::GetLandmarks(datagram.metaData, jsonData, App::mediapipeLandmarks);
 					break;
 				}
 				case FacePipe::EFacepipeData::Transforms:
@@ -133,6 +135,8 @@ int main(int argc, char* args[])
 					break;
 				}
 				}
+
+				App::lastReceivedDatagram = datagram;
 			}
 		}
 

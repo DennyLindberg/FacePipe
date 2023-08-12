@@ -65,7 +65,7 @@ def on_mp_facelandmarker_result(result: FaceLandmarkerResult, output_image: mp.I
     # message template
     message = {
         'channel': [0,0,0,0], # api version, scene, camera, subject
-        'header': ['mediapipe','1.0.0.0',''],
+        'header': ['mediapipe', '0.0.0.0', ''],
         'time': float(timestamp_ms)/1000.0,
         'data': {}
     }
@@ -106,33 +106,34 @@ options = FaceLandmarkerOptions(
     output_facial_transformation_matrixes = True,
     result_callback = on_mp_facelandmarker_result)
 
-
 with FaceLandmarker.create_from_options(options) as landmarker:
-    cv2_webcam_capture = cv2.VideoCapture(0) # 0: first webcam in device list
-    
-    # Create a loop to read the latest frame from the camera using VideoCapture#read()
+    cv2_webcam_capture = cv2.VideoCapture(0, cv2.CAP_DSHOW) # 0: first webcam in device list
+    cv2_webcam_capture.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+    cv2_webcam_capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+
+    time_start = time.time()
     while cv2_webcam_capture.isOpened() and run_program:
         success, cv2_webcam_image = cv2_webcam_capture.read()
 
+        # scale = 1.0
+        # width = int(cv2_webcam_image.shape[1] * scale)
+        # height = int(cv2_webcam_image.shape[0] * scale)
+        # dim = (width, height)
+        # cv2_webcam_image = cv2.resize(cv2_webcam_image, dim, interpolation = cv2.INTER_NEAREST)
+
         # TODO: Flip variable
         cv2_webcam_image = cv2.flip(cv2_webcam_image, 1)
-
-        scale = 1.0
-        width = int(cv2_webcam_image.shape[1] * scale)
-        height = int(cv2_webcam_image.shape[0] * scale)
-        dim = (width, height)
-        cv2_webcam_image = cv2.resize(cv2_webcam_image, dim, interpolation = cv2.INTER_NEAREST)
-
-        cv2.imshow('image', cv2_webcam_image)
-        if cv2.waitKey(1) == 27: 
-            break  # esc to quit
 
         # Convert the frame received from OpenCV to a MediaPipe’s Image object.
         mp_webcam_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=cv2_webcam_image)
 
         # This is async and method returns immediately. If another webcam frame is requested before the detector is finished it will ignore the new image.
-        frame_timestamp_ms = round(time.time()*1000)
+        frame_timestamp_ms = round((time.time()-time_start)*1000)
         landmarker.detect_async(mp_webcam_image, frame_timestamp_ms) # returns to on_mp_facelandmarker_result when done
+
+        cv2.imshow('image', cv2_webcam_image)
+        if cv2.waitKey(1) == 27: 
+            break  # esc to quit
 
 udp_socket.close()
 

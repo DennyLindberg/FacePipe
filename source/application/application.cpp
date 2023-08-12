@@ -19,6 +19,7 @@ UniformRandomGenerator App::random = UniformRandomGenerator();
 WeakPtr<Object> App::world = WeakPtr<Object>();
 WebCam App::webcam = WebCam();
 UDPSocket App::receiveDataSocket = UDPSocket();
+UDPDatagram App::lastReceivedDatagram = UDPDatagram();
 
 double App::mediapipeTime = 0.0;
 std::vector<std::string> App::arkitBlendshapeNames;

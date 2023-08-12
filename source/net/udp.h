@@ -2,11 +2,13 @@
 
 #include <functional>
 #include "netsocket.h"
+#include "facepipe.h"
 
 struct UDPDatagram
 {
 	NetSocket source;
 	std::vector<char> message;
+	FacePipe::MetaData metaData; // empty until parsed
 };
 
 class UDPSocket : public NetSocket

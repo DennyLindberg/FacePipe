@@ -79,6 +79,7 @@ public:
 	static WebCam webcam;
 
 	static UDPSocket receiveDataSocket;
+	static UDPDatagram lastReceivedDatagram;
 
 	static double mediapipeTime;
 	static std::vector<std::string> arkitBlendshapeNames;

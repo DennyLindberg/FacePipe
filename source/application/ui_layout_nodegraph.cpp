@@ -55,13 +55,26 @@ namespace UI
 				ImNodes::EndNodeTitleBar();
 
 				ImNodes::BeginOutputAttribute(1);
-					std::string spinnermodified = SpinnerTemplate;
-					spinnermodified[SpinnerPos] = '*';
-					ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(100, 100, 100, 255));
-						ImGui::Text("%s", spinnermodified.c_str());
-					ImGui::PopStyleColor();
-					ImGui::SameLine(0, 5);
-					ImGui::Text("Receive");
+					// connection info
+					{
+						FacePipe::MetaData& meta = App::lastReceivedDatagram.metaData;
+						ImGui::Text("%s %s", meta.SourceName.c_str(), meta.SourceVersion.c_str());
+						ImGui::Text("Scene: %d", meta.Scene);
+						ImGui::Text("Camera: %d", meta.Camera);
+						ImGui::Text("Subject: %d", meta.Subject);
+						ImGui::Text("Time: %.2f", meta.TimeStamp);
+					}
+
+					// spinner
+					{
+						//std::string spinnermodified = SpinnerTemplate;
+						//spinnermodified[SpinnerPos] = '*';
+						//ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(100, 100, 100, 255));
+						//	ImGui::Text("%s", spinnermodified.c_str());
+						//ImGui::PopStyleColor();
+						//ImGui::SameLine(0, 5);
+						//ImGui::Text("Receive");
+					}
 				ImNodes::EndOutputAttribute();
 			ImNodes::EndNode();
 
