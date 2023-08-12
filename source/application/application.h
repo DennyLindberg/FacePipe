@@ -30,6 +30,7 @@ struct ApplicationSettings
 	float viewportMouseSensitivity = 0.25f;
 	glm::fvec3 skyLightDirection = glm::normalize(glm::fvec3(1.0f));
 	glm::fvec4 skyLightColor = glm::fvec4(1.0f);
+	int receiveDataSocketPort = 9000;
 
 	float WindowRatio() const { return windowWidth / (float)windowHeight; }
 };
@@ -76,6 +77,8 @@ public:
 	static WeakPtr<Object> world;
 
 	static WebCam webcam;
+
+	static UDPSocket receiveDataSocket;
 
 	static double mediapipeTime;
 	static std::vector<std::string> arkitBlendshapeNames;

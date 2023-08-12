@@ -34,6 +34,17 @@ bool to_netsocket(const sockaddr_in& addr, NetSocket& info)
 	}
 }
 
+void UDPSocket::Set(const char* socketIP, int socketPort)
+{
+	if (ossocket)
+	{
+		Close();
+	}
+	
+	ip = socketIP;
+	port = socketPort;
+}
+
 bool UDPSocket::Start()
 {
 	if (ossocket)
@@ -176,6 +187,7 @@ bool UDPSocket::Receive(std::vector<UDPDatagram>& datagrams)
 			to_netsocket(sender_addr, datagrams.back().source);
 		}
 	} while (bytes_received > 0);
-
+	
+	bReceivedDataLastCall = bReceivedDataLastCall;
 	return bReceivedAnyDatagram;
 }

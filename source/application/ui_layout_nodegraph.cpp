@@ -13,7 +13,19 @@ namespace UI
 			ImNodes::BeginNode(1);
 
 			ImNodes::BeginNodeTitleBar();
-			ImGui::TextUnformatted("simple node :)");
+			ImGui::TextUnformatted("UDP");
+			ImNodes::EndNodeTitleBar();
+
+			ImNodes::EndNode();
+
+			ImNodes::SetNodeGridSpacePos(1, ImVec2(0.0f, 0.0f));
+		}
+
+		{
+			ImNodes::BeginNode(2);
+
+			ImNodes::BeginNodeTitleBar();
+			ImGui::TextUnformatted("example");
 			ImNodes::EndNodeTitleBar();
 
 			ImNodes::BeginInputAttribute(2);
@@ -29,10 +41,9 @@ namespace UI
 		}
 
 		{
-			ImNodes::BeginNode(4);
-
+			ImNodes::BeginNode(3);
 			ImNodes::BeginNodeTitleBar();
-			ImGui::TextUnformatted("simple node 2");
+			ImGui::TextUnformatted("example");
 			ImNodes::EndNodeTitleBar();
 
 			ImNodes::BeginInputAttribute(5);
@@ -46,6 +57,15 @@ namespace UI
 
 			ImNodes::EndNode();
 		}
+
+		static bool bInitialLoad = true;
+		if (bInitialLoad)
+		{
+			bInitialLoad = false;
+			ImNodes::SetNodeGridSpacePos(3, ImVec2(300.0f, 300.0f));
+		}
+
+		ImNodes::Link(1, 3, 5);
 
 		ImNodes::EndNodeEditor();
 	}

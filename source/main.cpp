@@ -51,15 +51,12 @@ int main(int argc, char* args[])
 		.viewportMouseSensitivity = 0.25f,
 		.skyLightDirection = glm::normalize(glm::fvec3(1.0f)),
 		.skyLightColor = glm::fvec4(1.0f),
+		.receiveDataSocketPort = 9000,
 	};
 	auto& settings = App::settings;
 
 	App::Initialize();
 	App::window.SetTitle("FacePipe");
-
-	//NetSocket sendTarget(Net::LocalHost, 1337);
-	UDPSocket udp(9000);
-	udp.Start();
 
 	/*
 		Load and initialize shaders
@@ -139,7 +136,7 @@ int main(int argc, char* args[])
 		
 		// Receiving packets
 		std::vector<UDPDatagram> datagrams;
-		if (udp.Receive(datagrams))
+		if (App::receiveDataSocket.Receive(datagrams))
 		{
 			for (UDPDatagram& datagram : datagrams)
 			{
@@ -293,8 +290,6 @@ int main(int argc, char* args[])
 	};
 
 	App::Run();
-
-	udp.Close();
 
 	return 0;
 }

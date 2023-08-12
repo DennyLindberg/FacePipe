@@ -18,6 +18,7 @@ UniformRandomGenerator App::random = UniformRandomGenerator();
 
 WeakPtr<Object> App::world = WeakPtr<Object>();
 WebCam App::webcam = WebCam();
+UDPSocket App::receiveDataSocket = UDPSocket();
 
 double App::mediapipeTime = 0.0;
 std::vector<std::string> App::arkitBlendshapeNames;
@@ -80,10 +81,15 @@ void App::Initialize()
 	App::world->name = "World";
 
 	App::webcam.Initialize();
+
+	receiveDataSocket.Set(Net::LocalHost, App::settings.receiveDataSocketPort);
+	receiveDataSocket.Start();
 }
 
 void App::Shutdown()
 {
+	receiveDataSocket.Close();
+
 	App::webcam.Shutdown();
 
 	ObjectPoolInternals::ShutdownPools();

@@ -16,6 +16,8 @@ protected:
 	void* ossocket = nullptr;
 
 public:
+	bool bReceivedDataLastCall = false; // UI status hack
+
 	UDPSocket(const char* socketIP = Net::LocalHost, int socketPort = 0)
 		: NetSocket(socketIP, socketPort)
 	{
