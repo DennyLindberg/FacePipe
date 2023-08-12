@@ -170,6 +170,18 @@ bool App::Tick()
 			auto key = event.key.keysym.sym;
 
 			// global keys here
+			if (key == SDLK_F11)
+			{
+				App::ui.fullscreenViewport = !App::ui.fullscreenViewport;
+			}
+
+			if (key == SDLK_ESCAPE)
+			{
+				if (App::ui.fullscreenViewport)
+				{
+					App::ui.fullscreenViewport = false;
+				}
+			}
 		}
 
 		if (Viewport* activeViewport = App::ui.GetActiveViewport())

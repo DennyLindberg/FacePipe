@@ -32,135 +32,142 @@ void UI::GenerateMainLayout(UIManager& ui)
 		w = glm::clamp(w, 0.1f, 0.9f);
 		h = glm::clamp(h, 0.1f, 0.9f);
 
-		// Viewport region
+		if (App::ui.fullscreenViewport)
 		{
-			ImGui::BeginChild("viewportregion", ImVec2(w * ws, h * hs), true);
-				ImGui::DrawViewport(&ui, ui.sceneViewport, 1.0f);
-			ImGui::EndChild();
+			ImGui::DrawViewport(&ui, ui.sceneViewport, 1.0f);
 		}
-
-		// Region splitter next to viewport
+		else
 		{
-			ImGui::SameLine();
-			ImGui::InvisibleButton("vsplitter", ImVec2(splitterThickness, h*hs));
-			if (ImGui::IsItemHovered())
-				ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
-			if (ImGui::IsItemActive())
-				w += ImGui::GetIO().MouseDelta.x/ws;
-		}
-
-		// Right region with middle/right divide
-		{
-			ImGui::SameLine();
-			ImGui::BeginChild("child2", ImVec2(0, h*hs), true);
-				const float ws2 = ImGui::GetContentRegionAvail().x;
-				const float hs2 = ImGui::GetContentRegionAvail().y;
-				static float w2 = 0.66f;
-				w2 = glm::clamp(w2, 0.1f, 0.9f);
-
-				// Center region
-				{
-					ImGui::BeginChild("centerregion", ImVec2(w2 * ws2, 0), true);
-						UI::DisplayNodeGraph();
-					ImGui::EndChild();
-				}
-
-				// Region splitter
-				{
-					ImGui::SameLine();
-					ImGui::InvisibleButton("vsplitter2", ImVec2(splitterThickness, h * hs2));
-					if (ImGui::IsItemHovered())
-						ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
-					if (ImGui::IsItemActive())
-						w2 += ImGui::GetIO().MouseDelta.x / ws2;
-				}
-
-				// Right region
-				{
-					ImGui::SameLine();
-					ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(5, 5));
-					ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(3, 3));
-					ImGui::BeginChild("detailsregion", ImVec2(0, 0), true);
-						//UI::DisplayOutliner(App::world);
-						//UI::DisplaySelectionDetails(App::ui.selected_object);
-
-						if (App::webcam.IsActive())
-						{
-							if (ImGui::Button("Stop"))
-								App::webcam.Stop();
-							ImGui::SameLine();
-							ImGui::Text(App::webcam.DebugString().c_str());
-						}
-						else
-						{
-							if (ImGui::Button("Start Camera"))
-								App::webcam.Start();
-						}
-
-						ImGui::InputInt("MaxFPS", &App::settings.maxFPS, 0);
-						ImGui::Checkbox("Wireframe", &ui.renderWireframe);
-						ImGui::Checkbox("Light follows camera", &ui.lightFollowsCamera);
-						ImGui::SliderFloat("PointSize", &App::settings.pointCloudSize, 0.0005f, 0.1f, "%.5f");
-						ImGui::InputTextMultiline("ScriptInput", &input_field_string, ImVec2(0.0f, 100.0f));
-						if (ImGui::Button("Execute"))
-						{
-							App::scripting.Execute(input_field_string);
-							Logf(LOG_STDOUT, "Script is not implemented\n");
-						}
-
-						if (App::webcam.Texture())
-						{
-							float ratio = App::webcam.TextureWidth() / (float) App::webcam.TextureHeight();
-							ImGui::Image((ImTextureID)(intptr_t)App::webcam.Texture(), ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().x/ratio), { 0, 1 }, { 1, 0 });
-						}
-
-						ImGui::Text("Mediapipe Time %.3f", App::mediapipeTime);
-
-						static bool bShowBlendshapes = true;
-						ImGui::Checkbox("Show Blendshapes", &bShowBlendshapes);
-						if (bShowBlendshapes)
-						{
-							ImGui::Text("Arkit Blendshapes");
-							for (size_t i=0; i<App::arkitBlendshapeValues.size(); ++i)
-							{
-								ImGui::SliderFloat(App::arkitBlendshapeNames[i].c_str(), &App::arkitBlendshapeValues[i], -1.0f, 1.0f, "%.3f", ImGuiSliderFlags_NoInput);
-							}
-						}
-						else
-						{
-							ImGui::Text("Mediapipe Landmarks");
-							for (size_t i = 0; i < App::mediapipeLandmarks.size(); ++i)
-							{
-								ImGui::SliderFloat(("##" + std::to_string(i)).c_str(), &App::mediapipeLandmarks[i], -1.0f, 1.0f, "%.3f", ImGuiSliderFlags_NoInput);
-							}
-						}
-
-
-					ImGui::EndChild();
-					ImGui::PopStyleVar();
-					ImGui::PopStyleVar();
-				}
-			ImGui::EndChild();
-		}
-
-		// Region splitter above log
-		{
-			ImGui::InvisibleButton("hsplitter", ImVec2(-1, splitterThickness));
-			if (ImGui::IsItemHovered())
-				ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);
-			if (ImGui::IsItemActive())
-				h += ImGui::GetIO().MouseDelta.y/hs;
-		}
-
-		// Log region
-		{
-			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(3, 3));
-			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(5, 5));
-				ImGui::BeginChild("logregion", ImVec2(0, 0), true);
-					ui.logging.Draw(NULL, false);
+			// Viewport region
+			{
+				ImGui::BeginChild("viewportregion", ImVec2(w * ws, h * hs), true);
+					ImGui::DrawViewport(&ui, ui.sceneViewport, 1.0f);
 				ImGui::EndChild();
-			ImGui::PopStyleVar();
-			ImGui::PopStyleVar();
+			}
+
+			// Region splitter next to viewport
+			{
+				ImGui::SameLine();
+				ImGui::InvisibleButton("vsplitter", ImVec2(splitterThickness, h*hs));
+				if (ImGui::IsItemHovered())
+					ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
+				if (ImGui::IsItemActive())
+					w += ImGui::GetIO().MouseDelta.x/ws;
+			}
+
+			// Right region with middle/right divide
+			{
+				ImGui::SameLine();
+				ImGui::BeginChild("child2", ImVec2(0, h*hs), true);
+					const float ws2 = ImGui::GetContentRegionAvail().x;
+					const float hs2 = ImGui::GetContentRegionAvail().y;
+					static float w2 = 0.66f;
+					w2 = glm::clamp(w2, 0.1f, 0.9f);
+
+					// Center region
+					{
+						ImGui::BeginChild("centerregion", ImVec2(w2 * ws2, 0), true);
+							UI::DisplayNodeGraph();
+						ImGui::EndChild();
+					}
+
+					// Region splitter
+					{
+						ImGui::SameLine();
+						ImGui::InvisibleButton("vsplitter2", ImVec2(splitterThickness, h * hs2));
+						if (ImGui::IsItemHovered())
+							ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
+						if (ImGui::IsItemActive())
+							w2 += ImGui::GetIO().MouseDelta.x / ws2;
+					}
+
+					// Right region
+					{
+						ImGui::SameLine();
+						ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(5, 5));
+						ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(3, 3));
+						ImGui::BeginChild("detailsregion", ImVec2(0, 0), true);
+							//UI::DisplayOutliner(App::world);
+							//UI::DisplaySelectionDetails(App::ui.selected_object);
+
+							if (App::webcam.IsActive())
+							{
+								if (ImGui::Button("Stop"))
+									App::webcam.Stop();
+								ImGui::SameLine();
+								ImGui::Text(App::webcam.DebugString().c_str());
+							}
+							else
+							{
+								if (ImGui::Button("Start Camera"))
+									App::webcam.Start();
+							}
+
+							ImGui::InputInt("MaxFPS", &App::settings.maxFPS, 0);
+							ImGui::Checkbox("Wireframe", &ui.renderWireframe);
+							ImGui::Checkbox("Light follows camera", &ui.lightFollowsCamera);
+							ImGui::SliderFloat("PointSize", &App::settings.pointCloudSize, 0.0005f, 0.1f, "%.5f");
+							ImGui::InputTextMultiline("ScriptInput", &input_field_string, ImVec2(0.0f, 100.0f));
+							if (ImGui::Button("Execute"))
+							{
+								App::scripting.Execute(input_field_string);
+								Logf(LOG_STDOUT, "Script is not implemented\n");
+							}
+
+							if (App::webcam.Texture())
+							{
+								float ratio = App::webcam.TextureWidth() / (float) App::webcam.TextureHeight();
+								ImGui::Image((ImTextureID)(intptr_t)App::webcam.Texture(), ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().x/ratio), { 0, 1 }, { 1, 0 });
+							}
+
+							ImGui::Text("Mediapipe Time %.3f", App::mediapipeTime);
+
+							static bool bShowBlendshapes = true;
+							ImGui::Checkbox("Show Blendshapes", &bShowBlendshapes);
+							if (bShowBlendshapes)
+							{
+								ImGui::Text("Arkit Blendshapes");
+								for (size_t i=0; i<App::arkitBlendshapeValues.size(); ++i)
+								{
+									ImGui::SliderFloat(App::arkitBlendshapeNames[i].c_str(), &App::arkitBlendshapeValues[i], -1.0f, 1.0f, "%.3f", ImGuiSliderFlags_NoInput);
+								}
+							}
+							else
+							{
+								ImGui::Text("Mediapipe Landmarks");
+								for (size_t i = 0; i < App::mediapipeLandmarks.size(); ++i)
+								{
+									ImGui::SliderFloat(("##" + std::to_string(i)).c_str(), &App::mediapipeLandmarks[i], -1.0f, 1.0f, "%.3f", ImGuiSliderFlags_NoInput);
+								}
+							}
+
+
+						ImGui::EndChild();
+						ImGui::PopStyleVar();
+						ImGui::PopStyleVar();
+					}
+				ImGui::EndChild();
+			}
+
+			// Region splitter above log
+			{
+				ImGui::InvisibleButton("hsplitter", ImVec2(-1, splitterThickness));
+				if (ImGui::IsItemHovered())
+					ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);
+				if (ImGui::IsItemActive())
+					h += ImGui::GetIO().MouseDelta.y/hs;
+			}
+
+			// Log region
+			{
+				ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(3, 3));
+				ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(5, 5));
+					ImGui::BeginChild("logregion", ImVec2(0, 0), true);
+						ui.logging.Draw(NULL, false);
+					ImGui::EndChild();
+				ImGui::PopStyleVar();
+				ImGui::PopStyleVar();
+			}
 		}
 	ImGui::End();
 	ImGui::PopStyleVar();

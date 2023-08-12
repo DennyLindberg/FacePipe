@@ -8,6 +8,7 @@
 class UIManager
 {
 public:
+	bool fullscreenViewport = false;
 	bool renderWireframe = false;
 	bool lightFollowsCamera = false;
 	bool drawDebugNormals = false;
