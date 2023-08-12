@@ -2,8 +2,11 @@
 
 #include <winsock2.h>
 #include <ws2tcpip.h>
+#include <format>
 
-#include "application/application.h"
+std::function<void(const char*)> UDPSocket::Logger = [](const char*) -> void {};
+
+#define UDPLog(str, ...) UDPSocket::Logger(std::format(str, __VA_ARGS__).c_str())
 
 // converts NetSocket to something the OS prefers
 bool to_net_addr(sockaddr_in& addr, const NetSocket& info)
@@ -52,14 +55,14 @@ bool UDPSocket::Start()
 
 	if (!Net::WinsockReady())
 	{
-		Logf(LOG_NET, "Failed to create UDP socket - Winsock is not started\n", ip, port);
+		UDPLog("Failed to create UDP socket - Winsock is not started\n", ip, port);
 		return false;
 	}
 
 	SOCKET sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 	if (sock == INVALID_SOCKET) 
 	{
-		Logf(LOG_NET, "Failed to create UDP socket - socket() returned INVALID_SOCKET [{}:{}]\n", ip, port);
+		UDPLog("Failed to create UDP socket - socket() returned INVALID_SOCKET [{}:{}]\n", ip, port);
 		return false;
 	}
 	ossocket = (void*) sock; // we don't own this one - void* so we don't need to include windows headers in the rest of the program
@@ -68,7 +71,7 @@ bool UDPSocket::Start()
 	int result = ioctlsocket(sock, FIONBIO, &nonBlockingMode);
 	if (result != NO_ERROR) 
 	{
-		Logf(LOG_NET, "Failed to create UDP socket - ioctlsocket() failed to set nonBlockingMode [{}:{}]\n", ip, port);
+		UDPLog("Failed to create UDP socket - ioctlsocket() failed to set nonBlockingMode [{}:{}]\n", ip, port);
 		Close();
 		return false;
 	}
@@ -76,7 +79,7 @@ bool UDPSocket::Start()
 	sockaddr_in addr;
 	if (!to_net_addr(addr, *((NetSocket*)this))) 
 	{
-		Logf(LOG_NET, "Failed to create UDP socket - inet_pton() failed [{}:{}]\n", ip, port);
+		UDPLog("Failed to create UDP socket - inet_pton() failed [{}:{}]\n", ip, port);
 		Close();
 		return false;
 	}
@@ -84,12 +87,12 @@ bool UDPSocket::Start()
 	// Bind the socket to the address
 	if (bind(sock, (struct sockaddr*)&addr, sizeof(sockaddr_in)) == SOCKET_ERROR) 
 	{
-		Logf(LOG_NET, "Failed to create UDP socket - bind() failed [{}:{}]\n", ip, port);
+		UDPLog("Failed to create UDP socket - bind() failed [{}:{}]\n", ip, port);
 		Close();
 		return false;
 	}
 
-	Logf(LOG_NET, "Started UDP socket [{}]\n", ToString());
+	UDPLog("Started UDP socket [{}]\n", ToString());
 
 	return true;
 }
@@ -100,7 +103,7 @@ void UDPSocket::Close()
 	{
 		if (!Net::WinsockReady())
 		{
-			Logf(LOG_NET, "Failed to Close() UDP socket - Valid SOCKET but Winsock not running? \n", ip, port);
+			UDPLog("Failed to Close() UDP socket - Valid SOCKET but Winsock not running? \n", ip, port);
 			ossocket = nullptr;
 			return;
 		}
@@ -108,7 +111,7 @@ void UDPSocket::Close()
 		closesocket((SOCKET)ossocket);
 		ossocket = nullptr;
 
-		Logf(LOG_NET, "Closed UDP socket [{}:{}]\n", ip, port);
+		UDPLog("Closed UDP socket [{}:{}]\n", ip, port);
 	}
 }
 
@@ -118,13 +121,13 @@ bool UDPSocket::Send(const std::string& message, const NetSocket& sock)
 	{
 		// UDP can be up to 65507 bytes but is limited by the Maximum Transmission Unit (1500 bytes or less).
 		// For portability it is recommended to send < 500 bytes at a time.
-		Logf(LOG_NET, "Excessive string length in UDPSocket::Send()! Message exceeded 512 bytes, the MTU might send fragmented packets which increases the risk of datagram loss.\n", ip, port);
+		UDPLog("Excessive string length in UDPSocket::Send()! Message exceeded 512 bytes, the MTU might send fragmented packets which increases the risk of datagram loss.\n", ip, port);
 	}
 
 	sockaddr_in addr;
 	if (to_net_addr(addr, sock) && sendto((SOCKET)ossocket, message.c_str(), (int) message.length(), 0, (SOCKADDR*)&addr, sizeof(sockaddr_in)) == SOCKET_ERROR) 
 	{
-		Logf(LOG_NET, "Failed to Send() message over UDP socket [{}:{}]\n", ip, port);
+		UDPLog("Failed to Send() message over UDP socket [{}:{}]\n", ip, port);
 		return false;
 	}
 
@@ -170,7 +173,7 @@ bool UDPSocket::Receive(std::vector<UDPDatagram>& datagrams)
 			else if (error_code == WSAENETDOWN || error_code == WSAESHUTDOWN || error_code == WSAENOTCONN || !is_socket_valid((SOCKET)ossocket))
 			{
 				Close();
-				Logf(LOG_NET, "Socket closed unexpectedly during recvfrom() [{}:{}]\n", ip, port);
+				UDPLog("Socket closed unexpectedly during recvfrom() [{}:{}]\n", ip, port);
 				break;
 			}
 			else

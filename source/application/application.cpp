@@ -72,6 +72,8 @@ void App::Initialize()
 	App::ui.logging.Register(LOG_NET, "Network");
 	App::ui.logging.Register(LOG_NET_SEND, "Net Send");
 	App::ui.logging.Register(LOG_NET_RECEIVE, "Net Receive");
+	UDPSocket::Logger = [](const char* str) -> void { App::ui.logging.AddLog(LOG_NET, str); };
+
 	if (Net::StartWinsock() != 0)
 	{
 		Logf(LOG_STDOUT, "Failed to initialize Winsock\n");

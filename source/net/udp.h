@@ -1,7 +1,6 @@
 #pragma once
 
-#include <string>
-#include <queue>
+#include <functional>
 #include "netsocket.h"
 
 struct UDPDatagram
@@ -16,6 +15,7 @@ protected:
 	void* ossocket = nullptr;
 
 public:
+	static std::function<void(const char*)> Logger;
 	double bReceivedDataLastCall = false; // UI status hack
 
 	UDPSocket(const char* socketIP = Net::LocalHost, int socketPort = 0)
