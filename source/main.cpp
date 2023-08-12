@@ -1,35 +1,6 @@
 #include "application/application.h"
 
-#include "nlohmann/json.hpp"
-
 namespace fs = std::filesystem;
-using json = nlohmann::json;
-
-#define INVALID_TYPE '\0'
-#define BYTES_TYPE 'b'
-#define STRING_TYPE 's'
-#define JSON_TYPE 'j'
-
-enum class EFacepipeData : uint8_t
-{
-	Landmarks = 0,
-	Blendshapes = 1,
-	Transforms = 2
-};
-
-enum class EDatagramType : uint8_t
-{
-	Invalid = 0,
-	Bytes = 1,
-	String = 2,
-	JSON = 3,
-	MAX = 4
-};
-
-std::string data_as_str(UDPDatagram& datagram)
-{
-	return std::string(datagram.message.begin() + 1, datagram.message.end());
-}
 
 /*
 	Application
@@ -140,114 +111,28 @@ int main(int argc, char* args[])
 		{
 			for (UDPDatagram& datagram : datagrams)
 			{
-				if (datagram.message.size() <= 1)
-					continue; // nothing to parse
-
-				// first byte depicts what this datagram is about
-				EDatagramType datatype;
-				switch (datagram.message[0])
+				FacePipe::MetaData metaData;
+				nlohmann::json jsonData;
+				if (!FacePipe::Parse(datagram.message, metaData, jsonData))
+					continue;
+				
+				switch (metaData.DataType)
 				{
-				case 'b': { datatype = EDatagramType::Bytes; break; }
-				case 's': { datatype = EDatagramType::String; break; }
-				case 'j': { datatype = EDatagramType::JSON; break; }
-				default:  { datatype = EDatagramType::Invalid; break; }
-				}
-
-				switch (datatype)
+				case FacePipe::EFacepipeData::Blendshapes:
 				{
-				case EDatagramType::Bytes:	
-				{ 
-					break; 
+					FacePipe::GetBlendshapes(metaData, jsonData, App::arkitBlendshapeNames, App::arkitBlendshapeValues);
+					break;
 				}
-				case EDatagramType::String:	
-				{ 
-					break; 
-				}
-				case EDatagramType::JSON:	
+				case FacePipe::EFacepipeData::Landmarks:
 				{
-					/*
-					* Protocol layout
-					* 
-					* First byte of datagram.message[0] is the type
-					*	'b' = bytes
-					*	'j' = json
-					*	's' = string
-					* 
-					* Remainder datagram.message[1] is handled differently per type
-					* 
-					* bytes
-					*	not implemented
-					* 
-					* string
-					*	only treated as log
-					* 
-					* json
-					*   {
-					*		'channel': [0,0,0,0],								# api version, scene, camera, subject
-					*		'header': ['mediapipe','1.0.0.0','blendshapes'],	# source, version, data type
-					*		'time': 0.0,										# time in seconds at the source (application start, since epoch, does not matter)
-					*		'data': {}											# data that changes with type
-					*	}
-					*/
-					try {
-						json mpdata = json::parse(data_as_str(datagram));
-
-						int api, scene, camera, subject;
-						json& channel = mpdata["channel"];
-						if (channel.is_array())
-						{
-							auto values = channel.get<std::vector<int>>();			// [0,0,0,0] api version, scene, camera, subject
-							if (values.size() < 4)
-								continue; // skip this datagram, invalid header
-
-							api = values[0];
-							scene = values[1];
-							camera = values[2];
-							subject = values[3];
-						}
-
-						std::string source, version, datatype;
-						json& header = mpdata["header"];
-						if (channel.is_array())
-						{
-							auto values = header.get<std::vector<std::string>>();	// ['source', 'version', 'datatype'] e.g. ['mediapipe', '1.0.0.0', 'blendshapes']
-							if (values.size() < 3)
-								continue;
-
-							source = values[0];
-							version = values[1];
-							datatype = values[2];
-						}
-
-						json& time = mpdata["time"];
-						json& data = mpdata["data"];
-						if (!time.is_number_float() || !data.is_object())
-							continue;
-
-						App::mediapipeTime = time.get<double>();
-
-						if (datatype == "blendshapes")
-						{
-							App::arkitBlendshapeNames = data["names"].get<std::vector<std::string>>();
-							App::arkitBlendshapeValues = data["values"].get<std::vector<float>>();
-						}
-						else if (datatype == "landmarks")
-						{
-							App::mediapipeLandmarks = data["values"].get<std::vector<float>>();
-						}
-						else if (datatype == "transforms")
-						{
-						}
-					}
-					catch (std::exception e)
-					{
-					}
-					break;	
+					FacePipe::GetLandmarks(metaData, jsonData, App::mediapipeLandmarks);
+					break;
 				}
-				default: {}
+				case FacePipe::EFacepipeData::Transforms:
+				{
+					break;
 				}
-
-				//Logf(LOG_NET_RECEIVE, "[{}:{}]: {}\n", datagram.source.ip, datagram.source.port, datagram.message);
+				}
 			}
 		}
 
