@@ -7,65 +7,102 @@ namespace UI
 {
 	void DisplayNodeGraph()
 	{
+		static std::string SpinnerTemplate = "            ";
+
 		ImNodes::BeginNodeEditor();
-
-		{
-			ImNodes::BeginNode(1);
-
-			ImNodes::BeginNodeTitleBar();
-			ImGui::TextUnformatted("UDP");
-			ImNodes::EndNodeTitleBar();
-
-			ImNodes::EndNode();
-
-			ImNodes::SetNodeGridSpacePos(1, ImVec2(0.0f, 0.0f));
-		}
-
-		{
-			ImNodes::BeginNode(2);
-
-			ImNodes::BeginNodeTitleBar();
-			ImGui::TextUnformatted("example");
-			ImNodes::EndNodeTitleBar();
-
-			ImNodes::BeginInputAttribute(2);
-			ImGui::Text("input");
-			ImNodes::EndInputAttribute();
-
-			ImNodes::BeginOutputAttribute(3);
-			ImGui::Indent(40);
-			ImGui::Text("output");
-			ImNodes::EndOutputAttribute();
-
-			ImNodes::EndNode();
-		}
-
-		{
-			ImNodes::BeginNode(3);
-			ImNodes::BeginNodeTitleBar();
-			ImGui::TextUnformatted("example");
-			ImNodes::EndNodeTitleBar();
-
-			ImNodes::BeginInputAttribute(5);
-			ImGui::Text("input");
-			ImNodes::EndInputAttribute();
-
-			ImNodes::BeginOutputAttribute(6);
-			ImGui::Indent(40);
-			ImGui::Text("output");
-			ImNodes::EndOutputAttribute();
-
-			ImNodes::EndNode();
-		}
 
 		static bool bInitialLoad = true;
 		if (bInitialLoad)
 		{
 			bInitialLoad = false;
-			ImNodes::SetNodeGridSpacePos(3, ImVec2(300.0f, 300.0f));
+			ImNodes::SetNodeGridSpacePos(1, ImVec2(25.0f, 50.0f));
+			ImNodes::SetNodeGridSpacePos(2, ImVec2(250.0f, 225.0f));
+			ImNodes::SetNodeGridSpacePos(3, ImVec2(400.0f, 400.0f));
 		}
 
-		ImNodes::Link(1, 3, 5);
+		{
+			static int ReceiveCounter = 0;
+			static int SpinnerPos = 0;
+			if (App::receiveDataSocket.bReceivedDataLastCall)
+			{
+				ReceiveCounter++;
+
+				int LastIndex = (int) (SpinnerTemplate.size() - 1);
+
+				if (ReceiveCounter <= LastIndex)
+				{
+					SpinnerPos = ReceiveCounter;
+				}
+				else
+				{
+					SpinnerPos = LastIndex - (ReceiveCounter%SpinnerTemplate.size()); // flip direction
+
+					if (SpinnerPos <= 0)
+					{
+						ReceiveCounter = 0;
+						SpinnerPos = 0;
+					}
+				}
+			}
+
+			ImNodes::BeginNode(1);
+				ImNodes::BeginNodeTitleBar();
+					ImGui::PushStyleColor(ImGuiCol_Text, App::receiveDataSocket.IsConnected()? IM_COL32(0, 255, 0, 255) : IM_COL32(0, 0, 0, 255));
+						ImGui::TextUnformatted(ICON_FA_WIFI);
+					ImGui::PopStyleColor();
+					ImGui::SameLine(0, 5);
+					ImGui::TextUnformatted(App::receiveDataSocket.ToString().c_str());
+				ImNodes::EndNodeTitleBar();
+
+				ImNodes::BeginOutputAttribute(1);
+					std::string spinnermodified = SpinnerTemplate;
+					spinnermodified[SpinnerPos] = '*';
+					ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(100, 100, 100, 255));
+						ImGui::Text("%s", spinnermodified.c_str());
+					ImGui::PopStyleColor();
+					ImGui::SameLine(0, 5);
+					ImGui::Text("Receive");
+				ImNodes::EndOutputAttribute();
+			ImNodes::EndNode();
+
+		}
+
+		{
+			ImNodes::BeginNode(2);
+				ImNodes::BeginNodeTitleBar();
+					ImGui::TextUnformatted("example");
+				ImNodes::EndNodeTitleBar();
+
+				ImNodes::BeginInputAttribute(2);
+				ImNodes::EndInputAttribute();
+
+				ImNodes::BeginOutputAttribute(3);
+				ImNodes::EndOutputAttribute();
+			ImNodes::EndNode();
+		}
+
+		{
+			ImNodes::BeginNode(3);
+				ImNodes::BeginNodeTitleBar();
+					ImGui::PushStyleColor(ImGuiCol_Text, false? IM_COL32(0, 255, 0, 255) : IM_COL32(0, 0, 0, 255));
+						ImGui::TextUnformatted(ICON_FA_WIFI);
+					ImGui::PopStyleColor();
+					ImGui::SameLine(0, 5);
+					ImGui::TextUnformatted("?.?.?.?:????");
+				ImNodes::EndNodeTitleBar();
+
+				ImNodes::BeginInputAttribute(4);
+					ImGui::Text("Send");
+					ImGui::SameLine(0, 5);
+					ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(100, 100, 100, 255));
+						ImGui::Text("%s", SpinnerTemplate.c_str());
+					ImGui::PopStyleColor();
+				ImNodes::EndInputAttribute();
+			ImNodes::EndNode();
+		}
+
+		ImNodes::Link(1, 1, 2);
+		ImNodes::Link(2, 3, 4);
 
 		ImNodes::EndNodeEditor();
 	}

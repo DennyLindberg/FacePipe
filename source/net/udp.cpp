@@ -89,7 +89,7 @@ bool UDPSocket::Start()
 		return false;
 	}
 
-	Logf(LOG_NET, "Started UDP socket [{}:{}]\n", ip, port);
+	Logf(LOG_NET, "Started UDP socket [{}]\n", ToString());
 
 	return true;
 }
@@ -188,6 +188,25 @@ bool UDPSocket::Receive(std::vector<UDPDatagram>& datagrams)
 		}
 	} while (bytes_received > 0);
 	
-	bReceivedDataLastCall = bReceivedDataLastCall;
+	bReceivedDataLastCall = bReceivedAnyDatagram;
 	return bReceivedAnyDatagram;
+}
+
+std::string UDPSocket::ToString() const
+{
+	sockaddr_in localAddress;
+	int addrSize = sizeof(localAddress);
+
+	if (getsockname((SOCKET)ossocket, (struct sockaddr*)&localAddress, &addrSize) != SOCKET_ERROR) 
+	{
+		// get info from socket if it is bound
+		char ipAddress[INET_ADDRSTRLEN];
+		inet_ntop(AF_INET, &localAddress.sin_addr, ipAddress, INET_ADDRSTRLEN);
+		return std::format("{}:{}", ipAddress,  ntohs(localAddress.sin_port));
+	}
+	else
+	{
+		// just use the user-requested values
+		return std::format("{}:{}", ip, port);
+	}
 }

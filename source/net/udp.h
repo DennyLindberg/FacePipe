@@ -16,7 +16,7 @@ protected:
 	void* ossocket = nullptr;
 
 public:
-	bool bReceivedDataLastCall = false; // UI status hack
+	double bReceivedDataLastCall = false; // UI status hack
 
 	UDPSocket(const char* socketIP = Net::LocalHost, int socketPort = 0)
 		: NetSocket(socketIP, socketPort)
@@ -39,4 +39,8 @@ public:
 
 	bool Send(const std::string& message, const NetSocket& sock);
 	bool Receive(std::vector<UDPDatagram>& datagrams);
+
+	bool IsConnected() const { return ossocket != nullptr; }
+
+	std::string ToString() const;
 };
