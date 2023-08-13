@@ -47,3 +47,5 @@
 binaries/*
 temp/*
 **incrementalSave
+external/unreal/FacePipe/Intermediate/*
+external/unreal/FacePipe/Binaries/*

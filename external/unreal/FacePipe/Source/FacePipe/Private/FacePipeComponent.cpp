@@ -3,7 +3,7 @@
 #include "Networking.h"
 #include "HAL/Runnable.h"
 
-#include "facepipe.h"
+#include "facepipe/facepipe.h"
 
 #define UDP_MAX_SIZE 65507
 

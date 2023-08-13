@@ -1,0 +1,23 @@
+{
+	"FileVersion": 1,
+	"Version": 1,
+	"VersionName": "0.0.1",
+	"FriendlyName": "FacePipe",
+	"Description": "",
+	"Category": "Animation",
+	"CreatedBy": "Denny Lindberg",
+	"CreatedByURL": "",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"SupportURL": "",
+	"CanContainContent": false,
+	"IsBetaVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "FacePipe",
+			"Type": "Runtime",
+			"LoadingPhase": "PostConfigInit"
+		}
+	]
+}
