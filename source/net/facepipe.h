@@ -33,7 +33,7 @@ namespace FacePipe
 		std::string SourceVersion = "";		// Version of the source
 
 		EFacepipeData DataType;				// What the data contains
-		double TimeStamp = 0.0;				// When the message was sent on the source side
+		double Time = 0.0;					// When the message was sent on the source side
 	};
 }
 

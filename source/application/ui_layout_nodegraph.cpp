@@ -62,7 +62,7 @@ namespace UI
 						ImGui::Text("Scene: %d", meta.Scene);
 						ImGui::Text("Camera: %d", meta.Camera);
 						ImGui::Text("Subject: %d", meta.Subject);
-						ImGui::Text("Time: %.2f", meta.TimeStamp);
+						ImGui::Text("Time: %.2f", meta.Time);
 					}
 
 					// spinner

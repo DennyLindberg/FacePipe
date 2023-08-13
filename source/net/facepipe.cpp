@@ -98,7 +98,7 @@ namespace FacePipe
 
 			const json& time = Message["time"];
 			{
-				OutMeta.TimeStamp = time.is_number_float()? time.get<double>() : 0.0;
+				OutMeta.Time = time.is_number_float()? time.get<double>() : 0.0;
 			}
 
 			return true;
