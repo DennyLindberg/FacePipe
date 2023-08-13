@@ -40,6 +40,7 @@ public:
 	void Close();
 
 	bool Send(const std::string& message, const NetSocket& sock);
+	bool Send(const UDPDatagram& datagram, const NetSocket& sock);
 	bool Receive(std::vector<UDPDatagram>& datagrams);
 
 	bool IsConnected() const { return ossocket != nullptr; }

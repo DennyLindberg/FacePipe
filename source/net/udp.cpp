@@ -117,15 +117,27 @@ void UDPSocket::Close()
 
 bool UDPSocket::Send(const std::string& message, const NetSocket& sock)
 {
-	if (message.length() >= 512)
-	{
-		// UDP can be up to 65507 bytes but is limited by the Maximum Transmission Unit (1500 bytes or less).
-		// For portability it is recommended to send < 500 bytes at a time.
-		UDPLog("Excessive string length in UDPSocket::Send()! Message exceeded 512 bytes, the MTU might send fragmented packets which increases the risk of datagram loss.\n", ip, port);
-	}
+	//if (message.length() >= 512)
+	//{
+	//	// UDP can be up to 65507 bytes but is limited by the Maximum Transmission Unit (1500 bytes or less).
+	//	// For portability it is recommended to send < 500 bytes at a time.
+	//	UDPLog("Excessive string length in UDPSocket::Send()! Message exceeded 512 bytes, the MTU might send fragmented packets which increases the risk of datagram loss.\n", ip, port);
+	//}
 
 	sockaddr_in addr;
 	if (to_net_addr(addr, sock) && sendto((SOCKET)ossocket, message.c_str(), (int) message.length(), 0, (SOCKADDR*)&addr, sizeof(sockaddr_in)) == SOCKET_ERROR) 
+	{
+		UDPLog("Failed to Send() message over UDP socket [{}:{}]\n", ip, port);
+		return false;
+	}
+
+	return true;
+}
+
+bool UDPSocket::Send(const UDPDatagram& datagram, const NetSocket& sock)
+{
+	sockaddr_in addr;
+	if (to_net_addr(addr, sock) && sendto((SOCKET)ossocket, datagram.message.data(), (int)datagram.message.size(), 0, (SOCKADDR*)&addr, sizeof(sockaddr_in)) == SOCKET_ERROR)
 	{
 		UDPLog("Failed to Send() message over UDP socket [{}:{}]\n", ip, port);
 		return false;

@@ -120,24 +120,24 @@ void UI::GenerateMainLayout(UIManager& ui)
 								ImGui::Image((ImTextureID)(intptr_t)App::webcam.Texture(), ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().x/ratio), { 0, 1 }, { 1, 0 });
 							}
 
-							ImGui::Text("Mediapipe Time %.3f", App::mediapipeTime);
+							ImGui::Text("Mediapipe Time %.3f", App::latestFrame.Meta.Time);
 
 							static bool bShowBlendshapes = true;
 							ImGui::Checkbox("Show Blendshapes", &bShowBlendshapes);
 							if (bShowBlendshapes)
 							{
 								ImGui::Text("Arkit Blendshapes");
-								for (size_t i=0; i<App::arkitBlendshapeValues.size(); ++i)
+								for (size_t i=0; i<App::latestFrame.BlendshapeValues.size(); ++i)
 								{
-									ImGui::SliderFloat(App::arkitBlendshapeNames[i].c_str(), &App::arkitBlendshapeValues[i], -1.0f, 1.0f, "%.3f", ImGuiSliderFlags_NoInput);
+									ImGui::SliderFloat(App::latestFrame.BlendshapeNames[i].c_str(), &App::latestFrame.BlendshapeValues[i], -1.0f, 1.0f, "%.3f", ImGuiSliderFlags_NoInput);
 								}
 							}
 							else
 							{
 								ImGui::Text("Mediapipe Landmarks");
-								for (size_t i = 0; i < App::mediapipeLandmarks.size(); ++i)
+								for (size_t i = 0; i < App::latestFrame.Landmarks.size(); ++i)
 								{
-									ImGui::SliderFloat(("##" + std::to_string(i)).c_str(), &App::mediapipeLandmarks[i], -1.0f, 1.0f, "%.3f", ImGuiSliderFlags_NoInput);
+									ImGui::SliderFloat(("##" + std::to_string(i)).c_str(), &App::latestFrame.Landmarks[i], -1.0f, 1.0f, "%.3f", ImGuiSliderFlags_NoInput);
 								}
 							}
 

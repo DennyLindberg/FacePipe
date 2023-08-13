@@ -81,8 +81,5 @@ public:
 	static UDPSocket receiveDataSocket;
 	static UDPDatagram lastReceivedDatagram;
 
-	static double mediapipeTime;
-	static std::vector<std::string> arkitBlendshapeNames;
-	static std::vector<float> arkitBlendshapeValues;
-	static std::vector<float> mediapipeLandmarks;
+	static FacePipe::Frame latestFrame;
 };

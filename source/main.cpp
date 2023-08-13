@@ -77,6 +77,7 @@ int main(int argc, char* args[])
 	DefaultTexture->LoadPNG(App::Path("content/textures/default.png"));
 	DefaultTexture->CopyToGPU();
 
+	NetSocket ApplicationSocket(9001); // to Unreal or Blender
 
 	App::ui.selected_object = suzanne;
 
@@ -126,12 +127,12 @@ int main(int argc, char* args[])
 				{
 				case FacePipe::EFacepipeData::Blendshapes:
 				{
-					FacePipe::GetBlendshapes(datagram.metaData, jsonData, App::arkitBlendshapeNames, App::arkitBlendshapeValues);
+					FacePipe::GetBlendshapes(datagram.metaData, jsonData, App::latestFrame.BlendshapeNames, App::latestFrame.BlendshapeValues);
 					break;
 				}
 				case FacePipe::EFacepipeData::Landmarks:
 				{
-					FacePipe::GetLandmarks(datagram.metaData, jsonData, App::mediapipeLandmarks);
+					FacePipe::GetLandmarks(datagram.metaData, jsonData, App::latestFrame.Landmarks);
 					break;
 				}
 				case FacePipe::EFacepipeData::Transforms:
@@ -141,15 +142,14 @@ int main(int argc, char* args[])
 				}
 
 				App::lastReceivedDatagram = datagram;
+
+				// forward to next application
+				App::receiveDataSocket.Send(datagram, ApplicationSocket);
 			}
 		}
-
-		//Logf(LOG_NET_RECEIVE, "{} vs {}\n", mpmesh->positions.size(), App::mediapipeLandmarks.size()/3);
 		
-		if (size_t mpcount = App::mediapipeLandmarks.size()/3)
+		if (size_t mpcount = App::latestFrame.Landmarks.size()/3)
 		{
-			//Logf(LOG_NET_RECEIVE, "{} vs {}\n", mpmesh->positions.size(), App::mediapipeLandmarks.size()/3);
-
 			// fill missing points (eyes, etc)
 			while (mpmesh->positions.size() < mpcount)
 			{
@@ -160,9 +160,9 @@ int main(int argc, char* args[])
 
 			for (size_t i=0; i<mpcount; ++i)
 			{
-				mpmesh->positions[i].x = -App::mediapipeLandmarks[i*3];
-				mpmesh->positions[i].y = App::mediapipeLandmarks[i*3+1];
-				mpmesh->positions[i].z = App::mediapipeLandmarks[i*3+2];
+				mpmesh->positions[i].x = -App::latestFrame.Landmarks[i*3];
+				mpmesh->positions[i].y = App::latestFrame.Landmarks[i*3+1];
+				mpmesh->positions[i].z = App::latestFrame.Landmarks[i*3+2];
 			}
 			mpmesh->SendToGPU();
 		}

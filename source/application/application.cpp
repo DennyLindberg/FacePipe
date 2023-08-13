@@ -21,10 +21,7 @@ WebCam App::webcam = WebCam();
 UDPSocket App::receiveDataSocket = UDPSocket();
 UDPDatagram App::lastReceivedDatagram = UDPDatagram();
 
-double App::mediapipeTime = 0.0;
-std::vector<std::string> App::arkitBlendshapeNames;
-std::vector<float> App::arkitBlendshapeValues;
-std::vector<float> App::mediapipeLandmarks;
+FacePipe::Frame App::latestFrame = FacePipe::Frame();
 
 std::function<void(float, float, const SDL_Event& event)> App::OnTickEvent = [](float time, float dt, const SDL_Event& event) -> void {};
 std::function<void(float, float)> App::OnTickScene = [](float time, float dt) -> void {};

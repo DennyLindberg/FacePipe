@@ -39,6 +39,14 @@ namespace FacePipe
 		EFacepipeData DataType;				// What the data contains
 		double Time = 0.0;					// When the message was sent on the source side
 	};
+
+	struct Frame
+	{
+		MetaData Meta;
+		std::vector<std::string> BlendshapeNames;
+		std::vector<float> BlendshapeValues;
+		std::vector<float> Landmarks;
+	};
 }
 
 namespace FacePipe
