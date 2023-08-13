@@ -3,6 +3,8 @@
 #include "Networking.h"
 #include "HAL/Runnable.h"
 
+#include "facepipe.h"
+
 #define UDP_MAX_SIZE 65507
 
 FFacePipeUDPListener::FFacePipeUDPListener(uint16 ListenPort)
@@ -39,24 +41,26 @@ bool FFacePipeUDPListener::Init()
 
 uint32 FFacePipeUDPListener::Run()
 {
-	static TArray<uint8> ReceivedData;
+	TArray<uint8> ReceivedData;
 	ReceivedData.SetNumUninitialized(UDP_MAX_SIZE);
 
     while (bRunThread)
     {
-        FPlatformProcess::Sleep(0.001);
-
 		uint32 BufferSize = 0;
-		while (ListenSocket->HasPendingData(BufferSize))
+		while (ListenSocket->HasPendingData(BufferSize) && BufferSize > 0)
 		{
-			ReceivedData.SetNumUninitialized(BufferSize, false);
+			ReceivedData.SetNumUninitialized(BufferSize + 1, false); // +1 for null terminator
 
 			int32 Read = 0;
-			if (ListenSocket->Recv(ReceivedData.GetData(), ReceivedData.Num(), Read, ESocketReceiveFlags::None))
+			while (ListenSocket->Recv(ReceivedData.GetData(), ReceivedData.Num(), Read, ESocketReceiveFlags::None) && Read > 0)
 			{
+				ReceivedData.Last() = 0; // null terminate
 				DatagramQueue.Enqueue(ReceivedData);
 			}
 		}
+
+		// Stops working if we sleep, no idea why
+		//FPlatformProcess::Sleep(0.001);
     }
 
     return 0;
@@ -102,16 +106,65 @@ void UFacePipeComponent::TickComponent(float DeltaTime, enum ELevelTick TickType
 	if (!UDPListener)
 		return;
 
-	TArray<uint8> Datagram;
-	while (UDPListener->DatagramQueue.Dequeue(Datagram))
+	TArray<uint8> UEDatagram;
+	while (UDPListener->DatagramQueue.Dequeue(UEDatagram))
 	{
-		Datagram.Add(0); // null terminate
-		FString DebugString = FString(ANSI_TO_TCHAR(reinterpret_cast<const char*>(Datagram.GetData())));
-		UE_LOG(LogTemp, Log, TEXT("Received data:\n%s"), *DebugString);
+		if (UEDatagram.Num() < 2 || FacePipe::ToType(UEDatagram[0]) != FacePipe::EDatagramType::JSON)
+			continue;
 
-		TArray<FFacePipeBlendshapeData> BlendshapeData;
-		float Timestamp = 0.0f;
-		OnBlendshapesUpdate.Broadcast(BlendshapeData, Timestamp);
+		if (UEDatagram.Last() != 0)
+			UEDatagram.Add(0); // null terminate string
+
+		// Data starts from second byte
+		std::string Datagram(1 + reinterpret_cast<const char*>(UEDatagram.GetData()));
+
+		FacePipe::MetaData FacePipeMetaData;
+		nlohmann::json JSONData;
+		if (!FacePipe::Parse(Datagram, FacePipeMetaData, JSONData))
+		{
+			continue;
+		}
+
+		switch (FacePipeMetaData.DataType)
+		{
+		case FacePipe::EFacepipeData::Blendshapes:
+		{
+			std::vector<std::string> Names;
+			std::vector<float> Values;
+			FacePipe::GetBlendshapes(FacePipeMetaData, JSONData, Names, Values);
+
+			TArray<FFacePipeBlendshapeData> BlendshapeData;
+			BlendshapeData.SetNumUninitialized(Names.size());
+			for (size_t i = 0; i < Names.size(); i++)
+			{
+				BlendshapeData[i].Name = FName(Names[i].c_str());
+				BlendshapeData[i].Value = Values[i];
+			}
+
+			OnBlendshapesUpdate.Broadcast(BlendshapeData, FacePipeMetaData.Time);
+			break;
+		}
+		case FacePipe::EFacepipeData::Landmarks:
+		{
+			std::vector<float> Values;
+			FacePipe::GetLandmarks(FacePipeMetaData, JSONData, Values);
+
+			// Could probably do a memcpy but better not to... UE5 has a different data type for FVector.
+			TArray<FVector> Landmarks;
+			Landmarks.Reserve(Values.size()/3);
+			for (int32 i=0; i<Values.size(); i += 3)
+			{
+				Landmarks.Add(FVector(Values[i], Values[i+1], Values[i+2]));
+			}
+
+			OnLandmarksUpdate.Broadcast(Landmarks, FacePipeMetaData.Time);
+			break;
+		}
+		case FacePipe::EFacepipeData::Transforms:
+		{
+			break;
+		}
+		}
 	}
 }
 

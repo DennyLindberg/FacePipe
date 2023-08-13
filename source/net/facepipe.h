@@ -1,5 +1,9 @@
 #pragma once
 
+#include <stdint.h>
+#include <string>
+#include <string_view>
+
 #include "nlohmann/json.hpp"
 
 namespace FacePipe
@@ -42,6 +46,7 @@ namespace FacePipe
 	EDatagramType ToType(char FirstByte);
 
 	bool ParseJSON(const std::string_view& Message, nlohmann::json& OutJSON);
+	bool ParseJSON(const std::string& Message, nlohmann::json& OutJSON);
 	bool ParseMetaData(const nlohmann::json& Message, MetaData& OutMeta);
 
 	bool GetBlendshapes(const MetaData& MessageMeta, const nlohmann::json& Message, std::vector<std::string>& OutNames, std::vector<float>& OutValues);

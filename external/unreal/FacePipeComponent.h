@@ -43,6 +43,7 @@ public:
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FFacePipeBlendshapesDelegate, const TArray<FFacePipeBlendshapeData>&, Data, float, Timestamp);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FFacePipeLandmarksDelegate, const TArray<FVector>&, Data, float, Timestamp);
 
 UCLASS(BlueprintType, Blueprintable, meta=(BlueprintSpawnableComponent))
 class UFacePipeComponent : public UActorComponent
@@ -64,6 +65,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable)
 	FFacePipeBlendshapesDelegate OnBlendshapesUpdate;
+
+	UPROPERTY(BlueprintAssignable)
+	FFacePipeLandmarksDelegate OnLandmarksUpdate;
 
 protected:
 	FFacePipeUDPListener* UDPListener;

@@ -54,6 +54,20 @@ namespace FacePipe
 		return false;
 	}
 
+	bool ParseJSON(const std::string& Message, nlohmann::json& OutJSON)
+	{
+		try
+		{
+			OutJSON = json::parse(Message);
+			return true;
+		}
+		catch (std::exception e)
+		{
+		}
+
+		return false;
+	}
+
 	bool ParseMetaData(const nlohmann::json& Message, MetaData& OutMeta)
 	{
 		try 
