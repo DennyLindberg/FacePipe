@@ -77,7 +77,8 @@ int main(int argc, char* args[])
 	DefaultTexture->LoadPNG(App::Path("content/textures/default.png"));
 	DefaultTexture->CopyToGPU();
 
-	NetAddressIP4 OutgoingAddress(9001); // to Unreal or Blender
+	NetAddressIP4 UnrealAddress(9001); // Unreal
+	NetAddressIP4 BlenderAddress(9002); // Blender
 
 	App::ui.selected_object = suzanne;
 
@@ -144,7 +145,8 @@ int main(int argc, char* args[])
 				App::lastReceivedDatagram = datagram;
 
 				// forward to next application
-				App::receiveDataSocket.Send(datagram, OutgoingAddress);
+				App::receiveDataSocket.Send(datagram, UnrealAddress);
+				App::receiveDataSocket.Send(datagram, BlenderAddress);
 			}
 		}
 		
