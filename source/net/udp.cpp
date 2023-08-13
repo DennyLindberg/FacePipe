@@ -9,7 +9,7 @@ std::function<void(const char*)> UDPSocket::Logger = [](const char*) -> void {};
 #define UDPLog(str, ...) UDPSocket::Logger(std::format(str, __VA_ARGS__).c_str())
 
 // converts NetSocket to something the OS prefers
-bool to_net_addr(sockaddr_in& addr, const NetSocket& info)
+bool to_net_addr(sockaddr_in& addr, const NetAddressIP4& info)
 {
 	addr.sin_family = AF_INET;
 	addr.sin_port = htons(info.port);
@@ -22,7 +22,7 @@ bool to_net_addr(sockaddr_in& addr, const NetSocket& info)
 	return true;
 }
 
-bool to_netsocket(const sockaddr_in& addr, NetSocket& info)
+bool to_netsocket(const sockaddr_in& addr, NetAddressIP4& info)
 {
 	char from_ip[INET_ADDRSTRLEN];
 	if (inet_ntop(AF_INET, &(addr.sin_addr), from_ip, INET_ADDRSTRLEN))
@@ -77,7 +77,7 @@ bool UDPSocket::Start()
 	}
 
 	sockaddr_in addr;
-	if (!to_net_addr(addr, *((NetSocket*)this))) 
+	if (!to_net_addr(addr, *((NetAddressIP4*)this))) 
 	{
 		UDPLog("Failed to create UDP socket - inet_pton() failed [{}:{}]\n", ip, port);
 		Close();
@@ -115,7 +115,7 @@ void UDPSocket::Close()
 	}
 }
 
-bool UDPSocket::Send(const std::string& message, const NetSocket& sock)
+bool UDPSocket::Send(const std::string& message, const NetAddressIP4& target)
 {
 	//if (message.length() >= 512)
 	//{
@@ -124,8 +124,8 @@ bool UDPSocket::Send(const std::string& message, const NetSocket& sock)
 	//	UDPLog("Excessive string length in UDPSocket::Send()! Message exceeded 512 bytes, the MTU might send fragmented packets which increases the risk of datagram loss.\n", ip, port);
 	//}
 
-	sockaddr_in addr;
-	if (to_net_addr(addr, sock) && sendto((SOCKET)ossocket, message.c_str(), (int) message.length(), 0, (SOCKADDR*)&addr, sizeof(sockaddr_in)) == SOCKET_ERROR) 
+	sockaddr_in sock_addr;
+	if (to_net_addr(sock_addr, target) && sendto((SOCKET)ossocket, message.c_str(), (int) message.length(), 0, (SOCKADDR*)&sock_addr, sizeof(sockaddr_in)) == SOCKET_ERROR) 
 	{
 		UDPLog("Failed to Send() message over UDP socket [{}:{}]\n", ip, port);
 		return false;
@@ -134,10 +134,10 @@ bool UDPSocket::Send(const std::string& message, const NetSocket& sock)
 	return true;
 }
 
-bool UDPSocket::Send(const UDPDatagram& datagram, const NetSocket& sock)
+bool UDPSocket::Send(const UDPDatagram& datagram, const NetAddressIP4& target)
 {
-	sockaddr_in addr;
-	if (to_net_addr(addr, sock) && sendto((SOCKET)ossocket, datagram.message.data(), (int)datagram.message.size(), 0, (SOCKADDR*)&addr, sizeof(sockaddr_in)) == SOCKET_ERROR)
+	sockaddr_in sock_addr;
+	if (to_net_addr(sock_addr, target) && sendto((SOCKET)ossocket, datagram.message.data(), (int)datagram.message.size(), 0, (SOCKADDR*)&sock_addr, sizeof(sockaddr_in)) == SOCKET_ERROR)
 	{
 		UDPLog("Failed to Send() message over UDP socket [{}:{}]\n", ip, port);
 		return false;

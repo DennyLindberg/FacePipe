@@ -6,12 +6,12 @@
 
 struct UDPDatagram
 {
-	NetSocket source;
+	NetAddressIP4 source;
 	std::vector<char> message;
 	FacePipe::MetaData metaData; // empty until parsed
 };
 
-class UDPSocket : public NetSocket
+class UDPSocket : public NetAddressIP4
 {
 protected:
 	void* ossocket = nullptr;
@@ -21,12 +21,12 @@ public:
 	double bReceivedDataLastCall = false; // UI status hack
 
 	UDPSocket(const char* socketIP = Net::LocalHost, int socketPort = 0)
-		: NetSocket(socketIP, socketPort)
+		: NetAddressIP4(socketIP, socketPort)
 	{
 	}
 
 	UDPSocket(int socketPort)
-		: NetSocket(socketPort)
+		: NetAddressIP4(socketPort)
 	{
 	}
 
@@ -39,8 +39,8 @@ public:
 	bool Start();
 	void Close();
 
-	bool Send(const std::string& message, const NetSocket& sock);
-	bool Send(const UDPDatagram& datagram, const NetSocket& sock);
+	bool Send(const std::string& message, const NetAddressIP4& target);
+	bool Send(const UDPDatagram& datagram, const NetAddressIP4& target);
 	bool Receive(std::vector<UDPDatagram>& datagrams);
 
 	bool IsConnected() const { return ossocket != nullptr; }

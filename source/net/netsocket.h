@@ -11,15 +11,15 @@ namespace Net
 	void StopWinsock();
 }
 
-class NetSocket
+class NetAddressIP4
 {
 public:
-	NetSocket(const char* socketIP = Net::LocalHost, int socketPort = 0)
-		: ip(socketIP), port(socketPort)
+	NetAddressIP4(const char* AddressIP = Net::LocalHost, int AddressPort = 0)
+		: ip(AddressIP), port(AddressPort)
 	{}
 
-	NetSocket(int socketPort)
-		: ip(Net::LocalHost), port(socketPort)
+	NetAddressIP4(int AddressPort)
+		: ip(Net::LocalHost), port(AddressPort)
 	{}
 
 	std::string ip = Net::LocalHost;
