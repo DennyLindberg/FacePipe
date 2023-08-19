@@ -58,7 +58,7 @@ namespace UI
 					// connection info
 					{
 						FacePipe::MetaData& meta = App::lastReceivedDatagram.metaData;
-						ImGui::Text("%s %s", meta.SourceName.c_str(), meta.SourceVersion.c_str());
+						ImGui::Text("%s", meta.Source.c_str());
 						ImGui::Text("Scene: %d", meta.Scene);
 						ImGui::Text("Camera: %d", meta.Camera);
 						ImGui::Text("Subject: %d", meta.Subject);

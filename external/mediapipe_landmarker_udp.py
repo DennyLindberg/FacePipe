@@ -60,37 +60,38 @@ def on_mp_facelandmarker_result(result: FaceLandmarkerResult, output_image: mp.I
 
     # list ids for readability
     subject = 3
-    dataType = 2
 
     # message template
     message = {
         'channel': [0,0,0,0], # api version, scene, camera, subject
-        'header': ['mediapipe', '0.0.0.0', ''],
+        'source': 'mediapipe',
         'time': float(timestamp_ms)/1000.0,
-        'data': {}
+        'data': {
+            'type': ''
+        }
     }
 
-    message['header'][dataType] = 'landmarks'
     for i in range(0, len(result.face_landmarks)):
         message['channel'][subject] = i
         message['data'] = {
+            'type': 'landmarks',
             'values': np.array([(lm.x, lm.y, lm.z) for lm in result.face_landmarks[i]]).flatten().tolist() # each array is a set of landmark objects { 'x': 0, 'y': 0, 'z': 0, ... } - this unpacks it to a continuous list
         }
         send_datagram(udp_socket, targetip, targetport, message=message)
 
-    message['header'][dataType] = 'blendshapes'
     for i in range(0, len(result.face_blendshapes)):
         message['channel'][subject] = i
         message['data'] = {
+            'type': 'blendshapes',
             'names': [bs.category_name for bs in result.face_blendshapes[i]],
             'values': [bs.score for bs in result.face_blendshapes[i]]
         }
         send_datagram(udp_socket, targetip, targetport, message=message)
 
-    message['header'][dataType] = 'transforms'
     for i in range(0, len(result.facial_transformation_matrixes)):
         message['channel'][subject] = i
         message['data'] = {
+            'type': 'transforms'
         }
         # TODO
         pass

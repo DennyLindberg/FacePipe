@@ -33,11 +33,9 @@ namespace FacePipe
 		int Camera = 0;			// Camera the subject was captured in
 		int Subject = 0;		// The subject the data belongs to
 
-		std::string SourceName = "None";	// Which application / capture method produced this data
-		std::string SourceVersion = "";		// Version of the source
-
-		EFacepipeData DataType;				// What the data contains
-		double Time = 0.0;					// When the message was sent on the source side
+		std::string Source = "None";						// Which application / capture method produced this data
+		EFacepipeData DataType = EFacepipeData::INVALID;	// What the data contains
+		double Time = 0.0;									// When the message was sent on the source side
 	};
 
 	struct Frame

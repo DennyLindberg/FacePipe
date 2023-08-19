@@ -40,16 +40,14 @@ void main()
     vec3 center = gl_in[0].gl_Position.xyz;
 
     float w = gl_in[0].gl_Position.w;
-    float x = size;
-    float y = size;
 
-    Emit(center + vec3(-x, y, 0.0f), w);
-    Emit(center + vec3(-x, -y, 0.0f), w);
-    Emit(center + vec3(x, -y, 0.0f), w);
+    Emit(center + vec3(-size, size, 0.0f), w);
+    Emit(center + vec3(-size, -size, 0.0f), w);
+    Emit(center + vec3(size, -size, 0.0f), w);
 
-    Emit(center + vec3(x, -y, 0.0f), w);
-    Emit(center + vec3(x, y, 0.0f), w);
-    Emit(center + vec3(-x, y, 0.0f), w);
+    Emit(center + vec3(size, -size, 0.0f), w);
+    Emit(center + vec3(size, size, 0.0f), w);
+    Emit(center + vec3(-size, size, 0.0f), w);
 
     EndPrimitive();
 }

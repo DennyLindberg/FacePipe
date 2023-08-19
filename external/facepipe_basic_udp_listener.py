@@ -25,11 +25,11 @@ try:
 
         if not 'channel' in jsonDict:
             continue
-        if not 'header' in jsonDict:
+        if not 'source' in jsonDict:
             continue
         if not 'time' in jsonDict:
             continue
-        if not 'data' in jsonDict:
+        if not 'data' in jsonDict or not 'type' in jsonDict['data']:
             continue
 
         api = jsonDict['channel'][0]
@@ -37,12 +37,10 @@ try:
         camera = jsonDict['channel'][2]
         subject = jsonDict['channel'][3]
 
-        source_name = jsonDict['header'][0]
-        source_version = jsonDict['header'][1]
-        data_type = jsonDict['header'][2]
-
+        source_name = jsonDict['source']
         t = jsonDict['time']
 
+        data_type = jsonDict['data']['type']
         if data_type == 'blendshapes':
             names = jsonDict['data']['names']
             values = jsonDict['data']['values']

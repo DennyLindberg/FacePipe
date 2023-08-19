@@ -35,6 +35,7 @@ namespace FacePipe
 		{
 		case 'b': { return EDatagramType::Bytes; }
 		case 's': { return EDatagramType::String; }
+		case '{':
 		case 'j': { return EDatagramType::JSON; }
 		default:  { return EDatagramType::Invalid; }
 		}
@@ -87,32 +88,36 @@ namespace FacePipe
 				OutMeta.Subject = values[3];
 			}
 
-			const json& header = Message["header"];
+			const json& source = Message["source"];
 			{
-				if (!header.is_array())
+				if (!source.is_string())
 					return false;
 
-				auto values = header.get<std::vector<std::string>>();	// ['source', 'version', 'datatype'] e.g. ['mediapipe', '1.0.0.0', 'blendshapes']
-				if (values.size() < 3)
-					return false;
-
-				OutMeta.SourceName = values[0];
-				OutMeta.SourceVersion = values[1];
-
-				auto& DataType = values[2];
-				if (DataType == "blendshapes")
-					OutMeta.DataType = EFacepipeData::Blendshapes;
-				else if (DataType == "landmarks")
-					OutMeta.DataType = EFacepipeData::Landmarks;
-				else if (DataType == "transforms")
-					OutMeta.DataType = EFacepipeData::Transforms;
-				else
-					OutMeta.DataType = EFacepipeData::INVALID;
+				OutMeta.Source = source.get<std::string>();
 			}
 
 			const json& time = Message["time"];
 			{
+				if (!time.is_number())
+					return false;
+
 				OutMeta.Time = time.is_number_float()? time.get<double>() : 0.0;
+			}
+
+			OutMeta.DataType = EFacepipeData::INVALID;
+			if (Message.contains("data"))
+			{
+				const json& data = Message["data"];
+				if (data.contains("type"))
+				{
+					const json& DataType = data["type"].get<std::string>();
+					if (DataType == "blendshapes")
+						OutMeta.DataType = EFacepipeData::Blendshapes;
+					else if (DataType == "landmarks")
+						OutMeta.DataType = EFacepipeData::Landmarks;
+					else if (DataType == "transforms")
+						OutMeta.DataType = EFacepipeData::Transforms;
+				}
 			}
 
 			return true;
