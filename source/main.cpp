@@ -131,13 +131,21 @@ int main(int argc, char* args[])
 					FacePipe::GetBlendshapes(datagram.metaData, jsonData, App::latestFrame.BlendshapeNames, App::latestFrame.BlendshapeValues);
 					break;
 				}
-				case FacePipe::EFacepipeData::Landmarks:
+				case FacePipe::EFacepipeData::Landmarks2D:
+				case FacePipe::EFacepipeData::Landmarks3D:
 				{
-					FacePipe::GetLandmarks(datagram.metaData, jsonData, App::latestFrame.Landmarks);
+					// TODO: Landmarks2D is a bit problematic when we store it as latestFrame, we expect 3D there
+					FacePipe::GetLandmarks(datagram.metaData, jsonData, App::latestFrame.Landmarks, App::latestFrame.ImageWidth, App::latestFrame.ImageHeight);
+					break;
+				}
+				case FacePipe::EFacepipeData::Mesh:
+				{
 					break;
 				}
 				case FacePipe::EFacepipeData::Transforms:
 				{
+					// TODO: This overwrites all transforms, append/replace based on name?
+					FacePipe::GetTransforms(datagram.metaData, jsonData, App::latestFrame.Transforms);
 					break;
 				}
 				}
@@ -148,6 +156,43 @@ int main(int argc, char* args[])
 				App::receiveDataSocket.Send(datagram, UnrealAddress);
 				App::receiveDataSocket.Send(datagram, BlenderAddress);
 			}
+		}
+
+		float w = (float) App::latestFrame.ImageWidth;
+		float h = (float) App::latestFrame.ImageHeight;
+		if (w == 0.0f || h == 0.0f)
+		{
+			w = h = 1.0f;
+		}
+		float ratio = w/h;
+
+		// Draw debug transforms
+		for (FacePipe::Transform transform : App::latestFrame.Transforms)
+		{
+			if (transform.Matrix.size() != 16)
+				continue;
+
+			const std::vector<float>& m = transform.Matrix;
+			glm::mat4 mat(
+				m[0], m[1], m[2], m[3],
+				m[4], m[5], m[6], m[7],
+				m[8], m[9], m[10], m[11],
+				m[12], m[13], m[14], m[15]
+			);
+
+			// Why?...
+			w *= 0.1f;
+			h *= 0.1f;
+			
+			// negative sign is to rotate the matrix so Z+ is forward (just for easier visualization)
+			glm::fvec3 origin{ mat[0][3]/w, mat[1][3]/h, mat[2][3]/w }; // translation vector x,y,z
+			glm::fvec3 x{ -mat[0] };
+			glm::fvec3 y{ mat[1] };
+			glm::fvec3 z{ -mat[2] };
+
+			App::ui.sceneViewport->debuglines->AddLine(origin, origin+x, glm::fvec4(1.0f, 0.0f, 0.0f, 1.0f));
+			App::ui.sceneViewport->debuglines->AddLine(origin, origin+y, glm::fvec4(0.0f, 1.0f, 0.0f, 1.0f));
+			App::ui.sceneViewport->debuglines->AddLine(origin, origin+z, glm::fvec4(0.0f, 0.0f, 1.0f, 1.0f));
 		}
 		
 		if (size_t mpcount = App::latestFrame.Landmarks.size()/3)
@@ -163,7 +208,7 @@ int main(int argc, char* args[])
 			for (size_t i=0; i<mpcount; ++i)
 			{
 				mpmesh->positions[i].x = App::latestFrame.Landmarks[i*3];
-				mpmesh->positions[i].y = App::latestFrame.Landmarks[i*3+1];
+				mpmesh->positions[i].y = App::latestFrame.Landmarks[i*3+1]; // divide by ratio to restore image proportions
 				mpmesh->positions[i].z = App::latestFrame.Landmarks[i*3+2];
 			}
 			mpmesh->SendToGPU();
@@ -171,7 +216,7 @@ int main(int argc, char* args[])
 	};
 
 	App::OnTickRender = [&](float time, float dt) -> void 
-	{
+	{	
 		App::ui.sceneViewport->Render([&](Viewport& viewport) {
 			//pointCloudShader.Use();
 			//pointCloudShader.SetUniformMat4("model", arhead->ComputeWorldMatrix());

@@ -8,11 +8,23 @@
 
 namespace FacePipe
 {
+	enum class EAxis : uint8_t
+	{
+		X = 0,	// +X
+		Y = 1,	// +Y
+		Z = 2,	// +Z
+		nX = 3,	// -X
+		nY = 4,	// -Y
+		nZ = 5, // -Z
+	};
+
 	enum class EFacepipeData : uint8_t
 	{
-		Landmarks = 0,
-		Blendshapes = 1,
-		Transforms = 2,
+		Blendshapes = 0,
+		Landmarks2D = 1,
+		Landmarks3D = 2,
+		Mesh = 3,
+		Transforms = 4,
 
 		INVALID = 255
 	};
@@ -38,12 +50,22 @@ namespace FacePipe
 		double Time = 0.0;									// When the message was sent on the source side
 	};
 
+	struct Transform
+	{
+		std::string Name = "";
+		std::vector<float> Matrix;
+	};
+
 	struct Frame
 	{
 		MetaData Meta;
 		std::vector<std::string> BlendshapeNames;
 		std::vector<float> BlendshapeValues;
 		std::vector<float> Landmarks;
+		std::vector<FacePipe::Transform> Transforms;
+
+		int ImageWidth = 0;
+		int ImageHeight = 0;
 	};
 }
 
@@ -56,8 +78,8 @@ namespace FacePipe
 	bool ParseMetaData(const nlohmann::json& Message, MetaData& OutMeta);
 
 	bool GetBlendshapes(const MetaData& MessageMeta, const nlohmann::json& Message, std::vector<std::string>& OutNames, std::vector<float>& OutValues);
-	bool GetLandmarks(const MetaData& MessageMeta, const nlohmann::json& Message, std::vector<float>& OutValues);
-	bool GetTransforms(const MetaData& MessageMeta, const nlohmann::json& Message, std::vector<float>& OutValues);
+	bool GetLandmarks(const MetaData& MessageMeta, const nlohmann::json& Message, std::vector<float>& OutValues, int& ImageWidth, int& ImageHeight);
+	bool GetTransforms(const MetaData& MessageMeta, const nlohmann::json& Message, std::vector<FacePipe::Transform>& OutTransforms);
 }
 
 namespace FacePipe

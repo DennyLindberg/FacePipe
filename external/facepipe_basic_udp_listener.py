@@ -45,7 +45,10 @@ try:
             names = jsonDict['data']['names']
             values = jsonDict['data']['values']
             print('{} Blendshapes {}'.format(len(values), t))
-        elif data_type == 'landmarks':
+        elif data_type == 'landmarks2d':
+            values = jsonDict['data']['values']
+            print('{} Landmarks {}'.format(int(len(values)/2), t))
+        elif data_type == 'landmarks3d':
             values = jsonDict['data']['values']
             print('{} Landmarks {}'.format(int(len(values)/3), t))
         elif data_type == 'transforms':

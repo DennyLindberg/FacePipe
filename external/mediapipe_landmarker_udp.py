@@ -74,7 +74,8 @@ def on_mp_facelandmarker_result(result: FaceLandmarkerResult, output_image: mp.I
     for i in range(0, len(result.face_landmarks)):
         message['channel'][subject] = i
         message['data'] = {
-            'type': 'landmarks',
+            'type': 'landmarks3d',
+            'image': [output_image.width, output_image.height],
             'values': np.array([(lm.x, lm.y, lm.z) for lm in result.face_landmarks[i]]).flatten().tolist() # each array is a set of landmark objects { 'x': 0, 'y': 0, 'z': 0, ... } - this unpacks it to a continuous list
         }
         send_datagram(udp_socket, targetip, targetport, message=message)
@@ -88,13 +89,23 @@ def on_mp_facelandmarker_result(result: FaceLandmarkerResult, output_image: mp.I
         }
         send_datagram(udp_socket, targetip, targetport, message=message)
 
+    # TODO: mesh (even though mediapipe technically does not have one)
+    #message['data'] = {
+    #    'type': 'mesh'
+    #}
+    
     for i in range(0, len(result.facial_transformation_matrixes)):
         message['channel'][subject] = i
         message['data'] = {
-            'type': 'transforms'
+            'type': 'transforms',
+            'values': [
+                {
+                    'name': 'face',
+                    'matrix': result.facial_transformation_matrixes[i].flatten().tolist()
+                }
+            ]
         }
-        # TODO
-        pass
+        send_datagram(udp_socket, targetip, targetport, message=message)
             
 options = FaceLandmarkerOptions(
     base_options = BaseOptions(model_asset_path='content/thirdparty/mediapipe/face_landmarker.task'),

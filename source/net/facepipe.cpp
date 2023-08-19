@@ -113,8 +113,12 @@ namespace FacePipe
 					const json& DataType = data["type"].get<std::string>();
 					if (DataType == "blendshapes")
 						OutMeta.DataType = EFacepipeData::Blendshapes;
-					else if (DataType == "landmarks")
-						OutMeta.DataType = EFacepipeData::Landmarks;
+					else if (DataType == "landmarks2d")
+						OutMeta.DataType = EFacepipeData::Landmarks2D;
+					else if (DataType == "landmarks3d")
+						OutMeta.DataType = EFacepipeData::Landmarks3D;
+					else if (DataType == "mesh")
+						OutMeta.DataType = EFacepipeData::Mesh;
 					else if (DataType == "transforms")
 						OutMeta.DataType = EFacepipeData::Transforms;
 				}
@@ -147,12 +151,26 @@ namespace FacePipe
 		return false;
 	}
 
-	bool GetLandmarks(const MetaData& MessageMeta, const nlohmann::json& Message, std::vector<float>& OutValues)
+	bool GetLandmarks(const MetaData& MessageMeta, const nlohmann::json& Message, std::vector<float>& OutValues, int& ImageWidth, int& ImageHeight)
 	{
-		if (MessageMeta.DataType == EFacepipeData::Landmarks)
+		if (MessageMeta.DataType == EFacepipeData::Landmarks2D || MessageMeta.DataType == EFacepipeData::Landmarks3D)
 		{
 			try {
 				const json& data = Message["data"];
+				OutValues = data["values"].get<std::vector<float>>();
+
+				ImageWidth = 0;
+				ImageHeight = 0;
+				if (data.contains("image"))
+				{
+					const json& image = data["image"];
+					if (image.is_array() && image.size() >= 2)
+					{
+						ImageWidth = image[0].get<int>();
+						ImageHeight = image[1].get<int>();
+					}
+				}
+
 				OutValues = data["values"].get<std::vector<float>>();
 				return true;
 			}
@@ -164,13 +182,28 @@ namespace FacePipe
 		return false;
 	}
 
-	bool GetTransforms(const MetaData& MessageMeta, const nlohmann::json& Message, std::vector<float>& OutValues)
+	bool GetTransforms(const MetaData& MessageMeta, const nlohmann::json& Message, std::vector<FacePipe::Transform>& OutTransforms)
 	{
 		if (MessageMeta.DataType == EFacepipeData::Transforms)
 		{
 			try {
 				const json& data = Message["data"];
-				OutValues = data["values"].get<std::vector<float>>();
+				if (!data.contains("values"))
+					return false;
+
+				OutTransforms.resize(0);
+				for (const json& transform : data["values"])
+				{
+					if (transform.contains("name") && transform.contains("matrix"))
+					{
+						FacePipe::Transform NewTransform;
+						NewTransform.Name = transform["name"].get<std::string>();
+						NewTransform.Matrix = transform["matrix"].get<std::vector<float>>();
+
+						OutTransforms.push_back(NewTransform);
+					}
+				}
+				
 				return true;
 			}
 			catch (std::exception e) 
