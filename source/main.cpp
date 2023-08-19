@@ -162,7 +162,7 @@ int main(int argc, char* args[])
 
 			for (size_t i=0; i<mpcount; ++i)
 			{
-				mpmesh->positions[i].x = -App::latestFrame.Landmarks[i*3];
+				mpmesh->positions[i].x = App::latestFrame.Landmarks[i*3];
 				mpmesh->positions[i].y = App::latestFrame.Landmarks[i*3+1];
 				mpmesh->positions[i].z = App::latestFrame.Landmarks[i*3+2];
 			}
