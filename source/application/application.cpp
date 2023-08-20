@@ -20,12 +20,31 @@ WeakPtr<Object> App::world = WeakPtr<Object>();
 WebCam App::webcam = WebCam();
 UDPSocket App::receiveDataSocket = UDPSocket();
 UDPDatagram App::lastReceivedDatagram = UDPDatagram();
+ThreadSafeQueue<UDPDatagram> App::datagramsQueue = ThreadSafeQueue<UDPDatagram>();
 
 FacePipe::Frame App::latestFrame = FacePipe::Frame();
 
 std::function<void(float, float, const SDL_Event& event)> App::OnTickEvent = [](float time, float dt, const SDL_Event& event) -> void {};
 std::function<void(float, float)> App::OnTickScene = [](float time, float dt) -> void {};
 std::function<void(float, float)> App::OnTickRender = [](float time, float dt) -> void {};
+
+std::thread receiveDatagramsThread;
+std::atomic<bool> shutdownReceiveThread = false;
+void ReceiveDatagramsThreadLoop()
+{
+	while (!shutdownReceiveThread)
+	{
+		std::vector<UDPDatagram> grams;
+		App::receiveDataSocket.Receive(grams);
+
+		for (UDPDatagram& d : grams)
+		{
+			App::datagramsQueue.Push(d);
+		}
+
+		Sleep(1);
+	}
+}
 
 namespace ObjectPoolInternals
 {
@@ -84,10 +103,16 @@ void App::Initialize()
 
 	receiveDataSocket.Set(Net::LocalHost, App::settings.receiveDataSocketPort);
 	receiveDataSocket.Start();
+
+	receiveDatagramsThread = std::thread(ReceiveDatagramsThreadLoop);
 }
 
 void App::Shutdown()
 {
+	shutdownReceiveThread = true;
+	if (receiveDatagramsThread.joinable())
+		receiveDatagramsThread.join();
+
 	receiveDataSocket.Close();
 
 	App::webcam.Shutdown();

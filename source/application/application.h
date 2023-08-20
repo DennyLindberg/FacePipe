@@ -80,6 +80,7 @@ public:
 
 	static UDPSocket receiveDataSocket;
 	static UDPDatagram lastReceivedDatagram;
+	static ThreadSafeQueue<UDPDatagram> datagramsQueue;
 
 	static FacePipe::Frame latestFrame;
 };

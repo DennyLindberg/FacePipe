@@ -67,6 +67,20 @@ bool UDPSocket::Start()
 	}
 	ossocket = (void*) sock; // we don't own this one - void* so we don't need to include windows headers in the rest of the program
 
+	int receiveBufferSize = 1024 * 1024;
+	int sendBufferSize = receiveBufferSize;
+	if (setsockopt(sock, SOL_SOCKET, SO_RCVBUF, (char*)&receiveBufferSize, sizeof(receiveBufferSize)) == SOCKET_ERROR)
+	{
+		UDPLog("Failed to create UDP socket - setsockopt() returned SOCKET_ERROR when trying to set buffer size [{}:{}]\n", ip, port);
+		return false;
+	}
+
+	if (setsockopt(sock, SOL_SOCKET, SO_SNDBUF, (char*)&sendBufferSize, sizeof(sendBufferSize)) == SOCKET_ERROR)
+	{
+		UDPLog("Failed to create UDP socket - setsockopt() returned SOCKET_ERROR when trying to set buffer size [{}:{}]\n", ip, port);
+		return false;
+	}
+
 	u_long nonBlockingMode = 1;
 	int result = ioctlsocket(sock, FIONBIO, &nonBlockingMode);
 	if (result != NO_ERROR) 
@@ -173,7 +187,7 @@ bool UDPSocket::Receive(std::vector<UDPDatagram>& datagrams)
 	{
 		sockaddr_in sender_addr{};
 		int sender_len = sizeof(sender_addr);
-		int bytes_received = recvfrom((SOCKET)ossocket, buffer, sizeof(buffer), 0, (struct sockaddr*)&sender_addr, &sender_len);
+		bytes_received = recvfrom((SOCKET)ossocket, buffer, bufferLength, 0, (struct sockaddr*)&sender_addr, &sender_len);
 
 		if (bytes_received == SOCKET_ERROR) 
 		{	

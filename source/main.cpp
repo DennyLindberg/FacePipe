@@ -112,48 +112,45 @@ int main(int argc, char* args[])
 		//udp.Send(send, sendTarget);
 		
 		// Receiving packets
-		std::vector<UDPDatagram> datagrams;
-		if (App::receiveDataSocket.Receive(datagrams))
+		UDPDatagram datagram;
+		while (App::datagramsQueue.Pop(datagram))
 		{
-			for (UDPDatagram& datagram : datagrams)
+			if (!FacePipe::ParseHeader(datagram.message, datagram.metaData))
 			{
-				if (!FacePipe::ParseHeader(datagram.message, datagram.metaData))
-				{
-					App::lastReceivedDatagram = UDPDatagram();
-					continue;
-				}
-
-				switch (datagram.metaData.DataType)
-				{
-				case FacePipe::EFacepipeData::Blendshapes:
-				{
-					FacePipe::GetBlendshapes(datagram.message, datagram.metaData, App::latestFrame.Blendshapes);
-					break;
-				}
-				case FacePipe::EFacepipeData::Landmarks2D:
-				case FacePipe::EFacepipeData::Landmarks3D:
-				{
-					// TODO: Landmarks2D is a bit problematic when we store it as latestFrame, we expect 3D there
-					FacePipe::GetLandmarks(datagram.message, datagram.metaData, App::latestFrame.Landmarks, App::latestFrame.ImageWidth, App::latestFrame.ImageHeight);
-					break;
-				}
-				case FacePipe::EFacepipeData::Mesh:
-				{
-					break;
-				}
-				case FacePipe::EFacepipeData::Matrices4x4:
-				{
-					FacePipe::GetMatrices(datagram.message, datagram.metaData, App::latestFrame.Matrices);
-					break;
-				}
-				}
-
-				App::lastReceivedDatagram = datagram;
-
-				// forward to next application
-				App::receiveDataSocket.Send(datagram, UnrealAddress);
-				App::receiveDataSocket.Send(datagram, BlenderAddress);
+				App::lastReceivedDatagram = UDPDatagram();
+				continue;
 			}
+
+			switch (datagram.metaData.DataType)
+			{
+			case FacePipe::EFacepipeData::Blendshapes:
+			{
+				FacePipe::GetBlendshapes(datagram.message, datagram.metaData, App::latestFrame.Blendshapes);
+				break;
+			}
+			case FacePipe::EFacepipeData::Landmarks2D:
+			case FacePipe::EFacepipeData::Landmarks3D:
+			{
+				// TODO: Landmarks2D is a bit problematic when we store it as latestFrame, we expect 3D there
+				FacePipe::GetLandmarks(datagram.message, datagram.metaData, App::latestFrame.Landmarks, App::latestFrame.ImageWidth, App::latestFrame.ImageHeight);
+				break;
+			}
+			case FacePipe::EFacepipeData::Mesh:
+			{
+				break;
+			}
+			case FacePipe::EFacepipeData::Matrices4x4:
+			{
+				FacePipe::GetMatrices(datagram.message, datagram.metaData, App::latestFrame.Matrices);
+				break;
+			}
+			}
+
+			App::lastReceivedDatagram = datagram;
+
+			// forward to next application
+			App::receiveDataSocket.Send(datagram, UnrealAddress);
+			App::receiveDataSocket.Send(datagram, BlenderAddress);
 		}
 
 		float w = (float) App::latestFrame.ImageWidth;
