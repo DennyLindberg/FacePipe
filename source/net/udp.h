@@ -8,7 +8,7 @@ struct UDPDatagram
 {
 	NetAddressIP4 source;
 	std::vector<char> message;
-	FacePipe::MetaData metaData; // empty until parsed
+	FacePipe::MessageInfo metaData; // empty until parsed
 };
 
 class UDPSocket : public NetAddressIP4

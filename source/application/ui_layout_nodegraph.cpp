@@ -57,7 +57,7 @@ namespace UI
 				ImNodes::BeginOutputAttribute(1);
 					// connection info
 					{
-						FacePipe::MetaData& meta = App::lastReceivedDatagram.metaData;
+						FacePipe::MessageInfo& meta = App::lastReceivedDatagram.metaData;
 						ImGui::Text("%s", meta.Source.c_str());
 						ImGui::Text("Scene: %d", meta.Scene);
 						ImGui::Text("Camera: %d", meta.Camera);

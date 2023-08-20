@@ -117,8 +117,7 @@ int main(int argc, char* args[])
 		{
 			for (UDPDatagram& datagram : datagrams)
 			{
-				std::string_view content;
-				if (!FacePipe::ParseHeader(datagram.message, datagram.metaData, content))
+				if (!FacePipe::ParseHeader(datagram.message, datagram.metaData))
 				{
 					App::lastReceivedDatagram = UDPDatagram();
 					continue;
@@ -128,14 +127,14 @@ int main(int argc, char* args[])
 				{
 				case FacePipe::EFacepipeData::Blendshapes:
 				{
-					FacePipe::GetBlendshapes(datagram.metaData, content, App::latestFrame.Blendshapes);
+					FacePipe::GetBlendshapes(datagram.message, datagram.metaData, App::latestFrame.Blendshapes);
 					break;
 				}
 				case FacePipe::EFacepipeData::Landmarks2D:
 				case FacePipe::EFacepipeData::Landmarks3D:
 				{
 					// TODO: Landmarks2D is a bit problematic when we store it as latestFrame, we expect 3D there
-					FacePipe::GetLandmarks(datagram.metaData, content, App::latestFrame.Landmarks, App::latestFrame.ImageWidth, App::latestFrame.ImageHeight);
+					FacePipe::GetLandmarks(datagram.message, datagram.metaData, App::latestFrame.Landmarks, App::latestFrame.ImageWidth, App::latestFrame.ImageHeight);
 					break;
 				}
 				case FacePipe::EFacepipeData::Mesh:
@@ -144,7 +143,7 @@ int main(int argc, char* args[])
 				}
 				case FacePipe::EFacepipeData::Matrices4x4:
 				{
-					FacePipe::GetTransforms(datagram.metaData, content, App::latestFrame.Matrices);
+					FacePipe::GetMatrices(datagram.message, datagram.metaData, App::latestFrame.Matrices);
 					break;
 				}
 				}

@@ -34,21 +34,57 @@
 
 namespace FacePipe
 {
-	bool NextSubstring(const std::string_view& StrView, char Delimiter, size_t& b, size_t& e)
+	double VectorView::ParseDouble(const std::vector<char>& Message) noexcept
 	{
-		if (e + 1 >= StrView.size())
+		std::string s(Message.begin() + b, Message.begin() + e);
+		char* pEnd = nullptr;
+		double v = std::strtod(s.c_str(), &pEnd);
+		return (*pEnd) ? 0.0f : v;
+	}
+
+	float VectorView::ParseFloat(const std::vector<char>& Message) noexcept
+	{
+		return (float)ParseDouble(Message);
+	}
+
+	int VectorView::ParseInt(const std::vector<char>& Message) noexcept
+	{
+		std::string s(Message.begin() + b, Message.begin() + e);
+		char* pEnd = nullptr;
+		int v = (int)std::strtol(s.c_str(), &pEnd, 10); // base 10
+		return (*pEnd) ? 0 : v;
+	}
+
+	std::vector<float> VectorView::ParseFloatArray(const std::vector<char>& Message)
+	{
+		std::vector<float> values;
+		VectorView SubView(b);
+		while (SubView.NextSubstring(Message, ',', e))
+		{
+			values.push_back(SubView.ParseFloat(Message));
+		}
+
+		return values;
+	}
+
+	bool VectorView::NextSubstring(const std::vector<char>& Message, char Delimiter, size_t End)
+	{
+		if (End > Message.size())
+			End = Message.size();
+
+		if (e + 1 >= End)
 			return false;
 
 		// Check if we are standing on a delimiter - if we are we start over on the next character and scan forward
-		if (StrView[e] == Delimiter)
+		if (Message[e] == Delimiter)
 		{
 			++e;
 			b = e;
 		}
 
-		while (e < StrView.size())
+		while (e < End)
 		{
-			if (StrView[e] == Delimiter)
+			if (Message[e] == Delimiter)
 			{
 				break;
 			}
@@ -58,65 +94,15 @@ namespace FacePipe
 
 		return true; // end of vector or delimiter
 	}
+}
 
-	double ParseDouble(const std::string_view& StringView) noexcept
-	{
-		std::string s(StringView);
-		char* pEnd = nullptr;
-		double v = std::strtod(s.c_str(), &pEnd);
-		return (*pEnd)? 0.0f : v;
-	}
-
-	float ParseFloat(const std::string_view& StringView) noexcept
-	{
-		return (float) ParseDouble(StringView);
-	}
-
-	int ParseInt(const std::string_view& StringView) noexcept
-	{
-		std::string s(StringView);
-		char* pEnd = nullptr;
-		int v = (int) std::strtol(s.c_str(), &pEnd, 10); // base 10
-		return (*pEnd)? 0 : v;
-	}
-
-	template<typename T>
-	std::vector<T> ParseArray(const std::string_view& StrView)
-	{
-		std::vector<T> values;
-		size_t b = 0;
-		size_t e = 0;
-		while (NextSubstring(StrView, ',', b, e))
-		{
-			if constexpr (std::is_same<T, float>())
-				values.push_back(ParseFloat(std::string_view(StrView.begin()+b, StrView.begin()+e)));
-			else if constexpr (std::is_same<T, double>())
-				values.push_back(ParseDouble(std::string_view(StrView.begin()+b, StrView.begin()+e)));
-			else if constexpr (std::is_same<T, int>())
-				values.push_back(ParseInt(std::string_view(StrView.begin()+b, StrView.begin()+e)));
-		}
-
-		return values;
-	}
-
-	std::vector<float> ParseFloatArray(const std::string_view& StrView)
-	{
-		std::vector<float> values;
-		size_t b = 0;
-		size_t e = 0;
-		while (NextSubstring(StrView, ',', b, e))
-		{
-			values.push_back(ParseFloat(std::string_view(StrView.begin() + b, StrView.begin() + e)));
-		}
-
-		return values;
-	}
-
-	bool ParseHeader(const std::vector<char>& Message, MetaData& OutMeta, std::string_view& OutContent)
+namespace FacePipe
+{
+	bool ParseHeader(const std::vector<char>& Message, MessageInfo& OutInfo)
 	{
 		// a|protocol|source|scene,camera,subject|time|content
 
-		OutMeta = MetaData();
+		OutInfo = MessageInfo();
 
 		if (Message.size() <= 2) // a| - first two characters must exist for us to do anything with this
 			return false;
@@ -136,22 +122,15 @@ namespace FacePipe
 		if (Type != EDatagramType::ASCII) // we don't support anything else at the moment
 			return false;
 		
-		// we start on the first '|'
-		size_t end = Message.size();
-		size_t b = 0; // substring begin (always first character to parse)
-		size_t e = 1; // substring end	 (always next | or end of message)
-
+		VectorView HeaderView(0,1);
 		int index = 0;
-		const std::string_view MessageView(Message.data(), Message.size());
-		while (NextSubstring(MessageView, '|', b, e))
+		while (HeaderView.NextSubstring(Message, '|', Message.size()))
 		{
-			const std::string_view substr(Message.begin() + b, Message.begin() + e);
-
 			switch (++index)
 			{
 				case 1: 
 				{ 
-					if (substr != "facepipe")
+					if (HeaderView.String(Message) != "facepipe")
 					{
 						return false;
 					}
@@ -159,41 +138,42 @@ namespace FacePipe
 				}
 				case 2: 
 				{ 
-					OutMeta.Source = substr; 
+					OutInfo.Source = HeaderView.String(Message); 
 					break;
 				}
 				case 3: 
 				{
-					std::vector<int> channels = ParseArray<int>(substr);
+					std::vector<int> channels = HeaderView.ParseArray<int>(Message);
 					if (channels.size() != 3)
 					{
 						return false;
 					}
-					OutMeta.Scene = channels[0];
-					OutMeta.Camera = channels[1];
-					OutMeta.Subject = channels[2];
+					OutInfo.Scene = channels[0];
+					OutInfo.Camera = channels[1];
+					OutInfo.Subject = channels[2];
 					break;
 				}
 				case 4:
 				{
-					OutMeta.Time = ParseDouble(substr);
+					OutInfo.Time = HeaderView.ParseDouble(Message);
 					break;
 				}
 				case 5:
 				{
-					if (substr == "l2d")
-						OutMeta.DataType = EFacepipeData::Landmarks2D;
-					else if (substr == "l3d")
-						OutMeta.DataType = EFacepipeData::Landmarks3D;
-					else if (substr == "bs")
-						OutMeta.DataType = EFacepipeData::Blendshapes;
-					else if (substr == "mat44")
-						OutMeta.DataType = EFacepipeData::Matrices4x4;
+					std::string type = HeaderView.String(Message);
+					if (type == "l2d")
+						OutInfo.DataType = EFacepipeData::Landmarks2D;
+					else if (type == "l3d")
+						OutInfo.DataType = EFacepipeData::Landmarks3D;
+					else if (type == "bs")
+						OutInfo.DataType = EFacepipeData::Blendshapes;
+					else if (type == "mat44")
+						OutInfo.DataType = EFacepipeData::Matrices4x4;
 					break;
 				}
 				case 6:
 				{
-					OutContent = std::string_view(Message.begin() + b, Message.end());
+					OutInfo.ContentView = VectorView(HeaderView.b, Message.size());
 					return true;
 				}
 			}
@@ -202,26 +182,22 @@ namespace FacePipe
 		return false; // only when we reach case 6 are we successful
 	}
 
-	bool GetBlendshapes(const MetaData& MessageMeta, const std::string_view Content, std::map<std::string, float>& OutBlendshapes)
+	bool GetBlendshapes(const std::vector<char>& Message, const MessageInfo& Info, std::map<std::string, float>& OutBlendshapes)
 	{
-		if (MessageMeta.DataType != EFacepipeData::Blendshapes)
+		if (Info.DataType != EFacepipeData::Blendshapes)
 			return false;
 
-		size_t b = 0;
-		size_t e = 0;
-		while (NextSubstring(Content, '|', b, e))
+		VectorView BSView(Info.ContentView.b);
+		while (BSView.NextSubstring(Message, '|', Info.ContentView.e))
 		{
-			const std::string_view BS(Content.begin() + b, Content.begin() + e);
-
-			size_t b1=0;
-			size_t e1=0;
-			if (NextSubstring(BS, '=', b1, e1))
+			VectorView TupleView(BSView.b);
+			if (TupleView.NextSubstring(Message, '=', BSView.e))
 			{
-				std::string Name(BS.begin() + b1, BS.begin() + e1);
+				std::string Name = TupleView.String(Message);
 
-				if (NextSubstring(BS, '=', b1, e1))
+				if (TupleView.NextSubstring(Message, '=', BSView.e))
 				{
-					OutBlendshapes[Name] = ParseFloat(std::string_view(BS.begin() + b1, BS.begin() + e1));
+					OutBlendshapes[Name] = TupleView.ParseFloat(Message);
 				}
 			}
 		}
@@ -229,50 +205,45 @@ namespace FacePipe
 		return true;
 	}
 
-	bool GetLandmarks(const MetaData& MessageMeta, const std::string_view Content, std::vector<float>& OutValues, int& ImageWidth, int& ImageHeight)
+	bool GetLandmarks(const std::vector<char>& Message, const MessageInfo& Info, std::vector<float>& OutValues, int& ImageWidth, int& ImageHeight)
 	{
-		if (MessageMeta.DataType != EFacepipeData::Landmarks2D && MessageMeta.DataType != EFacepipeData::Landmarks3D)
+		if (Info.DataType != EFacepipeData::Landmarks2D && Info.DataType != EFacepipeData::Landmarks3D)
 			return false;
 
-		size_t b = 0;
-		size_t e = 0;
-		if (!NextSubstring(Content, '|', b, e))
+		VectorView LandmarkView(Info.ContentView.b);
+		if (!LandmarkView.NextSubstring(Message, '|', Info.ContentView.e))
 			return false;
 
-		std::vector<int> ImageDimensions = ParseArray<int>(std::string_view(Content.begin()+b, Content.begin()+e));
+		std::vector<int> ImageDimensions = LandmarkView.ParseArray<int>(Message);
 		if (ImageDimensions.size() != 2)
 			return false;
 		ImageWidth = ImageDimensions[0];
 		ImageHeight = ImageDimensions[1];
 
-		if (!NextSubstring(Content, '|', b, e))
+		if (!LandmarkView.NextSubstring(Message, '|', Info.ContentView.e))
 			return false;
 
-		OutValues = ParseArray<float>(std::string_view(Content.begin()+b, Content.begin()+e));
+		OutValues = LandmarkView.ParseArray<float>(Message);
 
 		return true;
 	}
 
-	bool GetTransforms(const MetaData& MessageMeta, const std::string_view Content, std::map<std::string, std::vector<float>>& OutMatrices)
+	bool GetMatrices(const std::vector<char>& Message, const MessageInfo& Info, std::map<std::string, std::vector<float>>& OutMatrices)
 	{
-		if (MessageMeta.DataType != EFacepipeData::Matrices4x4)
+		if (Info.DataType != EFacepipeData::Matrices4x4)
 			return false;
 
-		size_t b = 0;
-		size_t e = 0;
-		while (NextSubstring(Content, '|', b, e))
+		VectorView MatView(Info.ContentView.b);
+		while (MatView.NextSubstring(Message, '|', Info.ContentView.e))
 		{
-			const std::string_view Mat4x4(Content.begin() + b, Content.begin() + e);
-
-			size_t b1 = 0;
-			size_t e1 = 0;
-			if (NextSubstring(Mat4x4, '=', b1, e1))
+			VectorView TupleView(MatView.b);
+			if (TupleView.NextSubstring(Message, '=', MatView.e))
 			{
-				std::string Name(Mat4x4.begin() + b1, Mat4x4.begin() + e1);
+				std::string Name = TupleView.String(Message);
 
-				if (NextSubstring(Mat4x4, '=', b1, e1))
+				if (TupleView.NextSubstring(Message, '=', MatView.e))
 				{
-					OutMatrices[Name] = ParseFloatArray(std::string_view(Mat4x4.begin() + b1, Mat4x4.begin() + e1));
+					OutMatrices[Name] = TupleView.ParseFloatArray(Message);
 				}
 			}
 		}
