@@ -59,8 +59,7 @@ uint32 FFacePipeUDPListener::Run()
 			}
 		}
 
-		// Stops working if we sleep, no idea why
-		//FPlatformProcess::Sleep(0.001);
+		FPlatformProcess::Sleep(0.001);
     }
 
     return 0;
@@ -109,58 +108,70 @@ void UFacePipeComponent::TickComponent(float DeltaTime, enum ELevelTick TickType
 	TArray<uint8> UEDatagram;
 	while (UDPListener->DatagramQueue.Dequeue(UEDatagram))
 	{
-		if (UEDatagram.Num() < 2 || FacePipe::ToType(UEDatagram[0]) != FacePipe::EDatagramType::JSON)
+		if (UEDatagram.Num() < 2)
 			continue;
 
-		if (UEDatagram.Last() != 0)
-			UEDatagram.Add(0); // null terminate string
+		UEDatagram.Push('\0');
 
 		// Data starts from second byte
-		std::string Datagram(1 + reinterpret_cast<const char*>(UEDatagram.GetData()));
+		std::vector<char> Message(UEDatagram.GetData(), UEDatagram.GetData() + UEDatagram.Num());
 
-		FacePipe::MetaData FacePipeMetaData;
-		nlohmann::json JSONData;
-		if (!FacePipe::Parse(Datagram, FacePipeMetaData, JSONData))
+		FacePipe::MessageInfo MessageInfo;
+		if (!FacePipe::ParseHeader(Message, MessageInfo))
 		{
 			continue;
 		}
 
-		switch (FacePipeMetaData.DataType)
+		switch (MessageInfo.DataType)
 		{
 		case FacePipe::EFacepipeData::Blendshapes:
 		{
-			std::vector<std::string> Names;
-			std::vector<float> Values;
-			FacePipe::GetBlendshapes(FacePipeMetaData, JSONData, Names, Values);
+			std::map<std::string, float> Blendshapes;
+			FacePipe::GetBlendshapes(Message, MessageInfo, Blendshapes);
 
 			TArray<FFacePipeBlendshapeData> BlendshapeData;
-			BlendshapeData.SetNumUninitialized(Names.size());
-			for (size_t i = 0; i < Names.size(); i++)
+			for (auto& Pair : Blendshapes)
 			{
-				BlendshapeData[i].Name = FName(Names[i].c_str());
-				BlendshapeData[i].Value = Values[i];
+				FFacePipeBlendshapeData Data;
+				Data.Name = FName(Pair.first.c_str());
+				Data.Value = Pair.second;
+				BlendshapeData.Push(Data);
 			}
 
-			OnBlendshapesUpdate.Broadcast(BlendshapeData, FacePipeMetaData.Time);
+			OnBlendshapesUpdate.Broadcast(BlendshapeData, MessageInfo.Time);
 			break;
 		}
-		case FacePipe::EFacepipeData::Landmarks:
+		case FacePipe::EFacepipeData::Landmarks2D:
+		case FacePipe::EFacepipeData::Landmarks3D:
 		{
+			int ImageWidth = 0;
+			int ImageHeight = 0;
 			std::vector<float> Values;
-			FacePipe::GetLandmarks(FacePipeMetaData, JSONData, Values);
+			FacePipe::GetLandmarks(Message, MessageInfo, Values, ImageWidth, ImageHeight);
 
 			// Could probably do a memcpy but better not to... UE5 has a different data type for FVector.
 			TArray<FVector> Landmarks;
-			Landmarks.Reserve(Values.size()/3);
-			for (int32 i=0; i<Values.size(); i += 3)
+			if (MessageInfo.DataType == FacePipe::EFacepipeData::Landmarks2D)
 			{
-				Landmarks.Add(FVector(Values[i], Values[i+1], Values[i+2]));
+				Landmarks.Reserve(Values.size()/2);
+				for (int32 i=0; i<Values.size(); i += 2)
+				{
+					Landmarks.Add(FVector(Values[i], Values[i+1], 0.0f));
+				}
+			}
+			else
+			{
+				Landmarks.Reserve(Values.size()/3);
+				for (int32 i=0; i<Values.size(); i += 3)
+				{
+					Landmarks.Add(FVector(Values[i], Values[i+1], Values[i+2]));
+				}
 			}
 
-			OnLandmarksUpdate.Broadcast(Landmarks, FacePipeMetaData.Time);
+			OnLandmarksUpdate.Broadcast(Landmarks, MessageInfo.Time);
 			break;
 		}
-		case FacePipe::EFacepipeData::Transforms:
+		case FacePipe::EFacepipeData::Matrices4x4:
 		{
 			break;
 		}

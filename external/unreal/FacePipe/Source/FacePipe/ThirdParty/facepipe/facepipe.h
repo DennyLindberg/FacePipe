@@ -2,17 +2,28 @@
 
 #include <stdint.h>
 #include <string>
-#include <string_view>
-
-#include "nlohmann/json.hpp"
+#include <vector>
+#include <map>
 
 namespace FacePipe
 {
+	enum class EAxis : uint8_t
+	{
+		X = 0,	// +X
+		Y = 1,	// +Y
+		Z = 2,	// +Z
+		nX = 3,	// -X
+		nY = 4,	// -Y
+		nZ = 5, // -Z
+	};
+
 	enum class EFacepipeData : uint8_t
 	{
-		Landmarks = 0,
-		Blendshapes = 1,
-		Transforms = 2,
+		Blendshapes = 0,
+		Landmarks2D = 1,
+		Landmarks3D = 2,
+		Mesh = 3,
+		Matrices4x4 = 4,
 
 		INVALID = 255
 	};
@@ -20,15 +31,55 @@ namespace FacePipe
 	enum class EDatagramType : uint8_t
 	{
 		Invalid = 0,
-		Bytes = 1,
-		String = 2,
-		JSON = 3,
-		MAX = 4
+		ASCII = 1,
+		Bytes = 2,
+		String = 3,
+		WString = 4,
+		Encoded = 5,
+		MAX = 6
 	};
 
-	struct MetaData
+	// similar intention as std::string_view but it is actually supported...
+	struct VectorView
 	{
-		int API = 0;			// version of protocol
+		VectorView(size_t start = 0) : b(start), e(start) {}
+		VectorView(size_t start, size_t end) : b(start), e(end) {}
+		size_t b = 0;
+		size_t e = 0;
+
+		inline std::string String(const std::vector<char>& Message)
+		{
+			return std::string(Message.begin() + b, Message.begin() + e);
+		}
+
+		double ParseDouble(const std::vector<char>& Message) noexcept;
+		float ParseFloat(const std::vector<char>& Message) noexcept;
+		int ParseInt(const std::vector<char>& Message) noexcept;
+		std::vector<float> ParseFloatArray(const std::vector<char>& Message);
+
+		template<typename T>
+		std::vector<T> ParseArray(const std::vector<char>& Message)
+		{
+			std::vector<T> values;
+			VectorView SubView(b);
+			while (SubView.NextSubstring(Message, ',', e))
+			{
+				if constexpr (std::is_same<T, float>())
+					values.push_back(SubView.ParseFloat(Message));
+				else if constexpr (std::is_same<T, double>())
+					values.push_back(SubView.ParseDouble(Message));
+				else if constexpr (std::is_same<T, int>())
+					values.push_back(SubView.ParseInt(Message));
+			}
+
+			return values;
+		}
+
+		bool NextSubstring(const std::vector<char>& Message, char Delimiter, size_t End);
+	};
+
+	struct MessageInfo
+	{
 		int Scene = 0;			// Scene of camera and subject
 		int Camera = 0;			// Camera the subject was captured in
 		int Subject = 0;		// The subject the data belongs to
@@ -36,45 +87,27 @@ namespace FacePipe
 		std::string Source = "None";						// Which application / capture method produced this data
 		EFacepipeData DataType = EFacepipeData::INVALID;	// What the data contains
 		double Time = 0.0;									// When the message was sent on the source side
+
+		VectorView ContentView;								// Range in message where content should be parsed
 	};
 
 	struct Frame
 	{
-		MetaData Meta;
-		std::vector<std::string> BlendshapeNames;
-		std::vector<float> BlendshapeValues;
+		MessageInfo Meta;
+		std::map<std::string, float> Blendshapes;
+		std::map<std::string, std::vector<float>> Matrices;
 		std::vector<float> Landmarks;
+
+		int ImageWidth = 0;
+		int ImageHeight = 0;
 	};
 }
 
 namespace FacePipe
 {
-	EDatagramType ToType(char FirstByte);
+	bool ParseHeader(const std::vector<char>& Message, MessageInfo& OutMeta);
 
-	bool ParseJSON(const std::string_view& Message, nlohmann::json& OutJSON);
-	bool ParseJSON(const std::string& Message, nlohmann::json& OutJSON);
-	bool ParseMetaData(const nlohmann::json& Message, MetaData& OutMeta);
-
-	bool GetBlendshapes(const MetaData& MessageMeta, const nlohmann::json& Message, std::vector<std::string>& OutNames, std::vector<float>& OutValues);
-	bool GetLandmarks(const MetaData& MessageMeta, const nlohmann::json& Message, std::vector<float>& OutValues);
-	bool GetTransforms(const MetaData& MessageMeta, const nlohmann::json& Message, std::vector<float>& OutValues);
-}
-
-namespace FacePipe
-{
-	template<typename T>
-	bool ParseJSON(const T& Message, nlohmann::json& OutJSON)
-	{
-		if (Message.size() == 0 || ToType(Message[0]) != EDatagramType::JSON)
-			return false;
-
-		std::string_view Data(Message.begin() + 1, Message.end()); // data starts from the second byte
-		return ParseJSON(Data, OutJSON);
-	}
-
-	template<typename T>
-	bool Parse(const T& Message, MetaData& OutMeta, nlohmann::json& OutJSON)
-	{
-		return ParseJSON(Message, OutJSON) && ParseMetaData(OutJSON, OutMeta);
-	}
+	bool GetBlendshapes(const std::vector<char>& Message, const MessageInfo& Info, std::map<std::string, float>& OutBlendshapes);
+	bool GetLandmarks(const std::vector<char>& Message, const MessageInfo& Info, std::vector<float>& OutValues, int& ImageWidth, int& ImageHeight);
+	bool GetMatrices(const std::vector<char>& Message, const MessageInfo& Info, std::map<std::string, std::vector<float>>& OutMatrices);
 }
