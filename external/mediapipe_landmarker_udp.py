@@ -20,96 +20,54 @@ import socket
 import time
 import signal
 
-BaseOptions = mp.tasks.BaseOptions
-FaceLandmarker = mp.tasks.vision.FaceLandmarker
-FaceLandmarkerOptions = mp.tasks.vision.FaceLandmarkerOptions
-FaceLandmarkerResult = mp.tasks.vision.FaceLandmarkerResult
-VisionRunningMode = mp.tasks.vision.RunningMode
-
-def cv2_imshow(img):
-    cv2.imshow('image', img)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-
-run_program = True
-def handler(signum, frame):
-    global run_program
-    run_program = False
-    print("\nExit command received")
-signal.signal(signal.SIGINT, handler)
-
 host = '127.0.0.1'
 port = 0
 targetip = '127.0.0.1'
 targetport = 9000
 udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 udp_socket.bind((host, 0)) # gets free port from OS
-port = udp_socket.getsockname()[1] 
+port = udp_socket.getsockname()[1]
 
-def send_datagram(socket: socket.socket, targetip: str, targetport: int, message):
-    # first byte datagram type [b = bytes, s = string, j = json]
-    if isinstance(message, str):
-        udp_socket.sendto(b's' + message.encode(), (targetip, targetport))
-    elif isinstance(message, bytes):
-        udp_socket.sendto(b'b' + message, (targetip, targetport))
-    else: # treat as json
-        udp_socket.sendto(b'j' + json.dumps(message, separators=(',', ':')).encode(), (targetip, targetport))
+def to_array_string(arr):
+    return json.dumps(arr, separators=(',', ':'))[1:-1] # [1,2,3,4,5] => "1,2,3,4,5"
 
-def on_mp_facelandmarker_result(result: FaceLandmarkerResult, output_image: mp.Image, timestamp_ms: int):
+def on_mp_facelandmarker_result(result: mp.tasks.vision.FaceLandmarkerResult, output_image: mp.Image, timestamp_ms: int):
     global udp_socket
 
-    # list ids for readability
-    subject = 3
+    protocol = "facepipe"
+    source = "mediapipe"
+    scene = 0
+    camera = 0
+    time = float(timestamp_ms)/1000.0
 
-    # message template
-    message = {
-        'channel': [0,0,0,0], # api version, scene, camera, subject
-        'source': 'mediapipe',
-        'time': float(timestamp_ms)/1000.0,
-        'data': {
-            'type': ''
-        }
-    }
+    for subject in range(0, len(result.face_landmarks)):
+        values = np.array([(lm.x, lm.y, lm.z) for lm in result.face_landmarks[subject]]).flatten().tolist() # each array is a set of landmark objects { 'x': 0, 'y': 0, 'z': 0, ... } - this unpacks it to a continuous list
+        values = to_array_string(values)
+        content = f"l3d|{output_image.width},{output_image.height}|{values}" 
+        udp_socket.sendto(f"a|{protocol}|{source}|{scene},{camera},{subject}|{time}|{content}".encode('ascii'), (targetip, targetport))
 
-    for i in range(0, len(result.face_landmarks)):
-        message['channel'][subject] = i
-        message['data'] = {
-            'type': 'landmarks3d',
-            'image': [output_image.width, output_image.height],
-            'values': np.array([(lm.x, lm.y, lm.z) for lm in result.face_landmarks[i]]).flatten().tolist() # each array is a set of landmark objects { 'x': 0, 'y': 0, 'z': 0, ... } - this unpacks it to a continuous list
-        }
-        send_datagram(udp_socket, targetip, targetport, message=message)
-
-    for i in range(0, len(result.face_blendshapes)):
-        message['channel'][subject] = i
-        message['data'] = {
-            'type': 'blendshapes',
-            'names': [bs.category_name for bs in result.face_blendshapes[i]],
-            'values': [bs.score for bs in result.face_blendshapes[i]]
-        }
-        send_datagram(udp_socket, targetip, targetport, message=message)
+    for subject in range(0, len(result.face_blendshapes)):
+        # bs|name=0|other=0.5|smile=0.8
+        content = "bs"
+        for i in range(0, len(result.face_blendshapes[subject])):
+            bs = result.face_blendshapes[subject][i]
+            content += f"|{bs.category_name}={bs.score}"
+        udp_socket.sendto(f"a|{protocol}|{source}|{scene},{camera},{subject}|{time}|{content}".encode('ascii'), (targetip, targetport))
 
     # TODO: mesh (even though mediapipe technically does not have one)
     #message['data'] = {
     #    'type': 'mesh'
     #}
     
-    for i in range(0, len(result.facial_transformation_matrixes)):
-        message['channel'][subject] = i
-        message['data'] = {
-            'type': 'transforms',
-            'values': [
-                {
-                    'name': 'face',
-                    'matrix': result.facial_transformation_matrixes[i].flatten().tolist()
-                }
-            ]
-        }
-        send_datagram(udp_socket, targetip, targetport, message=message)
-            
-options = FaceLandmarkerOptions(
-    base_options = BaseOptions(model_asset_path='content/thirdparty/mediapipe/face_landmarker.task'),
-    running_mode = VisionRunningMode.LIVE_STREAM,
+    for subject in range(0, len(result.facial_transformation_matrixes)):
+        values = result.facial_transformation_matrixes[subject].flatten().tolist()
+        values = to_array_string(values)
+        content = f"mat44|face={values}"
+        udp_socket.sendto(f"a|{protocol}|{source}|{scene},{camera},{subject}|{time}|{content}".encode('ascii'), (targetip, targetport))
+
+options = mp.tasks.vision.FaceLandmarkerOptions(
+    base_options = mp.tasks.BaseOptions(model_asset_path='content/thirdparty/mediapipe/face_landmarker.task'),
+    running_mode = mp.tasks.vision.RunningMode.LIVE_STREAM,
     num_faces = 1,
     min_face_detection_confidence = 0.1,
     min_face_presence_confidence = 0.1,
@@ -118,7 +76,14 @@ options = FaceLandmarkerOptions(
     output_facial_transformation_matrixes = True,
     result_callback = on_mp_facelandmarker_result)
 
-with FaceLandmarker.create_from_options(options) as landmarker:
+run_program = True
+def handler(signum, frame):
+    global run_program
+    run_program = False
+    print("\nExit command received")
+signal.signal(signal.SIGINT, handler)
+
+with mp.tasks.vision.FaceLandmarker.create_from_options(options) as landmarker:
     cv2_webcam_capture = cv2.VideoCapture(0, cv2.CAP_DSHOW) # 0: first webcam in device list
     cv2_webcam_capture.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
     cv2_webcam_capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
@@ -126,12 +91,6 @@ with FaceLandmarker.create_from_options(options) as landmarker:
     time_start = time.time()
     while cv2_webcam_capture.isOpened() and run_program:
         success, cv2_webcam_image = cv2_webcam_capture.read()
-
-        # scale = 1.0
-        # width = int(cv2_webcam_image.shape[1] * scale)
-        # height = int(cv2_webcam_image.shape[0] * scale)
-        # dim = (width, height)
-        # cv2_webcam_image = cv2.resize(cv2_webcam_image, dim, interpolation = cv2.INTER_NEAREST)
 
         # TODO: Flip variable
         cv2_webcam_image = cv2.flip(cv2_webcam_image, 1)

@@ -127,9 +127,9 @@ void UI::GenerateMainLayout(UIManager& ui)
 							if (bShowBlendshapes)
 							{
 								ImGui::Text("Arkit Blendshapes");
-								for (size_t i=0; i<App::latestFrame.BlendshapeValues.size(); ++i)
+								for (auto& Pair : App::latestFrame.Blendshapes)
 								{
-									ImGui::SliderFloat(App::latestFrame.BlendshapeNames[i].c_str(), &App::latestFrame.BlendshapeValues[i], -1.0f, 1.0f, "%.3f", ImGuiSliderFlags_NoInput);
+									ImGui::SliderFloat(Pair.first.c_str(), &Pair.second, -1.0f, 1.0f, "%.3f", ImGuiSliderFlags_NoInput);
 								}
 							}
 							else

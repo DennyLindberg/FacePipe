@@ -3,8 +3,8 @@
 #include <stdint.h>
 #include <string>
 #include <string_view>
-
-#include "nlohmann/json.hpp"
+#include <vector>
+#include <map>
 
 namespace FacePipe
 {
@@ -24,7 +24,7 @@ namespace FacePipe
 		Landmarks2D = 1,
 		Landmarks3D = 2,
 		Mesh = 3,
-		Transforms = 4,
+		Matrices4x4 = 4,
 
 		INVALID = 255
 	};
@@ -32,15 +32,16 @@ namespace FacePipe
 	enum class EDatagramType : uint8_t
 	{
 		Invalid = 0,
-		Bytes = 1,
-		String = 2,
-		JSON = 3,
-		MAX = 4
+		ASCII = 1,
+		Bytes = 2,
+		String = 3,
+		WString = 4,
+		Encoded = 5,
+		MAX = 6
 	};
 
 	struct MetaData
 	{
-		int API = 0;			// version of protocol
 		int Scene = 0;			// Scene of camera and subject
 		int Camera = 0;			// Camera the subject was captured in
 		int Subject = 0;		// The subject the data belongs to
@@ -50,19 +51,12 @@ namespace FacePipe
 		double Time = 0.0;									// When the message was sent on the source side
 	};
 
-	struct Transform
-	{
-		std::string Name = "";
-		std::vector<float> Matrix;
-	};
-
 	struct Frame
 	{
 		MetaData Meta;
-		std::vector<std::string> BlendshapeNames;
-		std::vector<float> BlendshapeValues;
+		std::map<std::string, float> Blendshapes;
+		std::map<std::string, std::vector<float>> Matrices;
 		std::vector<float> Landmarks;
-		std::vector<FacePipe::Transform> Transforms;
 
 		int ImageWidth = 0;
 		int ImageHeight = 0;
@@ -71,32 +65,9 @@ namespace FacePipe
 
 namespace FacePipe
 {
-	EDatagramType ToType(char FirstByte);
+	bool ParseHeader(const std::vector<char>& Message, MetaData& OutMeta, std::string_view& OutContent);
 
-	bool ParseJSON(const std::string_view& Message, nlohmann::json& OutJSON);
-	bool ParseJSON(const std::string& Message, nlohmann::json& OutJSON);
-	bool ParseMetaData(const nlohmann::json& Message, MetaData& OutMeta);
-
-	bool GetBlendshapes(const MetaData& MessageMeta, const nlohmann::json& Message, std::vector<std::string>& OutNames, std::vector<float>& OutValues);
-	bool GetLandmarks(const MetaData& MessageMeta, const nlohmann::json& Message, std::vector<float>& OutValues, int& ImageWidth, int& ImageHeight);
-	bool GetTransforms(const MetaData& MessageMeta, const nlohmann::json& Message, std::vector<FacePipe::Transform>& OutTransforms);
-}
-
-namespace FacePipe
-{
-	template<typename T>
-	bool ParseJSON(const T& Message, nlohmann::json& OutJSON)
-	{
-		if (Message.size() == 0 || ToType(Message[0]) != EDatagramType::JSON)
-			return false;
-
-		std::string_view Data(Message.begin() + 1, Message.end()); // data starts from the second byte
-		return ParseJSON(Data, OutJSON);
-	}
-
-	template<typename T>
-	bool Parse(const T& Message, MetaData& OutMeta, nlohmann::json& OutJSON)
-	{
-		return ParseJSON(Message, OutJSON) && ParseMetaData(OutJSON, OutMeta);
-	}
+	bool GetBlendshapes(const MetaData& MessageMeta, const std::string_view Content, std::map<std::string, float>& OutBlendshapes);
+	bool GetLandmarks(const MetaData& MessageMeta, const std::string_view Content, std::vector<float>& OutValues, int& ImageWidth, int& ImageHeight);
+	bool GetTransforms(const MetaData& MessageMeta, const std::string_view Content, std::map<std::string, std::vector<float>>& OutMatrices);
 }

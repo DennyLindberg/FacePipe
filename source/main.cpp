@@ -117,35 +117,34 @@ int main(int argc, char* args[])
 		{
 			for (UDPDatagram& datagram : datagrams)
 			{
-				nlohmann::json jsonData;
-				if (!FacePipe::Parse(datagram.message, datagram.metaData, jsonData))
+				std::string_view content;
+				if (!FacePipe::ParseHeader(datagram.message, datagram.metaData, content))
 				{
 					App::lastReceivedDatagram = UDPDatagram();
 					continue;
 				}
-				
+
 				switch (datagram.metaData.DataType)
 				{
 				case FacePipe::EFacepipeData::Blendshapes:
 				{
-					FacePipe::GetBlendshapes(datagram.metaData, jsonData, App::latestFrame.BlendshapeNames, App::latestFrame.BlendshapeValues);
+					FacePipe::GetBlendshapes(datagram.metaData, content, App::latestFrame.Blendshapes);
 					break;
 				}
 				case FacePipe::EFacepipeData::Landmarks2D:
 				case FacePipe::EFacepipeData::Landmarks3D:
 				{
 					// TODO: Landmarks2D is a bit problematic when we store it as latestFrame, we expect 3D there
-					FacePipe::GetLandmarks(datagram.metaData, jsonData, App::latestFrame.Landmarks, App::latestFrame.ImageWidth, App::latestFrame.ImageHeight);
+					FacePipe::GetLandmarks(datagram.metaData, content, App::latestFrame.Landmarks, App::latestFrame.ImageWidth, App::latestFrame.ImageHeight);
 					break;
 				}
 				case FacePipe::EFacepipeData::Mesh:
 				{
 					break;
 				}
-				case FacePipe::EFacepipeData::Transforms:
+				case FacePipe::EFacepipeData::Matrices4x4:
 				{
-					// TODO: This overwrites all transforms, append/replace based on name?
-					FacePipe::GetTransforms(datagram.metaData, jsonData, App::latestFrame.Transforms);
+					FacePipe::GetTransforms(datagram.metaData, content, App::latestFrame.Matrices);
 					break;
 				}
 				}
@@ -167,12 +166,13 @@ int main(int argc, char* args[])
 		float ratio = w/h;
 
 		// Draw debug transforms
-		for (FacePipe::Transform transform : App::latestFrame.Transforms)
+		for (auto& Pair : App::latestFrame.Matrices)
 		{
-			if (transform.Matrix.size() != 16)
+			auto& m = Pair.second;
+
+			if (m.size() != 16)
 				continue;
 
-			const std::vector<float>& m = transform.Matrix;
 			glm::mat4 mat(
 				m[0], m[1], m[2], m[3],
 				m[4], m[5], m[6], m[7],

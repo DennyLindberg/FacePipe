@@ -1,216 +1,282 @@
 #include "facepipe.h"
+#include <type_traits>
 
 /*
 * Protocol layout
 * 
-* First byte of datagram.message[0] is the type
-*	'b' = bytes
-*	'j' = json
-*	's' = string
+* type|protocol|source|scene,camera,subject|time|content
 * 
-* Remainder datagram.message[1] is handled differently per type
+* e.g.
 * 
-* bytes
-*	not implemented
+* a|facepipe|mediapipe|0,0,0|42.3312|...
 * 
-* string
-*	only treated as log
+* First byte of datagram.message[0] is the datagram type (see ToType)
+*	e.g. 'a' = ascii
 * 
-* json
-*   {
-*		'channel': [0,0,0,0],								# api version, scene, camera, subject
-*		'header': ['mediapipe','1.0.0.0','blendshapes'],	# source, version, data type
-*		'time': 0.0,										# time in seconds at the source (application start, since epoch, does not matter)
-*		'data': {}											# data that changes with type
-*	}
+* Protocol is a name so that the same socket could be used for other things.
+*	default facepipe
+* 
+* Source is the application generating the packet, in facepipe it signifies the tracking source.
+*	mediapipe, arkit, nvidia, etc
+* 
+* Scene,Camera,Subject are integers. These exist to allow multicamera setups to track the same subject.
+*	0 is the default value
+*	scene and camera is most likely to be 0 at all times while there can be multiple subjects
+* 
+* Time is a 64 bit floating point value in seconds - either from epoch or application start (does not matter as long as it ticks at normal rate)
+* 
+* Content is where the packet specific data begins. In facepipe the first word is the type followed by the data:
+*	Landmarks2D: l2d|0.1,0.2,0.3,0.4,...
+*	Landmarks3D: l3d|0.1,0.2,0.3,0.4,0.5,0.6,...
+*	Blendshapes: bs|mouthShrugUpper=0.5|eyeSquint_R=0.2
+*	Matrices:	 mat44|face=0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0,1.1,1.2,1.3,1.4,1.5|eyeL=...|eyeR=...|jaw=...
 */
-
-using json = nlohmann::json;
 
 namespace FacePipe
 {
-	EDatagramType ToType(char FirstByte)
+	bool NextSubstring(const std::string_view& StrView, char Delimiter, size_t& b, size_t& e)
 	{
-		switch (FirstByte)
-		{
-		case 'b': { return EDatagramType::Bytes; }
-		case 's': { return EDatagramType::String; }
-		case '{':
-		case 'j': { return EDatagramType::JSON; }
-		default:  { return EDatagramType::Invalid; }
-		}
-	}
+		if (e + 1 >= StrView.size())
+			return false;
 
-	bool ParseJSON(const std::string_view& Message, nlohmann::json& OutJSON)
-	{
-		try
+		// Check if we are standing on a delimiter - if we are we start over on the next character and scan forward
+		if (StrView[e] == Delimiter)
 		{
-			OutJSON = json::parse(Message);
-			return true;
-		}
-		catch (std::exception e)
-		{
+			++e;
+			b = e;
 		}
 
-		return false;
-	}
-
-	bool ParseJSON(const std::string& Message, nlohmann::json& OutJSON)
-	{
-		try
+		while (e < StrView.size())
 		{
-			OutJSON = json::parse(Message);
-			return true;
-		}
-		catch (std::exception e)
-		{
-		}
-
-		return false;
-	}
-
-	bool ParseMetaData(const nlohmann::json& Message, MetaData& OutMeta)
-	{
-		try 
-		{
-			const json& channel = Message["channel"];
+			if (StrView[e] == Delimiter)
 			{
-				if (!channel.is_array())
-					return false;
-
-				auto values = channel.get<std::vector<int>>();			// [0,0,0,0] api version, scene, camera, subject
-				if (values.size() < 4)
-					return false;
-
-				OutMeta.API = values[0];
-				OutMeta.Scene = values[1];
-				OutMeta.Camera = values[2];
-				OutMeta.Subject = values[3];
+				break;
 			}
 
-			const json& source = Message["source"];
+			++e;
+		}
+
+		return true; // end of vector or delimiter
+	}
+
+	double ParseDouble(const std::string_view& StringView) noexcept
+	{
+		std::string s(StringView);
+		char* pEnd = nullptr;
+		double v = std::strtod(s.c_str(), &pEnd);
+		return (*pEnd)? 0.0f : v;
+	}
+
+	float ParseFloat(const std::string_view& StringView) noexcept
+	{
+		return (float) ParseDouble(StringView);
+	}
+
+	int ParseInt(const std::string_view& StringView) noexcept
+	{
+		std::string s(StringView);
+		char* pEnd = nullptr;
+		int v = (int) std::strtol(s.c_str(), &pEnd, 10); // base 10
+		return (*pEnd)? 0 : v;
+	}
+
+	template<typename T>
+	std::vector<T> ParseArray(const std::string_view& StrView)
+	{
+		std::vector<T> values;
+		size_t b = 0;
+		size_t e = 0;
+		while (NextSubstring(StrView, ',', b, e))
+		{
+			if constexpr (std::is_same<T, float>())
+				values.push_back(ParseFloat(std::string_view(StrView.begin()+b, StrView.begin()+e)));
+			else if constexpr (std::is_same<T, double>())
+				values.push_back(ParseDouble(std::string_view(StrView.begin()+b, StrView.begin()+e)));
+			else if constexpr (std::is_same<T, int>())
+				values.push_back(ParseInt(std::string_view(StrView.begin()+b, StrView.begin()+e)));
+		}
+
+		return values;
+	}
+
+	std::vector<float> ParseFloatArray(const std::string_view& StrView)
+	{
+		std::vector<float> values;
+		size_t b = 0;
+		size_t e = 0;
+		while (NextSubstring(StrView, ',', b, e))
+		{
+			values.push_back(ParseFloat(std::string_view(StrView.begin() + b, StrView.begin() + e)));
+		}
+
+		return values;
+	}
+
+	bool ParseHeader(const std::vector<char>& Message, MetaData& OutMeta, std::string_view& OutContent)
+	{
+		// a|protocol|source|scene,camera,subject|time|content
+
+		OutMeta = MetaData();
+
+		if (Message.size() <= 2) // a| - first two characters must exist for us to do anything with this
+			return false;
+
+		// First byte is the type
+		EDatagramType Type = EDatagramType::Invalid;
+		switch (Message[0])
+		{
+		case 'a': { Type = EDatagramType::ASCII; break; }
+		case 'b': { Type = EDatagramType::Bytes; break; }
+		case 's': { Type = EDatagramType::String; break; }
+		case 'w': { Type = EDatagramType::WString; break; }
+		case 'e': { Type = EDatagramType::Encoded; break; }
+		default: { break; }
+		}
+
+		if (Type != EDatagramType::ASCII) // we don't support anything else at the moment
+			return false;
+		
+		// we start on the first '|'
+		size_t end = Message.size();
+		size_t b = 0; // substring begin (always first character to parse)
+		size_t e = 1; // substring end	 (always next | or end of message)
+
+		int index = 0;
+		const std::string_view MessageView(Message.data(), Message.size());
+		while (NextSubstring(MessageView, '|', b, e))
+		{
+			const std::string_view substr(Message.begin() + b, Message.begin() + e);
+
+			switch (++index)
 			{
-				if (!source.is_string())
-					return false;
-
-				OutMeta.Source = source.get<std::string>();
-			}
-
-			const json& time = Message["time"];
-			{
-				if (!time.is_number())
-					return false;
-
-				OutMeta.Time = time.is_number_float()? time.get<double>() : 0.0;
-			}
-
-			OutMeta.DataType = EFacepipeData::INVALID;
-			if (Message.contains("data"))
-			{
-				const json& data = Message["data"];
-				if (data.contains("type"))
+				case 1: 
+				{ 
+					if (substr != "facepipe")
+					{
+						return false;
+					}
+					break;
+				}
+				case 2: 
+				{ 
+					OutMeta.Source = substr; 
+					break;
+				}
+				case 3: 
 				{
-					const json& DataType = data["type"].get<std::string>();
-					if (DataType == "blendshapes")
-						OutMeta.DataType = EFacepipeData::Blendshapes;
-					else if (DataType == "landmarks2d")
+					std::vector<int> channels = ParseArray<int>(substr);
+					if (channels.size() != 3)
+					{
+						return false;
+					}
+					OutMeta.Scene = channels[0];
+					OutMeta.Camera = channels[1];
+					OutMeta.Subject = channels[2];
+					break;
+				}
+				case 4:
+				{
+					OutMeta.Time = ParseDouble(substr);
+					break;
+				}
+				case 5:
+				{
+					if (substr == "l2d")
 						OutMeta.DataType = EFacepipeData::Landmarks2D;
-					else if (DataType == "landmarks3d")
+					else if (substr == "l3d")
 						OutMeta.DataType = EFacepipeData::Landmarks3D;
-					else if (DataType == "mesh")
-						OutMeta.DataType = EFacepipeData::Mesh;
-					else if (DataType == "transforms")
-						OutMeta.DataType = EFacepipeData::Transforms;
+					else if (substr == "bs")
+						OutMeta.DataType = EFacepipeData::Blendshapes;
+					else if (substr == "mat44")
+						OutMeta.DataType = EFacepipeData::Matrices4x4;
+					break;
 				}
-			}
-
-			return true;
-		}
-		catch (std::exception e)
-		{
-		}
-
-		return false;
-	}
-
-	bool GetBlendshapes(const MetaData& MessageMeta, const nlohmann::json& Message, std::vector<std::string>& OutNames, std::vector<float>& OutValues)
-	{
-		if (MessageMeta.DataType == EFacepipeData::Blendshapes)
-		{
-			try {
-				const json& data = Message["data"];
-				OutNames = data["names"].get<std::vector<std::string>>();
-				OutValues = data["values"].get<std::vector<float>>();
-				return true;
-			}
-			catch (std::exception e) 
-			{
-			}
-		}
-
-		return false;
-	}
-
-	bool GetLandmarks(const MetaData& MessageMeta, const nlohmann::json& Message, std::vector<float>& OutValues, int& ImageWidth, int& ImageHeight)
-	{
-		if (MessageMeta.DataType == EFacepipeData::Landmarks2D || MessageMeta.DataType == EFacepipeData::Landmarks3D)
-		{
-			try {
-				const json& data = Message["data"];
-				OutValues = data["values"].get<std::vector<float>>();
-
-				ImageWidth = 0;
-				ImageHeight = 0;
-				if (data.contains("image"))
+				case 6:
 				{
-					const json& image = data["image"];
-					if (image.is_array() && image.size() >= 2)
-					{
-						ImageWidth = image[0].get<int>();
-						ImageHeight = image[1].get<int>();
-					}
+					OutContent = std::string_view(Message.begin() + b, Message.end());
+					return true;
 				}
-
-				OutValues = data["values"].get<std::vector<float>>();
-				return true;
-			}
-			catch (std::exception e)
-			{
 			}
 		}
 
-		return false;
+		return false; // only when we reach case 6 are we successful
 	}
 
-	bool GetTransforms(const MetaData& MessageMeta, const nlohmann::json& Message, std::vector<FacePipe::Transform>& OutTransforms)
+	bool GetBlendshapes(const MetaData& MessageMeta, const std::string_view Content, std::map<std::string, float>& OutBlendshapes)
 	{
-		if (MessageMeta.DataType == EFacepipeData::Transforms)
+		if (MessageMeta.DataType != EFacepipeData::Blendshapes)
+			return false;
+
+		size_t b = 0;
+		size_t e = 0;
+		while (NextSubstring(Content, '|', b, e))
 		{
-			try {
-				const json& data = Message["data"];
-				if (!data.contains("values"))
-					return false;
+			const std::string_view BS(Content.begin() + b, Content.begin() + e);
 
-				OutTransforms.resize(0);
-				for (const json& transform : data["values"])
-				{
-					if (transform.contains("name") && transform.contains("matrix"))
-					{
-						FacePipe::Transform NewTransform;
-						NewTransform.Name = transform["name"].get<std::string>();
-						NewTransform.Matrix = transform["matrix"].get<std::vector<float>>();
-
-						OutTransforms.push_back(NewTransform);
-					}
-				}
-				
-				return true;
-			}
-			catch (std::exception e) 
+			size_t b1=0;
+			size_t e1=0;
+			if (NextSubstring(BS, '=', b1, e1))
 			{
+				std::string Name(BS.begin() + b1, BS.begin() + e1);
+
+				if (NextSubstring(BS, '=', b1, e1))
+				{
+					OutBlendshapes[Name] = ParseFloat(std::string_view(BS.begin() + b1, BS.begin() + e1));
+				}
+			}
+		}
+		
+		return true;
+	}
+
+	bool GetLandmarks(const MetaData& MessageMeta, const std::string_view Content, std::vector<float>& OutValues, int& ImageWidth, int& ImageHeight)
+	{
+		if (MessageMeta.DataType != EFacepipeData::Landmarks2D && MessageMeta.DataType != EFacepipeData::Landmarks3D)
+			return false;
+
+		size_t b = 0;
+		size_t e = 0;
+		if (!NextSubstring(Content, '|', b, e))
+			return false;
+
+		std::vector<int> ImageDimensions = ParseArray<int>(std::string_view(Content.begin()+b, Content.begin()+e));
+		if (ImageDimensions.size() != 2)
+			return false;
+		ImageWidth = ImageDimensions[0];
+		ImageHeight = ImageDimensions[1];
+
+		if (!NextSubstring(Content, '|', b, e))
+			return false;
+
+		OutValues = ParseArray<float>(std::string_view(Content.begin()+b, Content.begin()+e));
+
+		return true;
+	}
+
+	bool GetTransforms(const MetaData& MessageMeta, const std::string_view Content, std::map<std::string, std::vector<float>>& OutMatrices)
+	{
+		if (MessageMeta.DataType != EFacepipeData::Matrices4x4)
+			return false;
+
+		size_t b = 0;
+		size_t e = 0;
+		while (NextSubstring(Content, '|', b, e))
+		{
+			const std::string_view Mat4x4(Content.begin() + b, Content.begin() + e);
+
+			size_t b1 = 0;
+			size_t e1 = 0;
+			if (NextSubstring(Mat4x4, '=', b1, e1))
+			{
+				std::string Name(Mat4x4.begin() + b1, Mat4x4.begin() + e1);
+
+				if (NextSubstring(Mat4x4, '=', b1, e1))
+				{
+					OutMatrices[Name] = ParseFloatArray(std::string_view(Mat4x4.begin() + b1, Mat4x4.begin() + e1));
+				}
 			}
 		}
 
-		return false;
+		return true;
 	}
 }
