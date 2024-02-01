@@ -180,10 +180,10 @@ void UI::GenerateMainMenuBar(UIManager& ui)
 	{
 		if (ImGui::BeginMenu("File"))
 		{
-			ImGui::MenuItem("New", "CTRL+N");
-			ImGui::MenuItem("Open", "CTRL+O");
-			ImGui::MenuItem("Save", "CTRL+S");
-			ImGui::MenuItem("Save As", "CTRL+SHIFT+S");
+			ImGui::MenuItem("New", "CTRL+N", false, false);
+			ImGui::MenuItem("Open", "CTRL+O", false, false);
+			ImGui::MenuItem("Save", "CTRL+S", false, false);
+			ImGui::MenuItem("Save As", "CTRL+SHIFT+S", false, false);
 			if (ImGui::MenuItem("Quit", ""))
 			{
 				ui.HandleQuit();
@@ -193,15 +193,15 @@ void UI::GenerateMainMenuBar(UIManager& ui)
 
 		if (ImGui::BeginMenu("Edit"))
 		{
-			if (ImGui::MenuItem("Undo", "CTRL+Z"))
+			if (ImGui::MenuItem("Undo", "CTRL+Z", false, false))
 			{
 				std::cout << "Undo" << std::endl;
 			}
 			if (ImGui::MenuItem("Redo", "CTRL+Y", false, false)) {}  // Disabled item
 			ImGui::Separator();
-			if (ImGui::MenuItem("Cut", "CTRL+X")) {}
-			if (ImGui::MenuItem("Copy", "CTRL+C")) {}
-			if (ImGui::MenuItem("Paste", "CTRL+V")) {}
+			if (ImGui::MenuItem("Cut", "CTRL+X", false, false)) {}
+			if (ImGui::MenuItem("Copy", "CTRL+C", false, false)) {}
+			if (ImGui::MenuItem("Paste", "CTRL+V", false, false)) {}
 			ImGui::EndMenu();
 		}
 
@@ -210,7 +210,7 @@ void UI::GenerateMainMenuBar(UIManager& ui)
 		{
 			ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
 			ImGui::TextUnformatted("Control camera    [Mouse buttons]");
-			ImGui::TextUnformatted("Re-center camera  [F]");
+			ImGui::TextUnformatted("Toggle Fullscreen [F]");
 			ImGui::TextUnformatted("Take Screenshot   [S]");
 			ImGui::PopTextWrapPos();
 			ImGui::EndTooltip();

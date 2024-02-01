@@ -193,7 +193,7 @@ void GLTriangleMesh::AppendMesh(const GLTriangleMesh& other)
 	}
 }
 
-void GLTriangleMesh::AppendMeshTransformed(const GLTriangleMesh & other, glm::mat4 transform)
+void GLTriangleMesh::AppendMeshTransformed(const GLTriangleMesh& other, glm::mat4 transform)
 {
 	int newPositionsStart = int(positions.size());
 	AppendMesh(other);
@@ -218,12 +218,14 @@ void GLTriangleMesh::ApplyMatrix(glm::mat4 transform)
 	ApplyMatrix(transform, 0, int(positions.size() - 1));
 }
 
-void GLTriangleMesh::SetUsage(GLenum newUsage)
+void GLTriangleMesh::SetUsage(GLenum newUsage, bool bSendToGPUOnChange)
 {
 	if (usage != newUsage)
 	{
 		usage = newUsage;
-		SendToGPU();
+
+		if (bSendToGPUOnChange)
+			SendToGPU();
 	}
 }
 

@@ -68,7 +68,7 @@ public:
 	void ApplyMatrix(glm::mat4 transform, int firstIndex, int lastIndex);
 	void ApplyMatrix(glm::mat4 transform);
 
-	void SetUsage(GLenum newUsage);
+	void SetUsage(GLenum newUsage, bool bSendToGPUOnChange);
 	void SetColors(const glm::fvec4& color);
 };
 

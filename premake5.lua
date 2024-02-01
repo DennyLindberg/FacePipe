@@ -55,7 +55,7 @@ function setupPython(expected_version)
 end
 
 ---
--- Solution
+-- Solution Configuration
 ---
 python_enable = "0"
 python_multithreaded = "0"

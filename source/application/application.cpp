@@ -65,6 +65,7 @@ void App::Initialize()
 {
 	Logging::StartLoggingThread();
 	App::window.Initialize(App::settings.windowWidth, App::settings.windowHeight, App::settings.fullscreen, App::settings.vsync, App::settings.showConsole);
+	App::window.SetTitle(App::settings.windowTitle);
 	OpenGLWindow::OnWindowChanged = [](EGLWindowEvent event, int low, int high) -> void {
 		if (event == EGLWindowEvent::Resize)
 		{

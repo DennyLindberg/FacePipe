@@ -21,6 +21,7 @@ struct ApplicationSettings
 	bool fullscreen = false;
 	int windowWidth = 0;
 	int windowHeight = 0;
+	std::string windowTitle = "App";
 	int maxFPS = 0;
 	bool sleepWhenFpsLimited = true;
 	glm::vec4 clearColor = glm::vec4(0.0f);
